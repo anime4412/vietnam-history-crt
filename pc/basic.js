@@ -42,7 +42,34 @@ const PROGRAMS = ["about", "online", "options"]; // what run(name) / input({ typ
 const CP437 = "\u0000☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ╱╲";
 const U2C = new Map();
 for (let i = CP437.length - 1; i >= 0; i--) U2C.set(CP437[i], i);
-const cp = c => { const v = U2C.get(c); return v === undefined ? 63 : v; };
+const VN_MAP = {
+  'à':'à','á':'á','ả':'a','ã':'a','ạ':'a','ă':'a','ằ':'à','ắ':'á','ẳ':'a','ẵ':'a','ặ':'a','â':'â','ầ':'à','ấ':'á','ẩ':'â','ẫ':'â','ậ':'â',
+  'À':'A','Á':'A','Ả':'A','Ã':'A','Ạ':'A','Ă':'A','Ằ':'A','Ắ':'A','Ẳ':'A','Ẵ':'A','Ặ':'A','Â':'A','Ầ':'A','Ấ':'A','Ẩ':'A','Ẫ':'A','Ậ':'A',
+  'è':'è','é':'é','ẻ':'e','ẽ':'e','ẹ':'e','ê':'ê','ề':'è','ế':'é','ể':'ê','ễ':'ê','ệ':'ê',
+  'È':'E','É':'É','Ẻ':'E','Ẽ':'E','Ẹ':'E','Ê':'E','Ề':'E','Ế':'E','Ể':'E','Ễ':'E','Ệ':'E',
+  'ì':'ì','í':'í','ỉ':'i','ĩ':'i','ị':'i',
+  'Ì':'I','Í':'I','Ỉ':'I','Ĩ':'I','Ị':'I',
+  'ò':'ò','ó':'ó','ỏ':'o','õ':'o','ọ':'o','ô':'ô','ồ':'ò','ố':'ó','ổ':'ô','ỗ':'ô','ộ':'ô','ơ':'o','ờ':'ò','ớ':'ó','ở':'o','ỡ':'o','ợ':'o',
+  'Ò':'O','Ó':'O','Ỏ':'O','Õ':'O','Ọ':'O','Ô':'O','Ồ':'O','Ố':'O','Ổ':'O','Ỗ':'O','Ộ':'O','Ơ':'O','Ờ':'O','Ớ':'O','Ở':'O','Ỡ':'O','Ợ':'O',
+  'ù':'ù','ú':'ú','ủ':'u','ũ':'u','ụ':'u','ư':'u','ừ':'ù','ứ':'ú','ử':'u','ữ':'u','ự':'u',
+  'Ù':'U','Ú':'U','Ủ':'U','Ũ':'U','Ụ':'U','Ư':'U','Ừ':'U','Ứ':'U','Ử':'U','Ữ':'U','Ự':'U',
+  'ỳ':'y','ý':'y','ỷ':'y','ỹ':'y','ỵ':'y',
+  'Ỳ':'Y','Ý':'Y','Ỷ':'Y','Ỹ':'Y','Ỵ':'Y',
+  'đ':'d','Đ':'D',
+  '“':'"', '”':'"', '‘':'\'', '’':'\'', '–':'-', '—':'-', '…':'.'
+};
+
+const cp = c => {
+  let v = U2C.get(c);
+  if (v !== undefined) return v;
+  const m = VN_MAP[c];
+  if (m && (v = U2C.get(m)) !== undefined) return v;
+  if (c) {
+    const norm = c.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+    if ((v = U2C.get(norm)) !== undefined) return v;
+  }
+  return 63;
+};
 
 // 9-bit row masks (bit 8 = leftmost). Line-drawing glyphs C0-DF repeat column 8 into column 9.
 const GL = (() => {
@@ -84,6 +111,7 @@ const esc = s => String(s).replace(/\{/g, "{{");
 const clip = (s, n) => { s = String(s); if (s.length <= n) return s; const cut = s.slice(0, n - 3), sp = cut.lastIndexOf(" "); return (sp > n * 0.6 ? cut.slice(0, sp) : cut).replace(/[\s,.;:\-]+$/, "") + "..."; };
 const commas = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 function wrapText(text, width, first = "", rest = first) {
+  text = String(text).normalize('NFC');
   const out = []; let line = first, empty = true;
   for (const word0 of String(text).split(/ +/)) {
     let word = word0;

@@ -1814,7 +1814,7 @@ function pcMonFrame(now){
 // the PC runs BASIC (pc/basic.js). DOS and a dial-up BBS (pc/dos.js, pc/bbs.js, the same mount API) were in Options
 // until Felix took the picker out (00:29Z)
 function pcLoad(start){
-  import(new URL("./pc/",import.meta.url).href+"basic.js").then(m=>{ PC.mod=m.default; pcMount(start); }).catch(e=>console.warn("pc",e));
+  import(new URL("./pc/",import.meta.url).href+"basic.js?v=" + Date.now()).then(m=>{ PC.mod=m.default; pcMount(start); }).catch(e=>console.warn("pc",e));
 }
 // a link on the PC (About's words, its Links list) opens as a real link, clicked inside the click or key press that chose it:
 // the artifact frame and popup blockers treat that as the visitor's own click, where window.open is often refused
