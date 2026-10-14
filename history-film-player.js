@@ -52,18 +52,36 @@ export class HistoryFilmPlayer {
       this.videoElement.loop = true;
       this.videoElement.playsInline = true;
     }
-    this.videoElement.muted = true;
+    const soundOn = (window.__roomSoundOn !== undefined) ? window.__roomSoundOn : true;
+    const tvVol = (window.__tvVolume !== undefined) ? window.__tvVolume : 0.85;
+
+    // Start muted to guarantee autoplay approval by browser policy
+    this.videoElement.muted = !soundOn;
+    this.videoElement.volume = Math.max(0, Math.min(1, tvVol));
     this.videoElement.src = url;
     this.videoElement.currentTime = 0;
+    
     this.videoElement.play().then(() => {
-      // If room sound is on, unmute video audio
-      if (this.audioCtx && this.audioCtx.state === "running") {
+      // If room sound is on, unmute video
+      if (soundOn) {
         this.videoElement.muted = false;
-        this.videoElement.volume = 0.85;
+        this.videoElement.volume = Math.max(0, Math.min(1, tvVol));
       }
     }).catch(e => {
-      console.warn("Video playback autoplay:", e);
+      console.warn("Autoplay with sound prevented, falling back to muted autoplay:", e);
+      this.videoElement.muted = true;
+      this.videoElement.play().catch(err => console.warn("Muted autoplay error:", err));
     });
+  }
+
+  setAudio(enabled, volume = 0.85) {
+    if (this.videoElement) {
+      this.videoElement.muted = !enabled;
+      this.videoElement.volume = Math.max(0, Math.min(1, volume));
+      if (enabled && this.videoElement.paused) {
+        this.videoElement.play().catch(() => {});
+      }
+    }
   }
 
   triggerBeep(freq = 880, duration = 0.08) {
