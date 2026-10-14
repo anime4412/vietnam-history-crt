@@ -1,7 +1,7 @@
 // Vietnam National History & 3D Relics CRT Experience
 import { VIETNAM_TAPES, VIETNAM_RELICS } from "./vietnam-history-data.js";
 import { RelicRenderer } from "./relic-renderer.js";
-import { HistoryFilmPlayer } from "./history-film-player.js";
+import { HistoryFilmPlayer } from "./history-film-player.js?v=20261014f";
 
 let relicRenderer = null;
 let relicCanvas = null;
@@ -396,6 +396,10 @@ const PAINT = {
       if (filmPlayer.tapeIndex !== state.tape) {
         filmPlayer.playTape(state.tape);
       }
+      if (!state.power) {
+        filmPlayer.pause();
+        return new THREE.Color("#000000");
+      }
       sx.setTransform(K, 0, 0, K, 0, 0);
       const dt = chLastT ? Math.min(100, t - chLastT) : 16;
       chLastT = t;
@@ -403,6 +407,15 @@ const PAINT = {
 
       const tape = VIETNAM_TAPES[state.tape] || VIETNAM_TAPES[0];
       return new THREE.Color(tape.bg);
+    }
+
+    // Stopped, ejecting, or empty state
+    if (filmPlayer && filmPlayer.isPlaying) {
+      if (state.tape < 0 || state.tapeState === "ejecting" || state.tapeState === "none") {
+        filmPlayer.stop();
+      } else {
+        filmPlayer.pause();
+      }
     }
 
     // Stopped or inserting state
@@ -2504,6 +2517,10 @@ addEventListener("pageshow",e=>{ if(!e.persisted) return;
 // sleeps; back in view, a tape that was playing picks up where it froze (play, then the sound, as the tapes expect)
 document.addEventListener("visibilitychange",()=>{
   if(chInst) chPause(!(tvPage()==="work"&&state.tapeState==="playing"&&chIdx===state.tape));
+  if(filmPlayer){
+    if(document.hidden) filmPlayer.pause();
+    else if(state.power && state.tape>=0 && state.tapeState==="playing" && tvPage()==="work") filmPlayer.resume();
+  }
   if(document.hidden) homePause();
   if(A.ctx){ if(document.hidden) A.ctx.suspend().catch(()=>{}); else if(A.on) A.ctx.resume().catch(()=>{}); mediaChannel(); } });
 function audioLevels(){
@@ -2511,6 +2528,10 @@ function audioLevels(){
   A.master.gain.setTargetAtTime(A.on?1:0,t,.12);
   A.tv.gain.setTargetAtTime(A.on&&state.power?state.volume*.85:0,t,.05);
   A.crt.gain.setTargetAtTime(A.on&&state.power?1:0,t,.15);
+  if(filmPlayer){
+    const hear = !!(A.on && state.power && state.tape>=0 && state.tapeState==="playing" && tvPage()==="work");
+    filmPlayer.setAudio(hear, state.volume*.85);
+  }
 }
 const soundBtn=$("#sound");
 function setSound(on){ audioInit(); A.on=on; if(firstGesture) userT=performance.now(); firstGesture=false; if(on&&A.ctx.state!=="running") A.ctx.resume().catch(()=>{}); mediaChannel(); soundBtn.setAttribute("aria-pressed",on); soundBtn.textContent=on?"SOUND ON":"SOUND OFF"; audioLevels(); }
@@ -2751,6 +2772,7 @@ function resumeTape(){
   if(state.tape<0||tapeAnim||state.tapeState==="loading") return;
   motor(); if(state.tapeState!=="playing"){ state.tapeState="playing"; homeCarry=false; if(chIdx!==state.tape) chStart(state.tape); }
   if(state.page!=="work") go("work"); cycOff(); chPause(false); drawVFD(); refreshWork();
+  if(filmPlayer && state.power) filmPlayer.resume();
 }
 // ---- the shelf: eleven tapes in two stacks, five companies on the left and six projects on the right, each read top to bottom.
 // Pulling a cassette out lets the ones above it settle; a tape coming back from the VCR goes on top of its stack.
@@ -2811,6 +2833,7 @@ function tapePath(home,q){
 }
 function insert(i){
   const g=tapeGroups[i]; if(!g) return;
+  if(filmPlayer) filmPlayer.stop();
   click("tape",.3); state.tape=i; state.tapeState="loading"; drawVFD(); refreshWork();
   const fromQ=g.quaternion.clone(), path=tapePath(g.userData.home,g.userData.homeQ), front=path.getPoint(1), inside=front.clone().setZ(IN_Z);
   leaveStack(g,.26); if(vcr) vcr.insert(g);
@@ -2821,11 +2844,16 @@ function insert(i){
     /* notepad stays down so video is fully visible */   // the tape's in: the notepad floats up with its notes
     setTimeout(()=>{ if(state.tape!==i||state.tapeState!=="loading") return;   // ejected, stopped or swapped while it threaded
       state.tapeState="playing"; homeCarry=false; chStart(i); drawVFD(); live("Now playing: "+tapeInfo(i).t);
-      if(tvPage()!=="work"){ chPause(true); return; }   // you left Work for the TV's other pages while it loaded: it waits there, paused
+      if(tvPage()!=="work" || !state.power){
+        chPause(true);
+        if(filmPlayer) filmPlayer.pause();
+        return;
+      }
       pageT=performance.now(); state.glitch=.9; staticBurst(.2,.2); refreshWork(); },220); }};
   if(A.fx.vcr_insert) setTimeout(()=>sample("vcr_insert",{gain:1,pan:-.05}),620); else if(!vcr) setTimeout(()=>click("door",-.05),660);
 }
 function eject(then){
+  if(filmPlayer) filmPlayer.stop();
   const i=state.tape; const g=tapeGroups[i]; if(!g){ state.tape=-1; return then&&then(); }
   chStop(); if(!sample("vcr_eject",{gain:1,pan:-.05})){ motor(.5); click("relay",-.05); } state.tapeState="ejecting"; drawVFD(); refreshWork();
   topOfStack(g);
@@ -2835,7 +2863,9 @@ function eject(then){
   tapeAnim={t:0,dur:.9+lead,step(k){ k=Math.max(0,(k*(.9+lead)-lead)/.9);
     if(k<.28){ const e=ease(k/.28); g.position.lerpVectors(inside,front,e); }
     else { const e=ease((k-.28)/.72); g.position.copy(path.getPoint(1-e)); g.quaternion.slerpQuaternions(new THREE.Quaternion(),g.userData.homeQ,Math.min(1,Math.max(0,e*1.7-.7))); }
-  },done(){ if(vcr) vcr.release(); const st=g.userData.stack; if(st&&!st.tapes.includes(g)) st.tapes.push(g);
+  },done(){
+    if(filmPlayer) filmPlayer.stop();
+    if(vcr) vcr.release(); const st=g.userData.stack; if(st&&!st.tapes.includes(g)) st.tapes.push(g);
     g.position.copy(g.userData.home); g.quaternion.copy(g.userData.homeQ);
     chStop(); click("tape",.3); state.tape=-1; state.tapeState="none"; drawVFD(); refreshWork(); then&&then(); }};
 }
@@ -2849,6 +2879,11 @@ function setPower(on){
   if(on) degauss(); else powerOffSound();
   setLeds();
   audioLevels();
+  if(!on){
+    if(filmPlayer) filmPlayer.pause();
+  } else {
+    if(filmPlayer && state.tape>=0 && state.tapeState==="playing" && tvPage()==="work") filmPlayer.resume();
+  }
 }
 // the monitor's six buttons: its three inputs (the pages on this screen), then three of a studio monitor's picture checks,
 // each on until pressed again, its LED lit amber: UNDERSCAN shows the whole raster, H/V DELAY the blanking between lines
@@ -2895,7 +2930,7 @@ function act(hit){
     setTimeout(()=>{ if(!state.power) return setPower(true); go(TV_BTN[(TV_BTN.indexOf(tvPage())+1)%3]); },90); }   // the TV's next input
   else if(info.kind==="vcr"){ pressAnim(hit,.0015); click("button",.1);
     if(info.i===0){ if(state.tape<0) chooseTape(0); else resumeTape(); cycOff(); }
-    else if(info.i===1){ cycOff(); if(state.tape>=0&&state.tapeState!=="ejecting"&&state.tapeState!=="stopped"){ state.tapeState="stopped"; motor(.5); chPause(true); refreshWork(); } }
+    else if(info.i===1){ cycOff(); if(state.tape>=0&&state.tapeState!=="ejecting"&&state.tapeState!=="stopped"){ state.tapeState="stopped"; motor(.5); chPause(true); refreshWork(); if(filmPlayer) filmPlayer.pause(); } }
     else if(info.i===2){ if(!(state.tapeState==="playing"&&chInput({type:"prev"}))) chooseTape(((state.tape<0?0:state.tape)+TAPES.length-1)%TAPES.length); cycOff(true); }   // (a scene skipped: that tape stays on)
     else if(info.i===3){ if(!(state.tapeState==="playing"&&chInput({type:"next"}))) chooseTape(((state.tape<0?-1:state.tape)+1)%TAPES.length); cycOff(true); }
     else if(info.i===4){ vcrLed&&(vcrLed.material.emissive.set("#ff2a1a"),vcrLed.material.emissiveIntensity=4); setTimeout(()=>vcrLed&&(vcrLed.material.emissiveIntensity=0),1600); }
@@ -3398,6 +3433,18 @@ function frame(now){
   if(shadowsDirty>0&&!phoneShadowSkip()){ renderer.shadowMap.needsUpdate=true; shadowsDirty--; }
   updateClock(clock?clock.now(Date.now()):Date.now()); stepPC(now); cycWatch(dt); musicDuck(now);
   if(homeOn&&!(homeOnTV()&&state.power)) homePause();
+  const filmActive = !!(state.power && state.tape >= 0 && state.tapeState === "playing" && tvPage() === "work" && !document.hidden);
+  if (filmPlayer) {
+    if (!filmActive && filmPlayer.isPlaying) {
+      if (state.tape < 0 || state.tapeState === "none" || state.tapeState === "ejecting") {
+        filmPlayer.stop();
+      } else {
+        filmPlayer.pause();
+      }
+    } else if (filmActive && !filmPlayer.isPlaying) {
+      filmPlayer.resume();
+    }
+  }
   composer.render();
   if(!revealNext&&!canvas.classList.contains("ready")) preFence=glc.fenceSync(glc.SYNC_GPU_COMMANDS_COMPLETE,0);
   if(revealNext){ revealNext=false; stillOut(); canvas.classList.add("ready"); revealT=performance.now();

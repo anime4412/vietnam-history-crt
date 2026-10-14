@@ -30,6 +30,40 @@ export class HistoryFilmPlayer {
     this.videoElement = null;
   }
 
+  stop() {
+    this.isPlaying = false;
+    this.time = 0;
+    this.tapeIndex = -1;
+    this.lastBeepSec = -1;
+    if (this.videoElement) {
+      try {
+        this.videoElement.pause();
+        this.videoElement.currentTime = 0;
+        this.videoElement.removeAttribute("src");
+        this.videoElement.load();
+      } catch (e) {}
+      this.videoElement = null;
+    }
+  }
+
+  pause() {
+    this.isPlaying = false;
+    if (this.videoElement && !this.videoElement.paused) {
+      try {
+        this.videoElement.pause();
+      } catch (e) {}
+    }
+  }
+
+  resume() {
+    this.isPlaying = true;
+    if (this.videoElement && this.videoElement.paused && this.videoElement.src) {
+      this.videoElement.play().catch(e => {
+        console.warn("Resume video failed:", e);
+      });
+    }
+  }
+
   playTape(index) {
     this.tapeIndex = Math.max(0, Math.min(VIETNAM_TAPES.length - 1, index));
     this.time = 0;
@@ -67,10 +101,15 @@ export class HistoryFilmPlayer {
         this.videoElement.muted = false;
         this.videoElement.volume = Math.max(0, Math.min(1, tvVol));
       }
+      if (!this.isPlaying) {
+        this.videoElement.pause();
+      }
     }).catch(e => {
       console.warn("Autoplay with sound prevented, falling back to muted autoplay:", e);
       this.videoElement.muted = true;
-      this.videoElement.play().catch(err => console.warn("Muted autoplay error:", err));
+      this.videoElement.play().then(() => {
+        if (!this.isPlaying) this.videoElement.pause();
+      }).catch(err => console.warn("Muted autoplay error:", err));
     });
   }
 
@@ -78,14 +117,16 @@ export class HistoryFilmPlayer {
     if (this.videoElement) {
       this.videoElement.muted = !enabled;
       this.videoElement.volume = Math.max(0, Math.min(1, volume));
-      if (enabled && this.videoElement.paused) {
+      if (enabled && this.isPlaying && this.videoElement.paused) {
         this.videoElement.play().catch(() => {});
+      } else if (!enabled && !this.isPlaying) {
+        this.videoElement.pause();
       }
     }
   }
 
   triggerBeep(freq = 880, duration = 0.08) {
-    if (!this.audioCtx) return;
+    if (!this.audioCtx || !this.isPlaying) return;
     try {
       const osc = this.audioCtx.createOscillator();
       const gain = this.audioCtx.createGain();
@@ -101,7 +142,10 @@ export class HistoryFilmPlayer {
   }
 
   frame(t, dt) {
-    this.time += dt / 1000;
+    if (this.isPlaying) {
+      this.time += dt / 1000;
+    }
+    if (this.tapeIndex < 0) return;
     const g = this.ctx;
     const w = this.width;
     const h = this.height;
