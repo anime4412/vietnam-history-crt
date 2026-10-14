@@ -39,8 +39,10 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Prevent stale caching on scripts and HTML
-  res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+  // Prevent stale caching on all static assets
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
 
   let reqUrl = req.url.split('?')[0];
   let filePath = path.join(__dirname, reqUrl === '/' ? 'index.html' : decodeURIComponent(reqUrl));

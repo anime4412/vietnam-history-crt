@@ -46,7 +46,7 @@ import { winUV, winPaint } from "./winframe/winframe.js";   // the window's fram
 import { createCredits } from "./credits/credits.js";   // the credits: the open card of the card file behind the desk lamp, floating up   // Work's card: the yellow pad on the desk, floating up with a tape's notes
 import { pcCase, pcCaseLip } from "./pccase/case.js";   // the old PC's plastic up close: smooth baked light, a moulded stipple (thread "PC screen look")
 import { createVCRDoor } from "./vcrdoor/vcrdoor.js";   // the VCR's cassette flap: a tape pushes it open, it springs shut behind it
-import { createMusic, createCDPlayer } from "./cdplayer/cdplayer.js";   // the music, and the CD player's close-up
+import { createMusic, createCDPlayer } from "./cdplayer/cdplayer.js?v=20261014b";   // the music, and the CD player's close-up
 import { createCalculator } from "./calc/calc.js";   // the desk calculator: a click lifts it, and it works
 import { createPCKeys } from "./pckeys/pckeys.js";   // the old PC's keyboard: the keys you type press its caps
 import { createCoffee } from "./coffee/coffee.js";   // the coffee on the desk: a click is a sip
