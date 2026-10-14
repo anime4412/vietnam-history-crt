@@ -28,6 +28,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
 // Built by ghost-theme/build.py from vhs-tv sources. Do not edit here.
 const CHANNEL_BASE = (window.__BM && window.__BM.assetBase) ? window.__BM.assetBase + "channels/" : new URL("./channels/", import.meta.url).href;
 const SCENE_BASE = (window.__BM && window.__BM.assetBase) || new URL("./", import.meta.url).href;
+const AUDIO_BASE = new URL("./audio2/", import.meta.url).href;
 // start page: the #hash, or (room on every page) the page this URL stands for
 const BM_HASH = () => location.hash.slice(1) || (window.__BM && window.__BM.pageAt ? window.__BM.pageAt(location.pathname) : "");
 
@@ -46,7 +47,7 @@ import { winUV, winPaint } from "./winframe/winframe.js";   // the window's fram
 import { createCredits } from "./credits/credits.js";   // the credits: the open card of the card file behind the desk lamp, floating up   // Work's card: the yellow pad on the desk, floating up with a tape's notes
 import { pcCase, pcCaseLip } from "./pccase/case.js";   // the old PC's plastic up close: smooth baked light, a moulded stipple (thread "PC screen look")
 import { createVCRDoor } from "./vcrdoor/vcrdoor.js";   // the VCR's cassette flap: a tape pushes it open, it springs shut behind it
-import { createMusic, createCDPlayer } from "./cdplayer/cdplayer.js?v=20261014b";   // the music, and the CD player's close-up
+import { createMusic, createCDPlayer } from "./cdplayer/cdplayer.js?v=20261014c";   // the music, and the CD player's close-up
 import { createCalculator } from "./calc/calc.js";   // the desk calculator: a click lifts it, and it works
 import { createPCKeys } from "./pckeys/pckeys.js";   // the old PC's keyboard: the keys you type press its caps
 import { createCoffee } from "./coffee/coffee.js";   // the coffee on the desk: a click is a sip
@@ -2344,7 +2345,7 @@ async function loadStems(){
   const spec={rain:{gain:RAIN,dest:()=>A.master},city:{gain:1.5,dest:()=>A.window},room:{gain:.8,dest:()=>A.master,url:clockMod?.ROOM_URL},sbahn:{gain:1,dest:()=>A.window,oneShot:true},
     vcr_insert:{fx:1},vcr_eject:{fx:1},crt_on:{fx:1},button_click:{fx:1},channel_static:{fx:1}};
   await Promise.all(Object.entries(spec).map(async([k,s])=>{
-    try{ const buf=await memDecode(ctx,await (await fetch(s.url||`${SCENE_BASE}audio2/${k}.mp3`)).arrayBuffer(),s.dest?.()===A.window);   // (perf/mem)
+    try{ const buf=await memDecode(ctx,await (await fetch(s.url||`${AUDIO_BASE}${k}.mp3`)).arrayBuffer(),s.dest?.()===A.window);   // (perf/mem)
       A.stems[k]=buf;
       if(s.fx){ A.fx[k]=buf; return; }
       if(!s.oneShot){ const n=ctx.createBufferSource(); n.buffer=buf; n.loop=true; const g=ctx.createGain(); g.gain.value=0;
@@ -2437,7 +2438,7 @@ function musicBus(){
     A.progTap=ctx.createAnalyser(); A.progTap.fftSize=1024; A.tapBuf=new Float32Array(1024); const z=ctx.createGain(); z.gain.value=0;
     A.prog.connect(A.progTap); A.progTap.connect(z).connect(A.master); }   // (kept in the graph, so every browser runs it)
   return A.music; }
-const music=createMusic({level:MUSIC_LEVEL,url:id=>`${SCENE_BASE}audio2/${id}.mp3`,audio:()=>A.ctx?{ctx:A.ctx,bus:musicBus()}:null,
+const music=createMusic({level:MUSIC_LEVEL,url:id=>`${AUDIO_BASE}${id}.mp3`,audio:()=>A.ctx?{ctx:A.ctx,bus:musicBus()}:null,
   tracks:[
     {id:"binh-yen",title:"Bình Yên",loop:[0,195.97]},
     {id:"chuyen-doi-ta",title:"Chuyện Đôi Ta",loop:[0,208.05]},
@@ -2463,22 +2464,19 @@ function musicStart(){ musicBus(); music.start(); }
 // nothing to play). Anthropic's ad can't play without its score, so ▶‖ or a skip while the CD holds for it stops that tape
 // instead, as the VCR's stop button does (play brings it back); the wheel and the LCD leave it be
 function cdClaim(how="play"){
-  if(adHold){ if(how!=="play"&&how!=="skip") return;
-    adHold=false; if(CYC.tv&&cycHere()&&cycNext()){ music.yieldTo(false); return; }   // (the ad's turn: the next tape's, tapecycle)
-    if(state.tapeState==="playing"){ state.tapeState="stopped"; motor(.5); chPause(true); refreshWork(); drawVFD(); }
-    music.yieldTo(false); return; }
-  if(how!=="play"&&music.mode!=="play") return;
-  if(!filmMusic||!homeOnTV()) return;
-  filmMusic=false; filmMusT=-1e9; cdTook=true; try{ homeInst?.setMusic?.(false); }catch(e){}
-  music.yieldTo(false,.12); }
-// ■ on the CD player after it took the music: the film has its own back (unless OPTIONS switched it off), and the CD holds for
-// it from now on, so a ▶‖ right after takes it again rather than the film's music coming in over the CD's song
-function cdGive(){ if(!cdTook) return; cdTook=false; filmMusic=OPT.tv_music!=="off"; if(!filmMusic) return;
-  filmMusT=performance.now(); if(homeOnTV()) music.yieldTo(true); try{ homeInst?.setMusic?.(true); }catch(e){} }
-let adMusT=-1e9, adHold=false;   // Anthropic's ad: when its score last sounded, and whether the CD player holds for it
-const FILM_WAIT=12000;   // how long the CD player waits for the home film's music to come in (it loads once the film is on)
-let cd=null, cdLeft=false;   // the player itself, once the room is in (createCDPlayer); cdLeft: the next flight starts at it
+  cdTook=true;
+  music.yieldTo(false,.05);
+  if(!A.on) setSound(true);
+  if(A.ctx&&A.ctx.state!=="running") A.ctx.resume().catch(()=>{});
+  if(A.musicDuck&&A.ctx) A.musicDuck.gain.setTargetAtTime(1, A.ctx.currentTime, 0.05);
+  if(A.music&&A.ctx) A.music.gain.setTargetAtTime(MUSIC_LEVEL*music.gain(), A.ctx.currentTime, 0.05);
+}
+function cdGive(){ cdTook=false; }
+let adMusT=-1e9, adHold=false;
+const FILM_WAIT=12000;
+let cd=null, cdLeft=false;
 function musicDuck(now){
+  if(cdTook) return;
   // the TV's home film playing its own music (Felix, 22:56Z: "while the tv music is playing we should not play the discman
   // song"): the CD player holds, and comes back in where it was once the film's music ends (its instance says: music). It
   // holds through a pause (a hidden tab) or a stall shorter than .8 s, and ahead of the film's music: from the visit's first

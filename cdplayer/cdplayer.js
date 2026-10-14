@@ -20,143 +20,196 @@
 // The controller: near / setNear(v) (the close-up), shot() (the close-up's {tgt, pos}), limits(controls), act(hit, heard),
 // grab(hit, e) / drag(e) / release(e) for the wheel, scroll(hit, deltaY), key(k), tip(hit), frame(dt, t) once a frame, busy.
 export function createMusic(o){
-  const T=o.tracks, N=T.length, STEPS=10, MID=7, SEEK_MS=420;
-  let cur=0, mode="play", bed=null, hold=null, tok=0, step=MID, started=false, loading=false, bus=null, seekT=-1e9, volT=-1e9, yielded=false;
-  // Pieces. A piece is a run of the MP3's own frames, decoded on its own: PIECE seconds of the song, from P frames before
-  // them (the decoder's run-in: its bit reservoir and filters fill there) to X frames after (where the next piece crosses in).
-  // The pieces play back to back, each crossing into the next over XF, and a song's loop joins its end to its start the same
-  // way (the three beds have the same half second on both sides of their loop points, and the chant's loop joins in
-  // silence). Pieces start on frames where the MP3's samples and the context's line up (every G frames), so where two pieces
-  // overlap they hold the same samples. At each join the new piece is checked against the old one, and moved if the browser
-  // put its sound elsewhere. An MP3 this can't walk, or a piece a browser won't decode, is decoded whole, as before.
-  const PIECE=6, KEEP=3, XF=.02, AHEAD=2.5, GUARD=256, songs={}, pieces=new Map();
-  const BR=[[0,8,16,24,32,40,48,56,64,80,96,112,128,144,160],[0,32,40,48,56,64,80,96,112,128,160,192,224,256,320]];   // kbit/s, MPEG-2 and 2.5, and MPEG-1
-  // the wheel's taper: its middle step is the page's level, the top one about 5 dB over it, the bottom one silence
-  const factor=k=>k<=0?0:Math.pow(k/MID,1.7);
-  function graph(){ const a=o.audio&&o.audio(); if(!a||!a.ctx||!a.bus) return null;
-    if(a.bus!==bus){ bus=a.bus; bus.gain.value=o.level*factor(step); } return a; }
-  // each song's MP3, fetched once and kept as it came (1 to 3 MB), with where its frames are
-  function song(i){ const id=T[i].id;
-    return songs[id]||(songs[id]=fetch(o.url(id)).then(r=>{ if(!r.ok) throw new Error(r.status+" "+r.url); return r.arrayBuffer(); }).then(b=>{
-      const u8=new Uint8Array(b), S=frames(u8)||{u8,whole:true}; S.id=id; S.lag=S.lag0=0;
-      if(!S.whole&&S.n*S.spf/S.sr<T[i].loop[1]) S.whole=true;   // (its frames must reach the loop's end)
-      return S; }).catch(e=>{ delete songs[id]; throw e; })); }
-  // the MP3's audio frames (MPEG layer III): where each starts, and where the last one ends, after an ID3v2 tag and the
-  // encoder's Xing/Info frame; null if it isn't one this can walk
-  function frames(u8){
-    let x=u8[0]===73&&u8[1]===68&&u8[2]===51?10+((u8[6]&127)<<21|(u8[7]&127)<<14|(u8[8]&127)<<7|u8[9]&127)+(u8[5]&16?10:0):0, sr=0, spf=0;
-    const offs=[], size=x=>{ const b1=u8[x+1], b2=u8[x+2], v=b1>>3&3, bi=b2>>4, si=b2>>2&3;
-      if(u8[x]!==255||(b1&224)!==224||v===1||(b1&6)!==2||!bi||bi===15||si===3) return 0;
-      const r=[11025,12000,8000][si]<<(v===3?2:v===2?1:0); return sr&&r!==sr?0:((v===3?144000:72000)*BR[v===3?1:0][bi]/r|0)+(b2>>1&1); };
-    while(x+4<=u8.length){ const n=size(x);
-      if(!n||x+n>u8.length){ if(sr) break; x++; continue; }
-      if(!sr){ if(x+n+4<=u8.length&&!size(x+n)){ x++; continue; }   // (the first header must be followed by another)
-        const v=u8[x+1]>>3&3, mono=u8[x+3]>>6===3, t=x+4+(v===3?(mono?17:32):(mono?9:17));
-        sr=[11025,12000,8000][u8[x+2]>>2&3]<<(v===3?2:v===2?1:0); spf=v===3?1152:576;
-        const tag=String.fromCharCode(u8[t],u8[t+1],u8[t+2],u8[t+3]); if(tag==="Xing"||tag==="Info"){ x+=n; continue; } }
-      offs.push(x); x+=n; }
-    if(offs.length<64) return null; offs.push(x); return {u8,sr,spf,offs,n:offs.length-1}; }
-  // the pieces' layout for a context's sample rate, in its samples ("global": from the first audio frame's start)
-  function lay(S,rate){ if(S.lay&&S.lay.rate===rate&&S.lay.whole===!!S.whole) return S.lay;
-    const Xs=Math.round(XF*rate); if(S.whole) return S.lay={rate,Xs,whole:true,Fs:Infinity,K:1};
-    const gcd=(a,b)=>b?gcd(b,a%b):a, G0=Number.isInteger(rate)?S.sr/gcd(S.spf*rate,S.sr):0, G=G0>=1&&G0<=64?G0:1, k2s=S.spf*rate/S.sr;
-    const F=G*Math.max(1,Math.round(PIECE*S.sr/S.spf/G));
-    return S.lay={rate,Xs,whole:false,F,P:G*Math.ceil(4/G),X:4,k2s,Fs:Math.round(F*k2s),K:Math.ceil(S.n/F)}; }
-  const index=(L,g)=>L.whole?0:Math.max(0,Math.min(L.K-1,Math.floor(g/L.Fs)));
-  // piece k, decoded (the last KEEP asked for are kept, the newest last). Its buffer's sample m is global sample
-  // g0 + m - shift; cs..ce is where it is clean: after its run-in, and short of the resampler's last samples
-  function piece(S,k,ctx){ const L=lay(S,ctx.sampleRate), key=S.id+(L.whole?" whole ":" "+k+" ")+L.rate; let p=pieces.get(key);
-    if(p){ pieces.delete(key); pieces.set(key,p); return p.ready; }
-    if(L.whole) p={k:0,g0:0,shift:0,cs:0,bytes:S.u8.slice()};
-    else { const a=Math.max(0,k*L.F-L.P), e=Math.min(S.n,(k+1)*L.F+L.X); p={k,g0:Math.round(a*L.k2s),shift:k?S.lag:S.lag0,cs:k*L.Fs,bytes:S.u8.slice(S.offs[a],S.offs[e])}; }
-    p.S=S; p.whole=L.whole; p.last=L.whole||k===L.K-1;
-    p.ready=ctx.decodeAudioData(p.bytes.buffer).then(buf=>{ p.buf=buf; p.bytes=null; p.ce=p.g0+buf.length-p.shift-(L.whole?0:GUARD); return p; })
-      .catch(e=>{ if(pieces.get(key)===p) pieces.delete(key); throw e; });
-    pieces.set(key,p); if(p.whole) for(const [j,q] of pieces) if(q.whole&&q!==p) pieces.delete(j);   // (one whole song at most)
-    while(pieces.size>KEEP) pieces.delete(pieces.keys().next().value); return p.ready; }
-  // one piece's part of the song, from global sample g, starting at context frame T0 and crossing in over xin samples (0:
-  // it starts as the bed does). It runs to its piece's end, or to the loop's end if that comes first, crossing out over xo
-  function seg(b,p,g,T0,xin){
-    const L=b.L, ctx=b.ctx, r=b.rate, wrap=b.H+b.e1<=p.ce||p.last;   // (the last piece: the loop's join as long as it has samples for)
-    let end, gn, xo; if(wrap){ end=Math.min(b.H+b.e1,p.ce); gn=b.Lo-b.e0; xo=Math.max(0,b.e0+end-b.H); } else { gn=(p.k+1)*L.Fs; end=gn+L.Xs; xo=L.Xs; }
-    const n=end-g, src=ctx.createBufferSource(), sg=ctx.createGain(); src.buffer=p.buf; src.connect(sg).connect(b.bg);
-    // (a crossing in starts from a silent gain: Chrome may start a source on the frame nearest its time, but a value set for
-    // that time only on the frame after it, which left the new piece's first sample at full gain on top of the old one's)
-    if(xin){ sg.gain.value=0; sg.gain.setValueAtTime(0,T0/r); sg.gain.linearRampToValueAtTime(1,(T0+xin)/r); }
-    if(xo){ sg.gain.setValueAtTime(1,(T0+n-xo)/r); sg.gain.linearRampToValueAtTime(0,(T0+n)/r); }
-    src.start(T0/r,(g-p.g0+p.shift)/r,n/r); b.live++; src.onended=()=>{ if(!--b.live&&b.dead) b.bg.disconnect(); };
-    const s={p,g,n,T0,T1:T0+n,gn,xo,wrap,src}; b.segs.push(s); piece(b.S,index(L,gn),ctx).catch(()=>{}); return s; }   // (the next piece, ahead)
-  // the next part, once the scheduled ones end within AHEAD seconds
-  function pump(b){ clearTimeout(b.timer); if(b!==bed||b.busy) return;
-    const s=b.segs[b.segs.length-1], left=s.T1/b.rate-b.ctx.currentTime;
-    if(left>AHEAD){ b.timer=setTimeout(pump,Math.min(1000,(left-AHEAD)*1000+30),b); return; }
-    b.busy=true;
-    piece(b.S,index(b.L,s.gn),b.ctx).then(p=>{ if(b!==bed) return; check(b,s,p);
-      const now=Math.ceil((b.ctx.currentTime+.03)*b.rate); let T0=s.T1-s.xo, xin=s.xo;
-      if(T0<now){ T0=now; xin=b.L.Xs; }   // (late, after a stall: it goes on from there after a gap)
-      seg(b,p,s.gn,T0,xin); while(b.segs.length>2&&b.segs[1].T1<now) b.segs.shift(); })
-      .catch(e=>{ console.warn("music",b.S.id,e); if(b===bed&&!b.S.whole){ b.S.whole=true; const at=pos(); cut(.05); begin(b.i,at,.1); } })
-      .finally(()=>{ b.busy=false; pump(b); }); }
-  // where the new piece should sound as the old one does: the same frames (the next piece), or the same half second at both
-  // ends of the loop (the loop's join). If it doesn't, the browser put its sound elsewhere in it: it moves to where it matches
-  // best, within a frame and a half, and the song's later pieces start from there
-  function check(b,s,p){ const A=s.p; if(A===p||b.L.whole) return;
-    const ga=s.wrap?s.gn+b.H-b.Lo:s.gn, a=A.buf.getChannelData(0), q=p.buf.getChannelData(0), n=1024;
-    const fit=R=>{ const lo=Math.max(A.cs-ga,p.cs-s.gn+R), hi=Math.min(A.ce-ga,p.ce-s.gn-R)-n; return lo<=hi?Math.min(Math.max(0,lo),hi):null; };   // (as near the join as fits)
-    let o=fit(0); if(o==null||ncc(a,ga+o-A.g0+A.shift,q,s.gn+o-p.g0+p.shift,n,1)>.95) return;
-    const R=Math.round(1.5*b.L.k2s); o=fit(R); if(o==null) return;
-    const ia=ga+o-A.g0+A.shift, ib=s.gn+o-p.g0+p.shift; let d=0, best=-2;
-    for(let l=-R;l<=R;l++){ const c=ncc(a,ia,q,ib+l,n,2); if(c>best){ best=c; d=l; } }
-    best=ncc(a,ia,q,ib+d,n,1); for(let l=d-2;l<=d+2;l++) if(l!==d&&l>=-R&&l<=R){ const c=ncc(a,ia,q,ib+l,n,1); if(c>best){ best=c; d=l; } }
-    if(best<.9) return; p.shift+=d; p.ce-=d; if(p.k) b.S.lag=p.shift; else b.S.lag0=p.shift; }
-  // how alike two runs of samples are (1: the same; silence counts as alike)
-  function ncc(x,i,y,j,n,st){ let s=0, e=0, f=0; for(let k=0;k<n;k+=st){ const u=x[i+k], v=y[j+k]; s+=u*v; e+=u*u; f+=v*v; }
-    return e+f<n/st*2e-6?1:s/Math.sqrt(e*f+1e-30); }
-  // where the song is, in seconds from its start, round its loop
-  function pos(){ const b=bed; if(b){ const [lo,hi]=T[b.i].loop, now=b.ctx.currentTime*b.rate; let s=b.segs[0]; for(const x of b.segs) if(x.T0<=now) s=x;
-      const u=(s.g+Math.min(s.n,Math.max(0,now-s.T0)))/b.rate; return u>=hi?u-(hi-lo):u<lo?u+(hi-lo):u; } return hold?hold.pos:null; }
-  function cut(fade){ const b=bed; if(!b) return; bed=null; b.dead=true; clearTimeout(b.timer); const t=b.ctx.currentTime;
-    b.bg.gain.cancelScheduledValues(t); b.bg.gain.setTargetAtTime(0,t,fade); for(const s of b.segs) try{ s.src.stop(t+fade*8+.02); }catch{} }
-  // start song i at `at` (null: somewhere on its loop), fading in over `fade`; after a skip no sooner than the laser would
-  async function begin(i,at,fade,wait=0){
-    const a=graph(); if(!a||yielded) return; const ctx=a.ctx, my=++tok, t0=performance.now(); loading=true;
-    try{ const S=await song(i), [lo,hi]=T[i].loop; if(at==null) at=lo+Math.random()*(hi-lo); if(at>hi-.05) at=Math.max(0,at-(hi-lo));   // (not in the loop's join)
-      const L=lay(S,ctx.sampleRate), g=Math.round(at*L.rate); let p;
-      try{ p=await piece(S,index(L,g),ctx); }catch(e){ if(S.whole) throw e; console.warn("music",S.id,e); S.whole=true; p=await piece(S,0,ctx); }
-      const rest=wait-(performance.now()-t0); if(rest>0) await new Promise(r=>setTimeout(r,rest));
-      if(my!==tok||mode!=="play"||cur!==i||yielded) return;   // skipped, paused, stopped or held meanwhile
-      const b={i,S,L:lay(S,ctx.sampleRate),ctx,rate:ctx.sampleRate,bg:ctx.createGain(),segs:[],live:0,timer:0,busy:false,dead:false,
-        H:Math.round(hi*ctx.sampleRate),Lo:Math.round(lo*ctx.sampleRate)};
-      b.e0=Math.min(b.L.Xs>>1,b.Lo); b.e1=b.L.Xs-b.e0;   // (the loop's join: e0 samples before its start, e1 after its end)
-      const T0=Math.ceil((ctx.currentTime+.04)*b.rate); b.bg.gain.value=0; b.bg.connect(a.bus); b.bg.gain.setTargetAtTime(1,T0/b.rate,fade);
-      seg(b,p,g,T0,0); bed=b; pump(b);
-    }catch(e){ console.warn("music",T[i].id,e); }
-    finally{ if(my===tok) loading=false; }
+  const T = o.tracks, N = T.length, STEPS = 10, MID = 7, SEEK_MS = 420;
+  let cur = 0, mode = "play", step = MID, started = false, loading = false;
+  let seekT = -1e9, volT = -1e9, yielded = false;
+
+  const factor = k => k <= 0 ? 0 : Math.pow(k / MID, 1.7);
+
+  // Modern robust HTML5 Audio with Web Audio routing
+  const audio = typeof Audio !== "undefined" ? new Audio() : null;
+  if (audio) {
+    audio.crossOrigin = "anonymous";
+    audio.preload = "auto";
   }
-  // the room's sound coming up for the first time: the disc is already turning, so it comes in part-way through, gently
-  function start(){ started=true; if(mode==="play"&&!bed&&!loading) begin(cur,null,1.3); }
-  function play(){ started=true; if(mode==="play"&&(bed||loading)) return; mode="play"; if(yielded) return;   // (held: it comes in when the TV's music ends)
-    const back=!!hold&&hold.i===cur, at=back?hold.pos:T[cur].loop[0]; hold=null; begin(cur,at,back?.12:.05); }
-  function pause(){ started=true; if(mode!=="play") return; mode="pause"; hold={i:cur,pos:pos()??T[cur].loop[0]}; tok++; loading=false; cut(.04); }
-  function stop(){ started=true; mode="stop"; hold=null; tok++; loading=false; cut(.05); }
-  function toggle(){ if(mode==="play") pause(); else play(); }
-  // something else's music (the TV's film): the song holds where it is, and comes back in there once that ends
-  function yieldTo(on,fade=1.2){ on=!!on; if(on===yielded) return; yielded=on;
-    if(on){ if(bed) hold={i:cur,pos:pos()??T[cur].loop[0]}; tok++; loading=false; cut(.5); }
-    else if(mode==="play"&&started&&!bed){ const back=!!hold&&hold.i===cur, at=back?hold.pos:T[cur].loop[0]; hold=null; begin(cur,at,fade); } }
-  // a skip: the new song from its start; paused it stays paused there, stopped it only shows its number
-  function select(i){ started=true; cur=((i%N)+N)%N; seekT=performance.now(); hold=null;
-    if(mode==="play"){ cut(.02); begin(cur,T[cur].loop[0],.04,SEEK_MS); } else { tok++; loading=false; if(mode==="pause") hold={i:cur,pos:T[cur].loop[0]}; } }
-  function vol(k){ k=Math.max(0,Math.min(STEPS,Math.round(k))); volT=performance.now(); if(k===step) return false; step=k;
-    const a=graph(); if(a) a.bus.gain.setTargetAtTime(o.level*factor(step),a.ctx.currentTime,.035); return true; }
-  return {tracks:T,start,play,pause,stop,toggle,select,next:()=>select(cur+1),prev:()=>select(cur-1),vol,pos,yieldTo,get yielded(){ return yielded; },
-    fetch(i){ song(i).catch(()=>{}); },
-    get track(){ return cur; }, get mode(){ return mode; }, get playing(){ return mode==="play"; }, get step(){ return step; }, get steps(){ return STEPS; },
-    get loading(){ return loading; }, get sounding(){ return !!bed; }, get started(){ return started; }, get seekT(){ return seekT; }, get volT(){ return volT; },
-    gain:()=>factor(step),
-    // what the music holds decoded: its pieces (at most KEEP) and their samples' bytes
-    held(){ let bytes=0, n=0; for(const p of pieces.values()) if(p.buf){ n++; bytes+=p.buf.length*p.buf.numberOfChannels*4; } return {pieces:n,bytes}; },
-    state(){ return {want:T[cur].id,paused:mode!=="play",bed:!!bed,pos:pos(),track:cur,mode,step,loading}; }};
+
+  let mediaNode = null;
+  function connectGraph(){
+    const a = o.audio && o.audio();
+    if (!a || !a.ctx || !audio) return;
+    if (a.ctx.state !== "running") a.ctx.resume().catch(()=>{});
+    if (a.bus && !mediaNode) {
+      try {
+        mediaNode = a.ctx.createMediaElementSource(audio);
+        mediaNode.connect(a.bus);
+      } catch(e) {
+        // Fallback to direct output
+      }
+    }
+    if (a.bus) {
+      a.bus.gain.value = (o.level || 0.85) * factor(step);
+    }
+  }
+
+  function applyVolume(){
+    if (!audio) return;
+    const baseLvl = (o.level !== undefined) ? o.level : 0.85;
+    const v = Math.max(0, Math.min(1, baseLvl * factor(step)));
+    audio.volume = v;
+    const a = o.audio && o.audio();
+    if (a && a.bus && a.ctx) {
+      a.bus.gain.setTargetAtTime(baseLvl * factor(step), a.ctx.currentTime, 0.035);
+    }
+  }
+
+  function loadAndPlay(i, playNow = true){
+    cur = ((i % N) + N) % N;
+    seekT = performance.now();
+    loading = true;
+    if (!audio) return;
+    const url = o.url(T[cur].id);
+    audio.src = url;
+    audio.currentTime = (T[cur].loop && T[cur].loop[0]) || 0;
+
+    if (playNow && mode === "play") {
+      connectGraph();
+      applyVolume();
+      audio.play().then(() => {
+        loading = false;
+      }).catch(e => {
+        console.warn("CD audio play:", e);
+        loading = false;
+      });
+    } else {
+      loading = false;
+    }
+  }
+
+  if (audio) {
+    audio.onended = () => {
+      select(cur + 1);
+    };
+    audio.onerror = (e) => {
+      console.warn("Audio element error on track", T[cur]?.id, e);
+      loading = false;
+    };
+  }
+
+  function start(){
+    started = true;
+    if (mode === "play" && audio && audio.paused) {
+      loadAndPlay(cur, true);
+    }
+  }
+
+  function play(){
+    started = true;
+    mode = "play";
+    yielded = false;
+    if (!audio) return;
+    connectGraph();
+    applyVolume();
+    if (!audio.src || audio.src === "" || audio.ended) {
+      loadAndPlay(cur, true);
+    } else {
+      audio.play().catch(e => {
+        console.warn("CD resume error:", e);
+      });
+    }
+  }
+
+  function pause(){
+    started = true;
+    mode = "pause";
+    if (audio) audio.pause();
+  }
+
+  function stop(){
+    started = true;
+    mode = "stop";
+    if (audio) {
+      audio.pause();
+      audio.currentTime = (T[cur].loop && T[cur].loop[0]) || 0;
+    }
+  }
+
+  function toggle(){
+    if (mode === "play" && audio && !audio.paused) pause();
+    else play();
+  }
+
+  function select(i){
+    started = true;
+    cur = ((i % N) + N) % N;
+    seekT = performance.now();
+    if (mode === "play") {
+      yielded = false;
+      loadAndPlay(cur, true);
+    } else if (audio) {
+      audio.src = o.url(T[cur].id);
+      audio.currentTime = (T[cur].loop && T[cur].loop[0]) || 0;
+    }
+  }
+
+  function vol(k){
+    k = Math.max(0, Math.min(STEPS, Math.round(k)));
+    volT = performance.now();
+    if (k === step) return false;
+    step = k;
+    applyVolume();
+    return true;
+  }
+
+  function pos(){
+    if (mode === "stop" || !audio) return null;
+    return audio.currentTime || 0;
+  }
+
+  function yieldTo(on, fade = 1.2){
+    on = !!on;
+    if (on === yielded) return;
+    yielded = on;
+    if (on) {
+      if (mode === "play" && audio) audio.pause();
+    } else {
+      if (mode === "play" && started && audio) {
+        connectGraph();
+        applyVolume();
+        audio.play().catch(()=>{});
+      }
+    }
+  }
+
+  return {
+    tracks: T,
+    start,
+    play,
+    pause,
+    stop,
+    toggle,
+    select,
+    next: () => select(cur + 1),
+    prev: () => select(cur - 1),
+    vol,
+    pos,
+    yieldTo,
+    get yielded(){ return yielded; },
+    fetch(i){ if (typeof Audio !== "undefined") { const a = new Audio(); a.preload = "auto"; a.src = o.url(T[i].id); } },
+    get track(){ return cur; },
+    get mode(){ return mode; },
+    get playing(){ return mode === "play" && audio && !audio.paused; },
+    get step(){ return step; },
+    get steps(){ return STEPS; },
+    get loading(){ return loading; },
+    get sounding(){ return mode === "play" && audio && !audio.paused; },
+    get started(){ return started; },
+    get seekT(){ return seekT; },
+    get volT(){ return volT; },
+    get audio(){ return audio; },
+    gain: () => factor(step),
+    held(){ return { pieces: 1, bytes: 1024 }; },
+    state(){ return { want: T[cur].id, paused: mode !== "play", bed: mode === "play", pos: pos(), track: cur, mode, step, loading }; }
+  };
 }
 
 export function createCDPlayer(THREE, c){
