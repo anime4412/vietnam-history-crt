@@ -39,11 +39,6 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Prevent stale caching on all static assets
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-
   let reqUrl = req.url.split('?')[0];
   let filePath = path.join(__dirname, reqUrl === '/' ? 'index.html' : decodeURIComponent(reqUrl));
 
@@ -63,12 +58,22 @@ const server = http.createServer((req, res) => {
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
+  const isMedia = ['.mp3', '.mp4', '.webm', '.ogg', '.wav', '.glb', '.gltf', '.png', '.jpg', '.jpeg', '.webp', '.woff2'].includes(ext);
+  if (isMedia) {
+    res.setHeader('Cache-Control', 'public, max-age=604800, stale-while-revalidate=86400');
+  } else {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+
   // Support range requests for video/audio
   const range = req.headers.range;
   if (range) {
     const parts = range.replace(/bytes=/, '').split('-');
     const start = parseInt(parts[0], 10);
-    const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+    const maxChunk = 1024 * 1024; // 1MB chunk for instant playback start
+    const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + maxChunk - 1, stat.size - 1);
     const chunksize = (end - start) + 1;
     const file = fs.createReadStream(filePath, { start, end });
     res.writeHead(206, {

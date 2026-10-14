@@ -29,7 +29,6 @@ export function createMusic(o){
   // Modern robust HTML5 Audio with Web Audio routing
   const audio = typeof Audio !== "undefined" ? new Audio() : null;
   if (audio) {
-    audio.crossOrigin = "anonymous";
     audio.preload = "auto";
   }
 
@@ -69,7 +68,10 @@ export function createMusic(o){
     if (!audio) return;
     const url = o.url(T[cur].id);
     audio.src = url;
-    audio.currentTime = (T[cur].loop && T[cur].loop[0]) || 0;
+    const startSec = (T[cur].loop && T[cur].loop[0]) || 0;
+    if (startSec > 0) {
+      audio.currentTime = startSec;
+    }
 
     if (playNow && mode === "play") {
       connectGraph();
