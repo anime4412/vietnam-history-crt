@@ -303,7 +303,10 @@ export function createCDPlayer(THREE, c){
       const s = clean.slice(nameOff(now)).padEnd(10).slice(0,10);
       for(let i=0;i<10;i++) cell(s[i],26+i*66,58,54,130,11,true);
     }
-      for(let i=0;i<10;i++){ const h=36+i*10.4, x=248+i*44; skewY0=188; poly([[x,188-h],[x+32,188-h],[x+32,188],[x,188]],i<M.step?ON:GHOST); } }
+    else if(sc==="vol"){
+      for(let i=0;i<3;i++) cell("VOL"[i],26+i*66,58,54,130,11,true);
+      for(let i=0;i<10;i++){ const h=36+i*10.4, x=248+i*44; skewY0=188; poly([[x,188-h],[x+32,188-h],[x+32,188],[x,188]],i<M.step?ON:GHOST); }
+    }
     else {
       const n=String(M.track+1).padStart(2,"0"); cell(n[0],26,58,74,130,15,false); cell(n[1],114,58,74,130,15,false);
       const secs=M.mode==="stop"||t==null?0:t-tr.loop[0], [m,ss]=mmss(secs), hide=held()&&(now%1000)>620, dash=M.loading&&playing;
