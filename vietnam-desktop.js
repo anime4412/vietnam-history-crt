@@ -2438,8 +2438,21 @@ function musicBus(){
     A.prog.connect(A.progTap); A.progTap.connect(z).connect(A.master); }   // (kept in the graph, so every browser runs it)
   return A.music; }
 const music=createMusic({level:MUSIC_LEVEL,url:id=>`${SCENE_BASE}audio2/${id}.mp3`,audio:()=>A.ctx?{ctx:A.ctx,bus:musicBus()}:null,
-  tracks:[{id:"deep-field",title:"Deep Field",loop:[.5,96.5]},{id:"late-shift",title:"Late Shift",loop:[.5,91.928571]},{id:"soft-focus",title:"Soft Focus",loop:[.5,80.5]},
-    {id:"retche-gospod",title:"Retche Gospod Gospodevi moyemu",loop:[0,144.4]}]});
+  tracks:[
+    {id:"binh-yen",title:"Bình Yên",loop:[0,195.97]},
+    {id:"chuyen-doi-ta",title:"Chuyện Đôi Ta",loop:[0,208.05]},
+    {id:"gio-thi",title:"Giờ Thì",loop:[0,234.17]},
+    {id:"id-072019",title:"id 072019",loop:[0,271.70]},
+    {id:"mat-ket-noi",title:"Mất Kết Nối",loop:[0,207.47]},
+    {id:"phep-mau",title:"Phép Màu (Đàn Cá Gỗ)",loop:[0,266.67]},
+    {id:"tam",title:"Tâm",loop:[0,108.24]},
+    {id:"tim-em",title:"Tìm Em",loop:[0,274.59]},
+    {id:"tung-la-cua-nhau",title:"Từng Là Của Nhau",loop:[0,269.47]},
+    {id:"deep-field",title:"Deep Field",loop:[.5,96.5]},
+    {id:"late-shift",title:"Late Shift",loop:[.5,91.928571]},
+    {id:"soft-focus",title:"Soft Focus",loop:[.5,80.5]},
+    {id:"retche-gospod",title:"Retche Gospod Gospodevi moyemu",loop:[0,144.4]}
+  ]});
 function musicStart(){ musicBus(); music.start(); }
 // the CD player used (Felix, 27 Sep 21:32Z: "if the user interacts with the discman, we should mute the home video music and
 // play whatever the discman is playing"): how is "play" (▶‖ that plays), "skip" (◀◀ ▶▶), "turn" (the volume wheel) or "look"

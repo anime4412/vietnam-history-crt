@@ -297,9 +297,12 @@ export function createCDPlayer(THREE, c){
     lg.setTransform(1,0,0,1,0,0); lg.fillStyle=BG; lg.fillRect(0,0,CW,CH);
     // the small print along the top: what the disc is doing, repeat one, the battery
     icon("play",250,16,24,playing&&!M.loading&&!M.yielded); icon("pause",286,16,24,held()); icon("stop",322,17,22,M.mode==="stop");
-    small("TRACK",26,38,22,sc==="time"); small("RPT 1",566,38,22,true); battery(636,17,true);
-    if(sc==="name"){ const s=tr.title.toUpperCase().slice(nameOff(now)).padEnd(10).slice(0,10); for(let i=0;i<10;i++) cell(s[i],26+i*66,58,54,130,11,true); }
-    else if(sc==="vol"){ for(let i=0;i<3;i++) cell("VOL"[i],26+i*66,58,54,130,11,true);
+    if(sc==="name"){
+      const rawTitle = tr.lcdTitle || tr.title;
+      const clean = rawTitle.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/Đ/g, "D").replace(/đ/g, "d").toUpperCase();
+      const s = clean.slice(nameOff(now)).padEnd(10).slice(0,10);
+      for(let i=0;i<10;i++) cell(s[i],26+i*66,58,54,130,11,true);
+    }
       for(let i=0;i<10;i++){ const h=36+i*10.4, x=248+i*44; skewY0=188; poly([[x,188-h],[x+32,188-h],[x+32,188],[x,188]],i<M.step?ON:GHOST); } }
     else {
       const n=String(M.track+1).padStart(2,"0"); cell(n[0],26,58,74,130,15,false); cell(n[1],114,58,74,130,15,false);
