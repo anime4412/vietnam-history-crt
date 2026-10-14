@@ -1,0 +1,31 @@
+# System & Dependency Files
+node_modules/
+.npm/
+.system_generated/
+*.log
+
+# Workspace Subfolders & Old Experiments
+.agents/
+Testing_NhacCuaTui/
+museum-studio-vietnam/
+retro-portfolio/
+vgpu-3d-prism/
+
+# Temporary Diagnostic Scripts
+analyze_*.js
+check_*.js
+dump_*.js
+fetch_*.js
+find_*.js
+inspect_*.js
+list_*.js
+print_*.js
+test_*.js
+trace_*.js
+verify_*.js
+capture_*.js
+copy_videos.js
+optimize_all_videos.js
+
+# Temporary Screenshots
+screenshot_*.png

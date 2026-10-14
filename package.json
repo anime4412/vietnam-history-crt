@@ -1,0 +1,23 @@
+{
+  "name": "vietnam-history-crt-retro",
+  "version": "1.0.0",
+  "description": "3D Retro CRT Museum Studio & Vietnamese Historical Documentaries",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "node build_vietnam_desktop.js"
+  },
+  "keywords": [
+    "threejs",
+    "webgl",
+    "retro",
+    "crt",
+    "vietnam-history",
+    "3d"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

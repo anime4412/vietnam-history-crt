@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: vietnam-history-crt
+    env: node
+    plan: free
+    buildCommand: ""
+    startCommand: node server.js
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20

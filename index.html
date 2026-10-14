@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="vi" data-accent="gold">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lịch Sử Việt Nam · Phòng Chiếu Retro & Bảo Vật Quốc Gia 3D</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=VT323&family=Caveat:wght@600&family=Courier+Prime:wght@400;700&display=swap">
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "/vendor/three/three.module.js",
+      "three/addons/": "/vendor/three/addons/"
+    }
+  }
+  </script>
+
+  <style>
+    html { background: #07080d; }
+    .bm-fallback { color: #efe9dc; font: 18px/1.6 system-ui, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+    .bm-fallback a { color: #ffb867; text-decoration: underline; }
+    .bm-fallback h1 { font-family: "Archivo", sans-serif; font-size: 36px; color: #ffcc00; margin-bottom: 12px; }
+    .bm-fallback h2 { font-size: 24px; color: #ff9966; margin-top: 28px; }
+  </style>
+  <noscript><style>.bm-fallback{display:block!important}</style></noscript>
+
+  <meta name="description" content="Phòng chiếu phim tài liệu lịch sử Việt Nam retro trên tivi CRT cổ điển. Mỗi cuộn phim là một trang sử hào hùng của dân tộc và xem bảo vật quốc gia 3D tương tác.">
+</head>
+<body class="home-template">
+
+<div id="bm-root" data-assets="https://c96b3c59.berlin-monitor-scene.pages.dev"></div>
+
+<nav class="bm-fallback" aria-label="Lịch sử Việt Nam" style="display:none">
+  <h1>LỊCH SỬ VIỆT NAM · PHÒNG CHIẾU RETRO</h1>
+  <p>Chào mừng bạn đến với không gian trải nghiệm lịch sử Việt Nam trên màn hình CRT và đầu băng từ VCR cổ điển. Mỗi cuộn phim trên bàn làm việc là một mốc son hào hùng: Hùng Vương dựng nước, Ngô Quyền cọc nhọn Bạch Đằng, Hào khí Đông A ba lần thắng Nguyên Mông, Bình Ngô đại cáo, Quang Trung đại phá quân Thanh, Bác Hồ đọc Tuyên ngôn Độc lập, và đại thắng mùa xuân 1975.</p>
+  <p><a href="#work">Xem các cuộn phim lịch sử</a> · <a href="#relics">Xem Cổ vật Bảo vật Quốc gia 3D</a> · <a href="#posts">Tra cứu sử liệu</a></p>
+</nav>
+
+<template id="bm-desktop">
+  <div id="still" aria-hidden="true"><div class="tv-spill"><i></i></div></div>
+  <div id="osd" aria-hidden="true">
+    <div class="tv-scr">
+      <div class="tv-pic">
+        <div class="tv-lb">▶▶ LOADING</div>
+        <div class="tv-ch">CH 00</div>
+        <div class="tv-mid">
+          <div class="tv-cta">BẤM ĐỂ VÀO PHÒNG CHIẾU</div>
+          <div class="tv-meter"><span class="bar"><i></i></span><span class="pc">0%</span></div>
+          <div class="tv-mute">VÀO PHÒNG (TẮT TIẾNG)</div>
+        </div>
+      </div>
+      <div class="tv-noise"></div>
+      <div class="tv-glass"></div>
+    </div>
+  </div>
+
+  <button id="enter" hidden aria-label="Bước vào phòng chiếu"></button>
+  <button id="enter-muted" hidden>Vào phòng chiếu tắt tiếng</button>
+
+  <canvas id="gl" aria-label="Phòng chiếu phim tài liệu lịch sử Việt Nam với tivi CRT, đầu băng VCR, máy tính cổ điển và cửa sổ mưa đêm."></canvas>
+
+  <div class="hud top">
+    <button class="name" id="home-link">LỊCH SỬ VIỆT NAM · PHÒNG CHIẾU RETRO</button>
+    <nav class="menu" aria-label="Điều hướng">
+      <a href="#about" data-page="about">GIỚI THIỆU</a>
+      <a href="#work" data-page="work">CUỘN PHIM</a>
+      <a href="#relics" data-page="relics">CỔ VẬT 3D</a>
+      <a href="#posts" data-page="posts">SỬ LIỆU</a>
+      <a href="#online" data-page="online">BẢN ĐỒ CHIẾN DỊCH</a>
+    </nav>
+  </div>
+
+  <h1 class="sr">Lịch Sử Việt Nam · Phòng Chiếu Retro</h1>
+  <p class="sr">Trải nghiệm các thước phim tư liệu lịch sử Việt Nam và chiêm ngưỡng bảo vật quốc gia 3D trên tivi CRT cổ điển.</p>
+
+  <section class="hud panel" id="panel" hidden aria-labelledby="p-title">
+    <header>
+      <div>
+        <div class="ch" id="p-ch">CH 01</div>
+        <h2 id="p-title">Giới thiệu</h2>
+      </div>
+      <div class="hbtns">
+        <button class="close" id="p-hide" aria-label="Ẩn thẻ ghi chú" hidden>ẨN</button>
+        <button class="close" id="p-close" aria-label="Trở về trang chủ">TRANG CHỦ</button>
+      </div>
+    </header>
+    <div class="body" id="p-body"></div>
+  </section>
+
+  <div class="hud ctl">
+    <div class="hint" id="hint">C máy tính cổ · M nghe đài · Z zoom TV · 1–6 nút TV · Cuộn phim trên bàn</div>
+    <div class="btns">
+      <button class="sound" id="cardon" aria-label="Hiện sổ tay" hidden>XEM THẺ · N</button>
+      <button class="sound" id="unzoom">TRỞ VỀ BÀN · ESC</button>
+      <button class="sound" id="btn-relics">CỔ VẬT 3D</button>
+      <button class="sound" id="credits">THÔNG TIN</button>
+      <button class="sound" id="sound" aria-pressed="false">ÂM THANH: TẮT</button>
+    </div>
+  </div>
+
+  <div id="tip" hidden></div>
+  <a id="plink" hidden target="_blank" rel="noopener"></a>
+  <div id="err" hidden></div>
+  <div id="live" class="sr" aria-live="polite"></div>
+  <div id="pc-sr" class="sr" aria-live="polite"></div>
+</template>
+
+<ol id="bm-posts" class="bm-fallback" style="display:none">
+  <li><a href="#work" data-date="Thế kỷ VII TCN">01. Khởi nguyên Văn Lang và đỉnh cao nghệ thuật đúc đồng Đông Sơn</a></li>
+  <li><a href="#work" data-date="Năm 938">02. Trận cọc nhọn Bạch Đằng Giang của Ngô Quyền rửa sạch nghìn năm Bắc thuộc</a></li>
+  <li><a href="#work" data-date="Năm 1077">03. Bản Tuyên ngôn Độc lập đầu tiên 'Nam Quốc Sơn Hà' trên phòng tuyến Như Nguyệt</a></li>
+  <li><a href="#work" data-date="1258–1288">04. Hào khí Đông A: Quân dân nhà Trần 3 lần đại thắng đế quốc Nguyên Mông</a></li>
+  <li><a href="#work" data-date="1418–1428">05. Khởi nghĩa Lam Sơn và áng thiên cổ hùng văn Bình Ngô Đại Cáo</a></li>
+  <li><a href="#work" data-date="Tết 1789">06. Hoàng đế Quang Trung hành quân thần tốc đại phá 29 vạn quân Mãn Thanh</a></li>
+  <li><a href="#work" data-date="02/09/1945">07. Chủ tịch Hồ Chí Minh đọc Tuyên ngôn Độc lập tại Quảng trường Ba Đình lịch sử</a></li>
+  <li><a href="#work" data-date="07/05/1954">08. Chiến thắng Điện Biên Phủ 'Lừng lẫy năm châu, chấn động địa cầu'</a></li>
+  <li><a href="#work" data-date="30/04/1975">09. Đại thắng mùa Xuân 1975: Xe tăng 390 húc tung cổng Dinh Độc Lập</a></li>
+  <li><a href="#relics" data-date="1835–1837">10. Đúc Cửu Đỉnh tại Hoàng thành Huế: Tượng trưng chủ quyền biển đảo non sông</a></li>
+  <li><a href="#relics" data-date="Năm 1823">11. Kim ấn truyền quốc 'Hoàng đế chi bảo' triều Nguyễn nặng 10,78kg vàng ròng</a></li>
+  <li><a href="#relics" data-date="TK III TCN">12. Phát hiện Trống đồng Ngọc Lũ: Tuyệt tác văn minh sông Hồng</a></li>
+  <li><a href="#relics" data-date="TK XI SCN">13. Điêu khắc tượng Rồng uốn lượn thời Lý tại Hoàng thành Thăng Long</a></li>
+  <li><a href="#online" data-date="Hiện tại">14. Khẳng định chủ quyền bất khả xâm phạm trên hai quần đảo Hoàng Sa và Trường Sa</a></li>
+  <li><a href="#online" data-date="2026">15. Bảo tồn và số hóa 3D di sản văn hóa dân tộc Việt Nam</a></li>
+</ol>
+
+<template id="bm-about">
+  <h2>PHÒNG CHIẾU TƯ LIỆU LỊCH SỬ VIỆT NAM</h2>
+  <p>Chào mừng bạn đến với <strong>Phòng Chiếu Phim Tài Liệu Lịch Sử Việt Nam</strong>. Đây là không gian phục dựng tương tác cổ điển, kết hợp thẩm mỹ retro cuối thập niên 90 với kho tàng lịch sử và bảo vật hào hùng của dân tộc Việt Nam.</p>
+  
+  <h2>HƯỚNG DẪN TRẢI NGHIỆM</h2>
+  <p>1. <strong>Xem các cuộn phim lịch sử:</strong> Trên bàn làm việc có 11 cuộn băng từ (VHS tapes). Mỗi cuộn phim đại diện cho một mốc son chói lọi của dân tộc (Hùng Vương, Bạch Đằng, Như Nguyệt, Đông A, Lam Sơn, Kỷ Dậu, Ba Đình 1945, Điện Biên Phủ, 30/4/1975...). Hãy nhấp chuột vào cuộn phim để đưa vào đầu băng VCR và thưởng thức phim tài liệu trực tiếp trên tivi CRT.</p>
+  <p>2. <strong>Xem Bảo vật Quốc gia 3D:</strong> Bấm vào nút <em>CỔ VẬT 3D</em> trên thanh menu, dưới góc phải màn hình, hoặc bấm phím số 3 trên tivi CRT. Bạn có thể xoay 360 độ bằng chuột để ngắm nhìn từng nét chạm khắc tinh xảo của Trống đồng Ngọc Lũ, Rồng thời Lý, Bảo kiếm Thuận Thiên, Kim ấn Hoàng đế chi bảo, Cửu Đỉnh Huế và Xe tăng 390.</p>
+  <p>3. <strong>Tương tác đồ vật trong phòng:</strong></p>
+  <ul>
+    <li>Bấm <strong>Z</strong> hoặc nhấp vào màn hình TV để zoom cận cảnh tivi.</li>
+    <li>Bấm <strong>C</strong> hoặc nhấp vào máy tính cổ bên trái để tra cứu cơ sở dữ liệu sử liệu.</li>
+    <li>Bấm <strong>M</strong> hoặc nhấp vào đài đĩa CD để thưởng thức âm nhạc hào hùng.</li>
+    <li>Bấm <strong>N</strong> để mở sổ tay ghi chú và hồ sơ giám định hiện vật.</li>
+  </ul>
+</template>
+
+<script>
+(function(){
+  var d = document, root = d.documentElement, q = new URLSearchParams(location.search).get("view");
+  var BM = window.__BM = {
+    page: "home",
+    everywhere: false,
+    tvPosts: true,
+    assetBase: d.getElementById("bm-root").dataset.assets || null
+  };
+
+  if (BM.assetBase) BM.assetBase = BM.assetBase.replace(/\/*$/, "/") + "3e11de40/";
+
+  BM.posts = [].map.call(d.querySelectorAll("#bm-posts a"), function(a){
+    return { t: a.textContent, u: a.href, d: a.dataset.date };
+  });
+  BM.postsA = BM.posts.map(function(p){ return [p.t, p.u, p.d]; });
+
+  BM.about = (function(){
+    var t = d.getElementById("bm-about"), out = [], sp = function(x){ return x.replace(/\s+/g," ").trim(); };
+    if (!t) return out;
+    var para = function(el){
+      var text = "", links = [];
+      (function walk(n){
+        [].forEach.call(n.childNodes, function(c){
+          if (c.nodeType === 3) { text += c.nodeValue.replace(/\s+/g, " "); return; }
+          if (c.nodeType !== 1) return;
+          if (c.tagName === "BR") { text += " "; return; }
+          var a = c.tagName === "A" && c.getAttribute("href"), at = text.length; walk(c);
+          if (a && text.length > at) links.push([at, text.length, c.href]);
+        });
+      })(el);
+      var lead = text.length - text.replace(/^\s+/, "").length; text = text.trim();
+      links = links.map(function(l){ return [Math.max(0, l[0] - lead), Math.min(text.length, l[1] - lead), l[2]]; }).filter(function(l){ return l[1] > l[0]; });
+      return links.length ? ["p", text, links] : ["p", text];
+    };
+    (function blocks(root){
+      [].forEach.call(root.children, function(el){
+        var tag = el.tagName;
+        if (/^H[1-6]$/.test(tag)) out.push(["h", sp(el.textContent)]);
+        else if (tag === "P") { var b = para(el); if (b[1]) out.push(b); }
+        else if (tag === "UL" || tag === "OL") [].forEach.call(el.children, function(li, i){ out.push(["l", sp(li.textContent), tag === "OL" ? (i + 1) + "." : "*"]); });
+        else if (tag === "BLOCKQUOTE") out.push(["q", sp(el.textContent)]);
+        else if (tag === "HR") out.push(["r"]);
+        else if (tag === "PRE") out.push(["c", el.textContent.replace(/\n$/, "")]);
+      });
+    })(t.content);
+    return out;
+  })();
+
+  var gl = false;
+  try {
+    var c = d.createElement("canvas");
+    gl = !!(window.WebGLRenderingContext && (c.getContext("webgl2") || c.getContext("webgl")));
+  } catch(e) {}
+
+  if (!gl) {
+    [].forEach.call(d.querySelectorAll(".bm-fallback"), function(e){ e.style.display = "block"; });
+    return;
+  }
+
+  root.classList.add("bm-scene", "bm-desktop");
+
+  // Load stylesheet
+  var css = d.createElement("link");
+  css.rel = "stylesheet";
+  css.href = "felix-desktop.css";
+  d.head.appendChild(css);
+
+  var mounted = false;
+  function mount() {
+    if (mounted) return;
+    mounted = true;
+    d.getElementById("bm-root").appendChild(d.getElementById("bm-desktop").content.cloneNode(true));
+    
+    // Boot loader display
+    var b = d.createElement("script");
+    b.src = "felix-boot.js";
+    b.async = false;
+    d.body.appendChild(b);
+
+    // Main 3D scene module
+    var s = d.createElement("script");
+    s.type = "module";
+    s.src = "vietnam-desktop.js";
+    d.body.appendChild(s);
+  }
+
+  css.onload = css.onerror = mount;
+  setTimeout(mount, 3000);
+})();
+</script>
+
+</body>
+</html>
