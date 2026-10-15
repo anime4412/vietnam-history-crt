@@ -1,6 +1,6 @@
-// Vietnam National History & 3D Relics CRT Experience
+// Vietnam National History & Relics CRT Experience
 import { VIETNAM_TAPES, VIETNAM_RELICS } from "./vietnam-history-data.js";
-import { RelicRenderer } from "./relic-renderer.js";
+import { RelicRenderer } from "./relic-renderer.js?v=20261015a";
 import { HistoryFilmPlayer } from "./history-film-player.js?v=20261014f";
 
 let relicRenderer = null;
@@ -64,7 +64,7 @@ const fontsReady = Promise.all(["600 70px Caveat","44px VT323","900 150px Archiv
 const PAGES = ["home","about","work","relics","posts","online"], PAGE_ALIAS={twitter:"online",github:"online",contact:"online",relic:"relics",covat:"relics"};
 const atPC=page=>page==="about"||page==="online";
 // the monitor's six buttons: its three inputs, then three picture checks from a studio monitor (tvButton)
-const TV_BTN=["home","work","relics","underscan","hvdelay","blueonly"], TV_LABEL=["TRANG CHỦ","CUỘN PHIM","CỔ VẬT 3D","QUÉT RỘNG","H/V DELAY","ĐƠN SẮC"];
+const TV_BTN=["home","work","relics","underscan","hvdelay","blueonly"], TV_LABEL=["TRANG CHỦ","CUỘN PHIM","CỔ VẬT","QUÉT RỘNG","H/V DELAY","ĐƠN SẮC"];
 const MON={underscan:false,hvdelay:false,blueonly:false}, MONK={us:0,fx:1.07,fy:1.1};
 // How far the raster reaches over the glass (the glass is this many rasters wide and high). Pages of text keep the whole
 // raster in sight, a little inside the glass. A film fills the tube, its edges just past the glass's, as a TV's are: a
@@ -374,13 +374,13 @@ const PAINT = {
     if (blink) {
       sx.fillStyle = "#ffcc00";
       sx.font = "bold 28px VT323, monospace";
-      sx.fillText("▶ HÃY CHỌN 1 CUỘN PHIM TRÊN BÀN HOẶC BẤM CỔ VẬT 3D", 480, 455);
+      sx.fillText("▶ HÃY CHỌN 1 CUỘN PHIM TRÊN BÀN HOẶC BẤM CỔ VẬT", 480, 455);
     }
 
     // Secondary hint
     sx.fillStyle = "rgba(255,255,255,0.75)";
     sx.font = "22px VT323, monospace";
-    sx.fillText("11 CUỘN PHIM TƯ LIỆU · 7 BẢO VẬT QUỐC GIA 3D", 480, 505);
+    sx.fillText("11 CUỘN PHIM TƯ LIỆU · 7 BẢO VẬT QUỐC GIA & HỒ SƠ GHI CHÉP", 480, 505);
 
     osd("▶ CH 00: TỔNG QUAN", 60, 82);
     osd("VIETNAM RETRO TV", 900, 82, "right");
@@ -454,49 +454,7 @@ const PAINT = {
     sx.setTransform(K, 0, 0, K, 0, 0);
     sx.drawImage(relicCanvas, 0, 0);
 
-    const relic = VIETNAM_RELICS[relicRenderer.relicIndex];
-    osd("BẢO VẬT 3D · " + (relicRenderer.relicIndex + 1) + "/" + VIETNAM_RELICS.length, 60, 68);
-    osd(relic.badge, 900, 68, "right");
-
-    // Right Telemetry Panel
-    sx.fillStyle = "rgba(10, 14, 22, 0.88)";
-    sx.strokeStyle = "rgba(200, 160, 80, 0.4)";
-    sx.lineWidth = 1;
-    sx.fillRect(520, 95, 410, 525);
-    sx.strokeRect(520, 95, 410, 525);
-
-    sx.font = "900 27px Archivo, sans-serif";
-    sx.fillStyle = "#ffdd80";
-    sx.textAlign = "left";
-    sx.fillText(relic.title, 540, 138);
-
-    sx.font = "700 18px Caveat, cursive";
-    sx.fillStyle = "#a2d2ff";
-    sx.fillText(relic.era, 540, 172);
-
-    sx.font = "18px VT323, monospace";
-    sx.fillStyle = "#8bd4a0";
-    sx.fillText("NIÊN ĐẠI: " + relic.era, 540, 210);
-    sx.fillText("CHẤT LIỆU: " + relic.material, 540, 240);
-    sx.fillText("KÍCH THƯỚC: " + relic.dims, 540, 270);
-    sx.fillText("LƯU GIỮ: " + relic.location, 540, 300);
-
-    sx.fillStyle = "#e2ded2";
-    sx.font = "15px monospace";
-    wrapText(sx, relic.desc, 540, 335, 370, 22);
-
-    // Bottom Navigation Bar
-    sx.fillStyle = "rgba(10, 14, 22, 0.92)";
-    sx.fillRect(60, 640, 840, 50);
-    sx.strokeStyle = "rgba(100, 160, 255, 0.35)";
-    sx.strokeRect(60, 640, 840, 50);
-
-    sx.font = "19px VT323, monospace";
-    sx.fillStyle = "#ffcc33";
-    sx.textAlign = "center";
-    sx.fillText("◀ [← TRƯỚC]  ·  [XOAY 360° CHUỘT / CHẠM]  ·  [M: DÂY/HOLOGRAM]  ·  [L: ÁNH SÁNG]  ·  [TIẾP →] ▶", 480, 672);
-
-    return new THREE.Color("#1a2b1f");
+    return new THREE.Color("#101622");
   },
 
   posts(t){ return teletext(t); },
@@ -2570,6 +2528,7 @@ function renderPanel(page){
   $("#p-ch").textContent="CH "+String(idx).padStart(2,"0")+(page==="posts"?" · TELETEXT 100":"");
   $("#p-title").textContent=TITLES[page];
   if(page==="work") body.innerHTML=workPanel();
+  if(page==="relics") body.innerHTML=relicsPanel();
   if(page==="posts") body.innerHTML=`<ul class="list">${POSTS.map((p,i)=>`<li><a class="row" href="${postHref(p)}" data-post="${i}"${ONSITE?"":` target="_blank" rel="noopener"`}><span class="n">${101+i}</span><span class="t">${esc(p.t)}</span><span class="m">${p.d.toUpperCase()}</span></a></li>`).join("")}</ul>`;
   body.scrollTop=0;
   if(ONSITE) body.querySelectorAll("[data-post]").forEach(a=>a.onclick=e=>{ if(e.metaKey||e.ctrlKey||e.shiftKey) return; e.preventDefault(); openPost(+a.dataset.post); });
@@ -2577,6 +2536,13 @@ function renderPanel(page){
   body.querySelectorAll("[data-tape]").forEach(b=>{ b.onclick=()=>{ gesture(); chooseTape(+b.dataset.tape); };
     // tabbing through the tapes marks each on the notepad, which comes up for it
     b.onfocus=()=>{ if(!padOn()||state.page!=="work"||state.sheet) return; notepad.focus(+b.dataset.tape); if(workHidden) workCard(true); }; b.onblur=()=>notepad?.focus(-1); });
+  body.querySelectorAll("[data-relic]").forEach(b=>{ b.onclick=()=>{
+    gesture();
+    const idx = +b.dataset.relic;
+    if (relicRenderer) relicRenderer.selectRelic(idx);
+    renderPanel("relics");
+    live("Bảo vật: " + VIETNAM_RELICS[idx].title);
+  }; });
   if(keep) body.querySelector(keep)?.focus();
 }
 function refreshWork(){ notepad?.redraw(); if(state.page==="work"&&!state.sheet&&!panel.hidden) renderPanel("work"); }
@@ -2585,14 +2551,19 @@ function live(msg){ const el=$("#live"); el.textContent=""; setTimeout(()=>el.te
 function relicsPanel(){
   const row = (r, i) => `<li><button data-relic="${i}" aria-pressed="${relicRenderer&&relicRenderer.relicIndex===i}"><span class="n">${String(i+1).padStart(2,"0")}</span><span class="t">${esc(r.title)}</span><span class="m">${esc(r.era)}</span></button></li>`;
   const cur = VIETNAM_RELICS[relicRenderer ? relicRenderer.relicIndex : 0];
-  return `<div class="sec">7 BẢO VẬT QUỐC GIA 3D</div>
+  const notesList = (cur.notes || []).map(n => `<li>${esc(n)}</li>`).join("");
+  return `<div class="sec">7 BẢO VẬT QUỐC GIA & HỒ SƠ TƯ LIỆU</div>
   <ul class="list">${VIETNAM_RELICS.map(row).join("")}</ul>
   <div class="detail"><div class="m">HỒ SƠ BẢO VẬT · ${esc(cur.badge)}</div>
   <h3>${esc(cur.title)}</h3>
   <div class="m">${esc(cur.era)} · ${esc(cur.material)}</div>
   <p class="am">${esc(cur.desc)}</p>
   <p><strong>Địa điểm lưu giữ:</strong> ${esc(cur.location)}</p>
-  <p><strong>Quy cách:</strong> ${esc(cur.dims)}</p></div>`;
+  <p><strong>Quy cách:</strong> ${esc(cur.dims)}</p>
+  ${cur.discovery ? `<p><strong>Bối cảnh phát hiện:</strong> ${esc(cur.discovery)}</p>` : ""}
+  ${cur.significance ? `<p><strong>Ý nghĩa thời đại:</strong> ${esc(cur.significance)}</p>` : ""}
+  ${notesList ? `<div style="margin-top:12px;border-top:1px dashed rgba(255,255,255,0.25);padding-top:8px;"><strong>Ghi chép khảo cổ học:</strong><ul style="margin:6px 0;padding-left:18px;font-size:13px;line-height:1.5;color:rgba(255,255,255,0.85);">${notesList}</ul></div>` : ""}
+  </div>`;
 }
 
 function workPanel(){
@@ -2642,7 +2613,7 @@ function syncUrl(page,push){
     else history.replaceState(history.state,"",pageUrl(page));
   }catch{}
 }
-const TITLES={home:"Home",about:"About me",work:"Work",posts:"Posts",online:"Online"};
+const TITLES={home:"Home",about:"About me",work:"Work",relics:"Cổ vật Quốc gia",posts:"Posts",online:"Online"};
 // A fly-in (ENTRY): once the room has shown its home view for a moment, the camera sets off for the page as the page's own button
 // sends it from home (#options: as C does). The PC's program waits for the camera (PC.hold: pcProgram and pcOptions keep it in
 // PC.held, and the flight's landing opens it), so Online's call, About and OPTIONS start at the glass.
@@ -2939,11 +2910,13 @@ function act(hit){
   else if(info.kind==="screen"){
     if(state.page==="relics"){
       if(!zoomed){ setZoomed(true); flyTo(tvZoomFrame()); return; }
-      if(pickUV.x < 0.28){ relicRenderer?.prevRelic(); click("button"); live("Hiện vật: "+VIETNAM_RELICS[relicRenderer.relicIndex].title); return; }
-      if(pickUV.x > 0.72 && pickUV.y > 0.85){ relicRenderer?.nextRelic(); click("button"); live("Hiện vật: "+VIETNAM_RELICS[relicRenderer.relicIndex].title); return; }
-      if(pickUV.y > 0.85){ relicRenderer?.toggleWireframe(); click("button"); return; }
-      if(pickUV.x > 0.88 && pickUV.y < 0.15){ toggleZoom(); return; }
-      relicRenderer?.toggleAutoRotate(); click("button"); return;
+      const handled = relicRenderer?.handleClick(pickUV.x, pickUV.y);
+      click("button");
+      if (relicRenderer) {
+        live("Bảo vật: " + VIETNAM_RELICS[relicRenderer.relicIndex].title);
+        if (panel && !panel.hidden) renderPanel("relics");
+      }
+      return;
     }
     if(state.page==="posts"){ const r=teletextRow(pickUV); if(r>=0&&r<POSTS.length) return openPost(r);
       const fk=fastextKey(pickUV); if(fk){ click("button"); return go(fk); }
@@ -3469,11 +3442,15 @@ import("./touch/touch.js").then(m=>m.default(window.__touchHooks)).catch(e=>cons
 
 addEventListener("keydown", e => {
   if (state.page === "relics") {
-    if (e.key === "ArrowLeft") { relicRenderer?.prevRelic(); click("button"); e.preventDefault(); }
-    if (e.key === "ArrowRight") { relicRenderer?.nextRelic(); click("button"); e.preventDefault(); }
-    if (e.key.toLowerCase() === "m") { relicRenderer?.toggleWireframe(); click("button"); }
-    if (e.key.toLowerCase() === "l") { relicRenderer?.setLightMode((relicRenderer.lightMode + 1) % 3); click("button"); }
-    if (e.key === " ") { relicRenderer?.toggleAutoRotate(); click("button"); e.preventDefault(); }
+    if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") { relicRenderer?.prevRelic(); click("button"); e.preventDefault(); }
+    if (e.key === "ArrowRight" || e.key.toLowerCase() === "d") { relicRenderer?.nextRelic(); click("button"); e.preventDefault(); }
+    if (e.key === "1") { relicRenderer?.setTab(0); click("button"); }
+    if (e.key === "2") { relicRenderer?.setTab(1); click("button"); }
+    if (e.key === "3") { relicRenderer?.setTab(2); click("button"); }
+    if (e.key.toLowerCase() === "z") { relicRenderer?.toggleZoom(); click("button"); }
+    if (e.key === "ArrowUp" || e.key.toLowerCase() === "w") { relicRenderer?.scroll(-1); e.preventDefault(); }
+    if (e.key === "ArrowDown" || e.key.toLowerCase() === "s") { relicRenderer?.scroll(1); e.preventDefault(); }
+    if (e.key === "Escape" && relicRenderer?.isZoomed) { relicRenderer.isZoomed = false; click("button"); e.preventDefault(); }
   }
   if (e.key.toLowerCase() === "r") {
     go("relics");
@@ -3486,8 +3463,7 @@ panel.addEventListener("click", e => {
   if (!btn) return;
   const idx = +btn.dataset.relic;
   if (relicRenderer) {
-    relicRenderer.relicIndex = idx;
-    relicRenderer.buildCurrentRelic();
+    relicRenderer.selectRelic(idx);
   }
   click("tape", 0.3);
   go("relics");

@@ -203,120 +203,147 @@ export const VIETNAM_RELICS = [
     id: "trongdong",
     title: "Trống Đồng Ngọc Lũ (Đông Sơn)",
     era: "Thế kỷ III - II TCN (Văn hóa Đông Sơn)",
-    badge: "Bảo vật Quốc gia số 01/QĐ-TTg",
+    badge: "Bảo vật Quốc gia số 01/QĐ-TTg (Đợt 1)",
     location: "Bảo tàng Lịch sử Quốc gia, Hà Nội",
-    material: "Đồng thau cổ nguyên khối, phủ lớp gỉ đồng cổ (patina)",
-    dims: "Đường kính mặt 86cm · Chiều cao 63cm · Nặng 86kg",
-    desc: "Chiếc trống đồng đẹp nhất và nguyên vẹn nhất của nền văn minh Đông Sơn. Chính giữa mặt trống là hình ngôi sao 14 cánh biểu trưng cho Mặt Trời, bao quanh bởi 16 vành hoa văn hình học, cảnh giã gạo, múa vũ trang lông chim và đàn chim Lạc bay ngược chiều kim đồng hồ.",
-    meshType: "drum",
-    primaryColor: "#5c7052",
-    accentColor: "#c29b38",
-    hotspots: [
-      { name: "Ngôi sao 14 cánh", detail: "Biểu tượng thần Mặt Trời, trung tâm vũ trụ và nguồn sống của cư dân nông nghiệp lúa nước." },
-      { name: "Đàn chim Lạc", detail: "16 con chim Lạc sải cánh dài bay ngược chiều kim đồng hồ thể hiện vòng quay thời gian và tín ngưỡng vật tổ." },
-      { name: "Cảnh sinh hoạt & Thuyền chiến", detail: "Hình ảnh người hóa trang lông chim nhảy múa, giã gạo chày đôi, chiến binh cầm rìu chiến trên thuyền." }
-    ]
+    image: "images/relics/trongdong.jpg",
+    material: "Đồng thau cổ nguyên khối, bề mặt phủ lớp gỉ đồng cổ (patina) xám xanh bóng",
+    dims: "Đường kính mặt 86cm · Chiều cao 63cm · Đường kính chân 96cm · Nặng 86kg",
+    discovery: "Phát hiện khoảng năm 1893–1894 tại bãi cát bồi ven sông Hồng, xã Như Trác, huyện Lý Nhân, tỉnh Hà Nam. Được các cụ bô lão đem về cúng tại đình làng Ngọc Lũ làm đồ tế khí trước khi chuyển về Bảo tàng năm 1902.",
+    desc: "Chiếc trống đồng đẹp nhất, cổ xưa nhất và bảo tồn nguyên vẹn nhất trong toàn bộ nền văn minh Đông Sơn. Được tôn vinh là đỉnh cao nghệ thuật đúc đồng và tư duy thẩm mỹ của người Việt cổ thời các Vua Hùng dựng nước.",
+    notes: [
+      "Đúc liền khối bằng kỹ thuật khuôn ba mang phức tạp, thể hiện trình độ luyện kim và đúc đồng đỉnh cao cách đây hơn 2.500 năm.",
+      "Chính giữa mặt trống đúc nổi ngôi sao 14 cánh biểu trưng cho thần Mặt Trời, xen giữa các cánh sao là họa tiết lông công cách điệu.",
+      "Mặt trống có 16 vành hoa văn đồng tâm: vành 6 và 8 khắc họa người hóa trang lông chim nhảy múa, giã gạo chày đôi rộn ràng, người đánh trống da, nhà sàn mái cong nóc hình chim.",
+      "Vành 10 gồm 16 con chim Lạc sải cánh dài bay ngược chiều kim đồng hồ, biểu tượng cho chu kỳ thời gian và lịch pháp nông nghiệp nguyên thủy.",
+      "Tang trống phình rộng khắc 6 chiếc thuyền chiến chở các chiến binh trang bị cung tên, rìu chiến, giáo mác lướt sóng; thân trống khắc dũng sĩ cầm vũ khí; chân trống loe hình nón cụt vững chãi."
+    ],
+    significance: "Minh chứng đanh thép khẳng định nền văn minh bản địa rực rỡ, độc lập và tài năng vô song của tổ tiên người Việt thuở lập quốc Văn Lang – Âu Lạc.",
+    highlights: ["Mặt trời 14 cánh trung tâm", "16 con chim Lạc bay ngược kim đồng hồ", "6 thuyền chiến dũng sĩ Đông Sơn", "Tác phẩm đúc đồng đẹp nhất Đông Nam Á"]
   },
   {
     id: "thapdong",
     title: "Thạp Đồng Đào Thịnh",
-    era: "Thế kỷ V TCN (Văn hóa Đông Sơn)",
-    badge: "Bảo vật Quốc gia đợt 1",
+    era: "Thế kỷ V - III TCN (Văn hóa Đông Sơn)",
+    badge: "Bảo vật Quốc gia đợt 1 (QĐ 1421/QĐ-TTg)",
     location: "Bảo tàng Lịch sử Quốc gia, Hà Nội",
-    material: "Đồng thau đúc tinh xảo",
-    dims: "Chiều cao 98cm · Đường kính miệng 61cm",
-    desc: "Thạp đồng lớn nhất Việt Nam từng được tìm thấy tại Yên Bái. Thân thạp khắc 8 vành hoa văn thuyền chiến, cá sấu, hươu sao. Đặc biệt trên nắp đúc nổi 4 cặp tượng nam nữ thể hiện tín ngưỡng phồn thực nguyên thủy cầu mong mùa màng sinh sôi nảy nở.",
-    meshType: "urn_jar",
-    primaryColor: "#475c43",
-    accentColor: "#8f7336",
-    hotspots: [
-      { name: "Tượng phồn thực", detail: "4 khối tượng nam nữ thể hiện khát vọng sinh tồn và phồn vinh giống nòi." },
-      { name: "Đoàn thuyền chiến Đông Sơn", detail: "Thuyền chiến trang bị rìu giáo, cung tên và thủy thủ chèo nhịp nhàng." }
-    ]
+    image: "images/relics/thapdong.jpg",
+    material: "Đồng thau đúc thủ công tinh xảo, bề mặt màu xanh rêu cổ kính",
+    dims: "Chiều cao 98cm · Đường kính miệng 61cm · Đường kính đáy 60cm · Nơi phình lớn nhất 70cm",
+    discovery: "Tháng 9/1961, một người dân đi câu cá phát hiện thạp đồng lộ ra tại bờ sông Hồng bị sạt lở ở xã Đào Thịnh, huyện Trấn Yên, tỉnh Yên Bái. Trong thạp chứa lớp than tro, di cốt mai táng và đồ tùy táng cổ.",
+    desc: "Chiếc thạp đồng lớn nhất Việt Nam từng được tìm thấy. Đây là tế khí quyền lực thiêng liêng và đồ tùy táng của vị thủ lĩnh tối cao bộ lạc Đông Sơn thời cổ đại.",
+    notes: [
+      "Thân thạp hình khối trụ thuôn dần về đáy, nắp đậy hình nón cụt vồng cao, gờ nắp đúc nổi 4 cặp tượng nam nữ đang giao hoan đối xứng.",
+      "4 khối tượng nam nữ là tác phẩm điêu khắc tròn cổ xưa nhất của mỹ thuật Việt Nam, thể hiện tín ngưỡng phồn thực nguyên thủy: cầu mong sự sinh sôi nảy nở của giống nòi và mùa màng tươi tốt.",
+      "Thân thạp chạm khắc 8 vành hoa văn tinh tế: nổi bật là 6 chiến thuyền mũi nhọn đuôi én, trên mỗi thuyền chở 6 đến 8 chiến binh hóa trang lông chim chỉ huy, hoa tiêu, xạ thủ và tay chèo.",
+      "Xen kẽ các băng hoa văn là hình đàn cá sấu cách điệu ngậm mồi, hươu sao đang gặm cỏ và hoa văn răng lược, xoắn ốc sóng nước.",
+      "Bên trong thạp phát hiện dấu vết vải thô bọc quanh tro cốt, một số răng người và chiếc thạp đồng nhỏ lồng bên trong."
+    ],
+    significance: "Di vật độc bản phản ánh toàn diện trình độ luyện kim, nghệ thuật đóng thuyền chiến, quân thủy và đời sống tâm linh của người Việt cổ ven lưu vực sông Hồng.",
+    highlights: ["Thạp đồng lớn nhất nền văn hóa Đông Sơn", "4 cặp tượng phồn thực điêu khắc tròn cổ nhất", "Chiến thuyền chở cung thủ và hoa tiêu", "Di vật tùy táng thủ lĩnh cổ đại"]
   },
   {
     id: "rongly",
-    title: "Tượng Rồng Thời Lý",
-    era: "Thế kỷ XI - XII (Hoàng thành Thăng Long)",
+    title: "Tượng Rồng Thời Lý (Hoàng Thành Thăng Long)",
+    era: "Thế kỷ XI - XII (Vương triều Lý, 1009–1225)",
     badge: "Bảo vật Quốc gia Hoàng thành Thăng Long",
-    location: "Khu di tích Hoàng thành Thăng Long, Hà Nội",
-    material: "Đá sa thạch và gốm đất nung hoàng cung",
-    dims: "Chiều dài thân 1.2m · Chiều cao uốn lượn 65cm",
-    desc: "Biểu tượng nghệ thuật điêu khắc đỉnh cao triều Lý. Rồng thời Lý mang dáng dấp mềm mại uốn lượn hình sin thu nhỏ dần về đuôi, đầu ngẩng cao, miệng ngậm ngọc minh châu, mào lửa bốc cao tựa mây trời, tượng trưng cho sự thanh thoát và tư tưởng Phật giáo hòa bình.",
-    meshType: "dragon",
-    primaryColor: "#a38c6d",
-    accentColor: "#d9a441",
-    hotspots: [
-      { name: "Thân hình sin mềm mại", detail: "12 khúc uốn lượn nhịp nhàng tượng trưng cho 12 tháng mưa thuận gió hòa." },
-      { name: "Mào lửa & Hạt minh châu", detail: "Mào lửa rực cháy trên mũi và ngọc châu ngậm trong miệng thể hiện vương quyền và trí tuệ." }
-    ]
+    location: "Khu di tích Hoàng thành Thăng Long (18 Hoàng Diệu, Hà Nội)",
+    image: "images/relics/rongly.jpg",
+    material: "Đá sa thạch xám mịn nguyên khối và đất nung tráng men hoàng cung",
+    dims: "Chiều dài thân 1.2m · Chiều cao uốn lượn 65cm · Độ dày khối 28cm",
+    discovery: "Khai quật khảo cổ học tại tầng văn hóa thời Lý, khu di tích khảo cổ Hoàng thành Thăng Long từ năm 2002 đến 2008. Hiện vật là thành bậc cung điện hoàng gia thời Lý.",
+    desc: "Hình tượng rồng đặc sắc và thanh thoát nhất trong lịch sử mỹ thuật Việt Nam. Khác với rồng các nước lân cận hung dữ, rồng thời Lý uốn lượn nhịp nhàng hình sin, toát lên vẻ hiền hòa, thanh tịnh thấm đẫm tinh thần Phật giáo thời Lý.",
+    notes: [
+      "Thân rồng dài uốn lượn hình sin thu nhỏ dần về phía đuôi, gồm 12 khúc nhịp nhàng biểu trưng cho 12 tháng mưa thuận gió hòa và sự luân chuyển của vũ trụ.",
+      "Đầu rồng ngẩng cao uy nghi, mắt tròn lồi đính ngọc, miệng há rộng ngậm viên ngọc minh châu dạ quang thể hiện trí tuệ và sự giác ngộ tâm linh.",
+      "Mào rồng vươn cao uốn lượn tựa ngọn lửa thiêng hoặc đám mây lành; mũi rồng biến thành vòi thanh tú, chòm râu và bờm dài bay ngược về sau lộng gió.",
+      "Bốn chân rồng thanh mảnh, gập cong tự nhiên, các ngón chân có móng vuốt sắc nhọn vờn nhẹ trên mây sóng.",
+      "Hình tượng rồng Lý ngự trị trang nghiêm trên các công trình kiến trúc cung điện Thăng Long, chùa Phật Tích, chùa Dạm và đền Đô."
+    ],
+    significance: "Biểu tượng rực rỡ cho vương quyền độc lập tự chủ và nền văn hóa Thăng Long nghìn năm văn hiến, gắn liền với huyền tích Rồng Vàng bay lên khi Vua Lý Thái Tổ dời đô năm 1010.",
+    highlights: ["Thân uốn hình sin 12 khúc mềm mại", "Miệng ngậm ngọc minh châu dạ quang", "Thấm đẫm tinh thần Phật giáo hòa bình", "Biểu tượng khai sáng kinh đô Thăng Long"]
   },
   {
     id: "thuanthienkiem",
-    title: "Bảo Kiếm Thuận Thiên (Lê Lợi)",
-    era: "Thế kỷ XV (Khởi nghĩa Lam Sơn)",
-    badge: "Di sản Huyền thoại Quốc gia Hồ Gươm",
-    location: "Khu di tích Lam Sơn & Đền Ngọc Sơn",
-    material: "Thép tôi luyện cổ, chuôi khảm vàng ròng & ngọc bích",
-    dims: "Chiều dài kiếm 95cm · Bản rộng 4.5cm",
-    desc: "Thanh thần kiếm huyền thoại gắn liền với cuộc khởi nghĩa Lam Sơn của Bình Định Vương Lê Lợi và sự tích Trả gươm cho Rùa Vàng tại hồ Lục Thủy (Hồ Hoàn Kiếm). Chuôi kiếm đúc đầu rồng vàng uy mãnh, trên lưỡi kiếm ánh lên sắc xanh thần bí cùng hai chữ 'Thuận Thiên' thếp vàng.",
-    meshType: "sword",
-    primaryColor: "#cfd6df",
-    accentColor: "#f0b62b",
-    hotspots: [
-      { name: "Chuôi rồng thếp vàng", detail: "Điêu khắc rồng cuộn bảo vệ bàn tay cầm kiếm, mắt nạm hồng ngọc." },
-      { name: "Chữ thần 'Thuận Thiên'", detail: "Dấu ấn mệnh trời thuận lòng dân khởi nghĩa chống giặc ngoại xâm." }
-    ]
+    title: "Bảo Kiếm Thuận Thiên & Gươm Cổ Hoàng Cung",
+    era: "Thế kỷ XV (Khởi nghĩa Lam Sơn & Triều Lê - Nguyễn)",
+    badge: "Bảo vật Truyền quốc & Di sản Huyền thoại Quốc gia",
+    location: "Khu di tích Lam Sơn, Đền Ngọc Sơn & Bảo tàng Lịch sử Quốc gia",
+    image: "images/relics/thuanthienkiem.jpg",
+    material: "Thép tôi luyện cổ cao cấp, chuôi và bao kiếm khảm vàng ròng nạm ngọc quý",
+    dims: "Tổng chiều dài 98cm · Lưỡi kiếm dài 76cm · Bản rộng 4.2cm · Nặng 1.65kg",
+    discovery: "Gắn liền với huyền tích hồ Lục Thủy (Hồ Hoàn Kiếm, Hà Nội) và kho tàng vũ khí hoàng cung triều Lê – Nguyễn được gìn giữ qua các cuộc kháng chiến vệ quốc.",
+    desc: "Thanh kiếm thần thoại gắn liền với Bình Định Vương Lê Lợi và Khởi nghĩa Lam Sơn 10 năm gian khổ (1418–1428). Tên kiếm 'Thuận Thiên' mang ý nghĩa thuận theo lòng trời và ý nguyện của muôn dân đứng lên đánh đuổi giặc Minh xâm lược.",
+    notes: [
+      "Theo Đại Việt Sử ký toàn thư: tướng Lê Thận kéo lưới trên sông vớt được lưỡi kiếm sáng lấp lánh; sau đó Lê Lợi tìm thấy chuôi kiếm nạm ngọc trong hốc cây rừng. Tra lưỡi vào chuôi vừa khít như một thể thống nhất, ánh lên hai chữ thần 'Thuận Thiên'.",
+      "Lê Lợi mang gươm báu chỉ huy nghĩa quân Lam Sơn, trăm trận trăm thắng, đập tan 15 vạn viện binh Liễu Thăng, giải phóng hoàn toàn giang sơn bờ cõi năm 1428.",
+      "Khi thái bình, nhà vua dạo thuyền trên hồ Lục Thủy, Rùa Vàng nổi lên đòi lại gươm thần để đem về cho Long Quân. Vua trao trả kiếm, từ đó hồ đổi tên thành Hồ Hoàn Kiếm (Hồ Gươm).",
+      "Kỹ thuật luyện kiếm cổ truyền: lưỡi thép được rèn đập hàng trăm lớp tạo hoa văn vân mây dẻo dai và sắc bén; chuôi kiếm chạm đầu rồng cẩn vàng lộng lẫy.",
+      "Tại Bảo tàng Lịch sử Quốc gia còn lưu giữ thanh kiếm An Dân và kiếm báu triều Nguyễn bằng vàng ròng, minh chứng cho nghệ thuật chế tác vũ khí vương quyền đỉnh cao của dân tộc."
+    ],
+    significance: "Biểu tượng thiêng liêng cho tinh thần quật khởi chống ngoại xâm và triết lý hòa hiếu nhân văn: 'Đem đại nghĩa để thắng hung tàn, lấy chí nhân để thay cường bạo'.",
+    highlights: ["Gươm thần khởi nghĩa Lam Sơn 1418-1428", "Huyền tích Trả gươm Hồ Hoàn Kiếm", "Hai chữ 'Thuận Thiên' thuận lòng trời", "Chuôi rồng nạm ngọc và thếp vàng ròng"]
   },
   {
     id: "cuudinh",
-    title: "Cửu Đỉnh Huế (Cao Đỉnh)",
-    era: "Năm 1835-1837 (Hoàng triều Nguyễn)",
-    badge: "Bảo vật Quốc gia & Ký ức Thế giới UNESCO",
-    location: "Trước Thế Miếu, Đại Nội Huế",
-    material: "Đồng hợp kim đúc thủ công tinh xảo",
-    dims: "Cao 2.50m · Đường kính miệng 1.38m · Nặng 2.603kg",
-    desc: "Chiếc đỉnh lớn nhất và quan trọng nhất trong Cửu Đỉnh, đặt ở vị trí trung tâm ứng với vua Gia Long. Thân đỉnh chạm khắc 17 hình ảnh nổi danh của đất nước: Mặt Trời, núi Thiên Tôn, sông Bến Nghé, cây lúa, trầm hương và đặc biệt là 'Đông Hải' (Biển Đông) - minh chứng chủ quyền bất khả xâm phạm.",
-    meshType: "tripod_cauldron",
-    primaryColor: "#3d3a33",
-    accentColor: "#bf893b",
-    hotspots: [
-      { name: "Chữ chạm 'Đông Hải'", detail: "Minh chứng lịch sử đanh thép khẳng định chủ quyền biển đảo Tổ quốc từ thế kỷ XIX." },
-      { name: "Ba chân đỉnh hình trụ vạc", detail: "Tượng trưng cho sự vững như bàn thạch của đất nước muôn đời." }
-    ]
+    title: "Cửu Đỉnh Cố Đô Huế (Cao Đỉnh)",
+    era: "Năm Minh Mạng thứ 16-18 (1835–1837), Triều Nguyễn",
+    badge: "Bảo vật Quốc gia số 01/2012 & Di sản Tư liệu Thế giới UNESCO (2024)",
+    location: "Sân trước Thế Tổ Miếu, Hoàng thành Huế, Thừa Thiên Huế",
+    image: "images/relics/cuudinh.jpg",
+    material: "Đồng hợp kim đúc thủ công nguyên khối, tổng trọng lượng 9 đỉnh hơn 22 tấn",
+    dims: "Cao Đỉnh cao 2.50m · Đường kính miệng 1.38m · Chu vi bụng 4.28m · Nặng 2.603kg (4.338 cân cổ)",
+    discovery: "Được Hoàng đế Minh Mạng hạ chỉ đúc vào tháng 10 năm 1835 và hoàn thành lễ tấn phong ngày 1/3/1837. Đặt trang nghiêm theo hình cánh cung trước sân Thế Miếu suốt gần 2 thế kỷ.",
+    desc: "Bộ chín chiếc đỉnh đồng độc bản lớn nhất Việt Nam và Đông Nam Á. Mỗi đỉnh tượng trưng cho một vị vua triều Nguyễn, trong đó Cao Đỉnh ở vị trí trung tâm tôn vinh vua Gia Long – người lập nên quốc hiệu Việt Nam năm 1804.",
+    notes: [
+      "Bộ Cửu Đỉnh gồm: Cao Đỉnh, Nhân Đỉnh, Chương Đỉnh, Anh Đỉnh, Kính Đỉnh, Thuần Đỉnh, Tuyên Đỉnh, Dụ Đỉnh và Huyền Đỉnh, tượng trưng cho sự vững bền như bàn thạch của đất nước muôn đời.",
+      "Thân 9 đỉnh chạm khắc tổng cộng 153 bức phù điêu tinh xảo như một pho bách khoa toàn thư sống động bằng đồng về địa lý, núi non, bờ cõi, sản vật và vũ khí nước Đại Nam.",
+      "Đặc biệt nhất, trên Cao Đỉnh khắc chữ Hán 'Đông Hải' (Biển Đông); trên Nhân Đỉnh khắc 'Nam Hải'; trên Chương Đỉnh khắc 'Tây Hải'. Đây là minh chứng lịch sử bằng đồng đanh thép khẳng định chủ quyền biển đảo bất khả xâm phạm của Tổ quốc từ thế kỷ XIX.",
+      "Mỗi đỉnh đúc ba chân trụ vạc liền khối vững chãi, hai quai đỉnh lớn chạm rồng mây hoặc xoắn ốc uy nghiêm.",
+      "Ngày 8/5/2024, Cửu Đỉnh Huế đã được UNESCO chính thức ghi danh vào Danh mục Di sản Tư liệu Ký ức Thế giới khu vực châu Á – Thái Bình Dương."
+    ],
+    significance: "Đỉnh cao tuyệt mỹ của nghệ thuật đúc đồng truyền thống Việt Nam thế kỷ XIX; pho sử thi bằng đồng ghi dấu toàn vẹn chủ quyền lãnh thổ, biển đảo non sông gấm vóc.",
+    highlights: ["Bộ 9 đỉnh đồng lớn nhất Đông Nam Á", "153 bức phù điêu bách khoa toàn thư sông núi", "Chữ chạm 'Đông Hải' khẳng định chủ quyền Biển Đông", "Di sản Tư liệu Ký ức Thế giới UNESCO"]
   },
   {
     id: "kiman",
-    title: "Kim Ấn 'Hoàng Đế Chi Bảo'",
-    era: "Năm Minh Mạng thứ 4 (1823)",
-    badge: "Bảo vật Quốc gia Triều Nguyễn",
-    location: "Bảo tàng Lịch sử Quốc gia, Hà Nội",
-    material: "Vàng ròng nguyên khối (10 tuổi)",
-    dims: "Cao 10.4cm · Cạnh đế 13.8cm · Nặng 10.78kg",
-    desc: "Kim ấn truyền quốc quý giá bậc nhất triều Nguyễn. Quai ấn đúc hình một con rồng uốn cong, đầu ngẩng cao, 2 sừng nhọn, trán khắc chữ 'Vương', 4 chân có 5 móng vuốt uy nghiêm. Mặt ấn khắc 4 chữ triện 'Hoàng Đế Chi Bảo'. Đây là chiếc ấn lịch sử được vua Bảo Đại trao cho chính quyền cách mạng ngày 30/8/1945.",
-    meshType: "gold_seal",
-    primaryColor: "#e6b325",
-    accentColor: "#fff2a8",
-    hotspots: [
-      { name: "Quai rồng 5 móng vàng ròng", detail: "Rồng cuộn lưng gù tựa núi non, đại diện cho quyền lực tối cao của Hoàng đế." },
-      { name: "Triện ngữ 'Hoàng Đế Chi Bảo'", detail: "Khắc sâu sắc nét bằng lối chữ Triện uy nghiêm, khẳng định tính chính thống của vương triều." }
-    ]
+    title: "Kim Ấn 'Hoàng Đế Chi Bảo' (1823)",
+    era: "Năm Minh Mạng thứ 4 (1823), Triều Nguyễn",
+    badge: "Bảo vật Quốc gia số 73/QĐ-TTg & Bảo vật Hoàng gia Triều Nguyễn",
+    location: "Bảo tàng Hoàng gia Nam Hồng & Bảo tàng Lịch sử Quốc gia, Hà Nội",
+    image: "images/relics/kiman.jpg",
+    material: "Vàng ròng 10 tuổi nguyên khối đúc tinh xảo, nặng 10.78kg (280 lạng 9 đồng 2 phân)",
+    dims: "Chiều cao toàn bộ 10.4cm · Cạnh đế vuông 13.8cm · Độ dày thân đế 2.52cm",
+    discovery: "Đúc năm 1823 dưới thời Minh Mạng. Ngày 30/8/1945 tại Ngọ Môn Huế, vua Bảo Đại trao ấn cho phái đoàn Chính phủ Cách mạng lâm thời, chấm dứt triều đại phong kiến. Sau nhiều năm lưu lạc ở Pháp, ấn đã được hồi hương thành công về Việt Nam.",
+    desc: "Chiếc ấn vàng truyền quốc quý giá bậc nhất và có trọng lượng lớn nhất trong lịch sử các triều đại phong kiến Việt Nam. Dùng để đóng trên các văn kiện ngoại giao, sắc dụ và chiếu chỉ quan trọng nhất của triều đình.",
+    notes: [
+      "Quai ấn đúc hình một con rồng cuộn 5 móng tư thế dũng mãnh, đầu ngẩng cao, 2 sừng nhọn hướng về trước, trán khắc chữ 'Vương' (Vua). Lưng rồng uốn lượn vây sắc nhọn, 4 chân bám chặt đế ấn uy nghiêm.",
+      "Mặt ấn đúc nổi 4 chữ triện 'Hoàng Đế Chi Bảo' (皇帝之寶) nét chữ vuông vức, sâu sắc và tinh chuẩn tuyệt đối.",
+      "Lưng ấn bên trái khắc dòng chữ 'Minh Mạng tứ niên nhị nguyệt sơ tứ nhật cát thời chú tạo' (Đúc vào giờ lành ngày 4 tháng 2 năm Minh Mạng thứ 4 - tức ngày 15/3/1823).",
+      "Lưng ấn bên phải khắc 'Thập thành hoàng kim trọng nhị bách bát thập lạng cửu tiền nhị phân' (Đúc bằng vàng 10 tuổi, nặng 280 lạng 9 tiền 2 phân).",
+      "Chiếc ấn mang ý nghĩa biểu tượng lịch sử vô giá về sự chuyển giao quyền lực từ chế độ quân chủ phong kiến sang chế độ dân chủ nhân dân độc lập."
+    ],
+    significance: "Bảo vật quốc gia tối cao, minh chứng cho vương quyền độc lập và dấu mốc lịch sử thiêng liêng khai sinh nước Việt Nam Dân chủ Cộng hòa năm 1945.",
+    highlights: ["Ấn vàng lớn nhất nặng 10.78kg vàng ròng", "Quai rồng 5 móng khắc chữ Vương", "Trao cho chính quyền cách mạng ngày 30/8/1945", "Bảo vật hồi hương lịch sử của dân tộc"]
   },
   {
     id: "xetang390",
     title: "Xe Tăng Số Hiệu 390 (T-59)",
-    era: "Ngày 30/4/1975 (Đại thắng mùa Xuân)",
-    badge: "Bảo vật Quốc gia số 1421/QĐ-TTg",
-    location: "Bảo tàng Tăng Thiết giáp, Hà Nội",
-    material: "Thép bọc giáp chiến xa T-59",
-    dims: "Dài 9m · Rộng 3.27m · Cao 2.59m · Trọng lượng 36 tấn",
-    desc: "Nhân chứng lịch sử đã dũng mãnh húc tung cánh cổng chính Dinh Độc Lập vào lúc 11h30 ngày 30 tháng 4 năm 1975, mở đường cho quân Giải phóng tiến vào bắt sống toàn bộ nội các chính quyền Sài Gòn, chấm dứt cuộc chiến tranh 30 năm gian khổ, thống nhất hoàn toàn đất nước.",
-    meshType: "tank",
-    primaryColor: "#34472d",
-    accentColor: "#d62828",
-    hotspots: [
-      { name: "Mũi thép húc cổng Dinh", detail: "Vết xước lịch sử nơi bánh xích và mũi xe tăng đè bẹp cánh cổng sắt Dinh Độc Lập." },
-      { name: "Cờ Mặt trận Giải phóng", detail: "Lá cờ nửa đỏ nửa xanh ngôi sao vàng phất phới trong ngày khải hoàn 30/4." }
-    ]
+    era: "Trưa ngày 30/4/1975 (Chiến dịch Hồ Chí Minh lịch sử)",
+    badge: "Bảo vật Quốc gia số 1421/QĐ-TTg (Đợt 1)",
+    location: "Bảo tàng Tăng Thiết giáp (đường Hoàng Quốc Việt, Cầu Giấy, Hà Nội)",
+    image: "images/relics/xetang390.jpg",
+    material: "Thép hợp kim bọc giáp chiến xa T-59, sơn ngụy trang xanh lá quân đội nhân dân",
+    dims: "Chiều dài toàn thân 9.0m (cả nòng pháo) · Chiều rộng 3.27m · Chiều cao 2.59m · Nặng 36 tấn · Pháo 100mm",
+    discovery: "Chiếc xe tăng lịch sử của Đại đội 4, Tiểu đoàn 1, Lữ đoàn Tăng Thiết giáp 203, Quân đoàn 2 đã dẫn đầu thọc sâu đánh chiếm Dinh Độc Lập trưa ngày 30/4/1975.",
+    desc: "Bảo vật quốc gia thời hiện đại, nhân chứng thép của Đại thắng mùa Xuân 1975. Chiếc xe đã dũng mãnh húc tung cánh cổng chính Dinh Độc Lập, sào huyệt cuối cùng của chính quyền Sài Gòn, chấm dứt 30 năm chiến tranh giải phóng dân tộc.",
+    notes: [
+      "Tổ lái xe tăng 390 gồm 4 chiến sĩ anh hùng: Trung úy Vũ Đăng Toàn (Trưởng xe), Trung sĩ Ngô Sĩ Nguyên (Pháo thủ số 1), Trung sĩ Lê Văn Phượng (Lái xe) và Hạ sĩ Nguyễn Văn Tập (Pháo thủ số 2).",
+      "Hồi 11 giờ 30 phút ngày 30/4/1975: Xe 390 vượt qua cầu Sài Gòn tiến vào đại lộ Thống Nhất. Khi xe tăng 843 rẽ vào cổng phụ bị kẹt lại, xe tăng 390 nhấn ga húc sập hoàn toàn hai cánh cổng sắt kiên cố của Dinh Độc Lập.",
+      "Sau cú húc lịch sử, xe 390 tiến thẳng vào thảm cỏ trước dinh, nòng pháo hướng thẳng lên lễ đài. Trung úy Vũ Đăng Toàn cùng đồng đội yểm trợ đồng chí Bùi Quang Thận tiến lên nóc dinh cắm lá cờ Giải phóng.",
+      "Bức ảnh lịch sử do nữ nhà báo Pháp Francoise Demulder chụp lại khoảnh khắc xe tăng 390 đè bẹp cánh cổng Dinh Độc Lập đã trở thành biểu tượng bất tử được cả thế giới công nhận.",
+      "Sau chiến tranh, kíp xe tiếp tục tham gia chiến đấu bảo vệ biên giới Tây Nam năm 1979 trước khi xe được vinh danh đưa về trưng bày tại Bảo tàng Tăng Thiết giáp."
+    ],
+    significance: "Tượng đài bất tử về lòng dũng cảm, ý chí sắt đá và chiến thắng vĩ đại của Quân đội nhân dân Việt Nam, đánh dấu non sông thu về một mối, đất nước thống nhất trọn vẹn.",
+    highlights: ["Húc sập cổng chính Dinh Độc Lập 11h30 ngày 30/4/1975", "Kíp lái 4 chiến sĩ anh hùng Quân đoàn 2", "Bức ảnh lịch sử của Francoise Demulder", "Biểu tượng ngày non sông thống nhất"]
   }
 ];

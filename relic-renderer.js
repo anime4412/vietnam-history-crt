@@ -1,610 +1,77 @@
-// 3D Vietnamese Historical Relics Renderer for the Retro CRT TV
-// Powered by Three.js inside the 1024x768 TV signal
+// Vietnamese Historical Relics Archive & Historical Dossier Renderer
+// Displays authentic photographs and comprehensive archaeological field records on the CRT TV
 
-import * as THREE from "three";
 import { VIETNAM_RELICS } from "./vietnam-history-data.js";
 
 export class RelicRenderer {
-  constructor(canvas, width = 1024, height = 768) {
+  constructor(canvas, width = 960, height = 720) {
     this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
     this.width = width;
     this.height = height;
 
     this.relicIndex = 0;
-    this.autoRotate = true;
-    this.wireframe = false;
-    this.lightMode = 0; // 0: Museum spotlight, 1: Golden sunset, 2: Cyber neon
+    this.tabIndex = 0; // 0: Tổng quan, 1: Ghi chép lịch sử, 2: Ý nghĩa & Sự kiện
+    this.scrollOffset = 0;
+    this.maxScroll = 0;
+    this.zoomPhoto = false;
 
-    this.rotX = 0.25;
-    this.rotY = 0;
-    this.targetRotX = 0.25;
-    this.targetRotY = 0;
-    this.zoom = 1.0;
-    this.targetZoom = 1.0;
-
-    this.isDragging = false;
-    this.lastPointer = { x: 0, y: 0 };
-
-    this.setupScene();
-    this.buildCurrentRelic();
+    // Load authentic museum photographs
+    this.images = new Map();
+    this.loadImages();
   }
 
-  setupScene() {
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color("#07090e");
-
-    this.camera = new THREE.PerspectiveCamera(38, this.width / this.height, 0.1, 100);
-    this.camera.position.set(0, 0.4, 3.8);
-
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.canvas,
-      antialias: true,
-      alpha: false,
-      preserveDrawingBuffer: true,
-      powerPreference: "high-performance"
+  loadImages() {
+    VIETNAM_RELICS.forEach((relic, idx) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = relic.image;
+      img.onload = () => {
+        this.images.set(idx, img);
+      };
+      this.images.set(idx, img);
     });
-    this.renderer.setSize(this.width, this.height, false);
-    this.renderer.setPixelRatio(1);
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.35;
-
-    // Pedestal & Museum display room
-    this.pedestalGroup = new THREE.Group();
-    const pedGeo = new THREE.CylinderGeometry(1.3, 1.4, 0.2, 48);
-    const pedMat = new THREE.MeshStandardMaterial({
-      color: "#12141a",
-      roughness: 0.6,
-      metalness: 0.2
-    });
-    const pedestal = new THREE.Mesh(pedGeo, pedMat);
-    pedestal.position.y = -1.1;
-    this.pedestalGroup.add(pedestal);
-
-    const ringGeo = new THREE.RingGeometry(1.28, 1.35, 48);
-    const ringMat = new THREE.MeshBasicMaterial({ color: "#c99a38", side: THREE.DoubleSide });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = -Math.PI / 2;
-    ring.position.y = -0.99;
-    this.pedestalGroup.add(ring);
-    this.scene.add(this.pedestalGroup);
-
-    // Relic holder
-    this.relicRoot = new THREE.Group();
-    this.scene.add(this.relicRoot);
-
-    // Lighting
-    this.ambientLight = new THREE.AmbientLight("#22283a", 1.8);
-    this.scene.add(this.ambientLight);
-
-    this.keyLight = new THREE.SpotLight("#fff5df", 120);
-    this.keyLight.position.set(2.5, 4.5, 3.5);
-    this.keyLight.angle = Math.PI / 5;
-    this.keyLight.penumbra = 0.5;
-    this.scene.add(this.keyLight);
-
-    this.rimLight = new THREE.DirectionalLight("#a2c2ff", 3.2);
-    this.rimLight.position.set(-3.5, 2.5, -3);
-    this.scene.add(this.rimLight);
-
-    this.bottomGlow = new THREE.PointLight("#c48b29", 35, 4);
-    this.bottomGlow.position.set(0, -0.9, 0);
-    this.scene.add(this.bottomGlow);
   }
-
-  buildCurrentRelic() {
-    // Clear old relic
-    while (this.relicRoot.children.length > 0) {
-      const obj = this.relicRoot.children[0];
-      this.relicRoot.remove(obj);
-      if (obj.geometry) obj.geometry.dispose();
-      if (obj.material) {
-        if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
-        else obj.material.dispose();
-      }
-    }
-
-    const data = VIETNAM_RELICS[this.relicIndex];
-    let meshGroup = new THREE.Group();
-
-    switch (data.meshType) {
-      case "drum":
-        meshGroup = this.createDongSonDrum(data);
-        break;
-      case "urn_jar":
-        meshGroup = this.createDaoThinhJar(data);
-        break;
-      case "dragon":
-        meshGroup = this.createLyDragon(data);
-        break;
-      case "sword":
-        meshGroup = this.createThuanThienSword(data);
-        break;
-      case "tripod_cauldron":
-        meshGroup = this.createCuuDinh(data);
-        break;
-      case "gold_seal":
-        meshGroup = this.createGoldSeal(data);
-        break;
-      case "tank":
-        meshGroup = this.createTank390(data);
-        break;
-      default:
-        meshGroup = this.createDongSonDrum(data);
-    }
-
-    this.relicRoot.add(meshGroup);
-  }
-
-  // --- PROCEDURAL RELIC MESH GENERATORS ---
-
-  // 1. Trống đồng Ngọc Lũ (Đông Sơn Bronze Drum)
-  createDongSonDrum(data) {
-    const group = new THREE.Group();
-
-    // Drum Tympanum Texture (14-pointed solar star & birds)
-    const tympCanvas = document.createElement("canvas");
-    tympCanvas.width = tympCanvas.height = 1024;
-    const ctx = tympCanvas.getContext("2d");
-    const cx = 512, cy = 512;
-
-    // Bronze Patina base
-    ctx.fillStyle = "#3a4a35";
-    ctx.fillRect(0, 0, 1024, 1024);
-
-    // Decorative relief rings
-    ctx.strokeStyle = "#cbb279";
-    ctx.lineWidth = 4;
-
-    for (let r = 70; r <= 480; r += 26) {
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    // Central Sun: 14 Rays
-    ctx.fillStyle = "#e0c78d";
-    ctx.beginPath();
-    const rays = 14;
-    const rInner = 28, rOuter = 82;
-    for (let i = 0; i < rays * 2; i++) {
-      const angle = (i * Math.PI) / rays - Math.PI / 2;
-      const rad = i % 2 === 0 ? rOuter : rInner;
-      const x = cx + Math.cos(angle) * rad;
-      const y = cy + Math.sin(angle) * rad;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-    ctx.fill();
-
-    // 16 Flying Lac Birds (Chim Lạc) flying counter-clockwise
-    ctx.fillStyle = "#e0c78d";
-    const birdRadius = 310;
-    const numBirds = 16;
-    for (let i = 0; i < numBirds; i++) {
-      const a = (i * 2 * Math.PI) / numBirds;
-      const bx = cx + Math.cos(a) * birdRadius;
-      const by = cy + Math.sin(a) * birdRadius;
-      ctx.save();
-      ctx.translate(bx, by);
-      ctx.rotate(a - Math.PI / 2);
-      // Bird shape
-      ctx.beginPath();
-      ctx.moveTo(-16, 0);
-      ctx.lineTo(24, -4);
-      ctx.lineTo(12, 10);
-      ctx.lineTo(4, 2);
-      ctx.lineTo(-8, 14);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    }
-
-    // Feathers & Dancers in concentric ring
-    ctx.font = "bold 15px monospace";
-    ctx.fillStyle = "#cbb279";
-    for (let i = 0; i < 28; i++) {
-      const a = (i * 2 * Math.PI) / 28;
-      const fx = cx + Math.cos(a) * 210;
-      const fy = cy + Math.sin(a) * 210;
-      ctx.save();
-      ctx.translate(fx, fy);
-      ctx.rotate(a + Math.PI / 2);
-      ctx.fillText("▲", -6, 0);
-      ctx.restore();
-    }
-
-    const tympTex = new THREE.CanvasTexture(tympCanvas);
-
-    // Drum Bronze Material
-    const drumMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(data.primaryColor),
-      roughness: 0.38,
-      metalness: 0.72,
-      wireframe: this.wireframe
-    });
-
-    const topMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(data.primaryColor),
-      map: tympTex,
-      roughness: 0.35,
-      metalness: 0.65,
-      wireframe: this.wireframe
-    });
-
-    // Profile of Dong Son Drum (Lathe Geometry)
-    const points = [];
-    points.push(new THREE.Vector2(0, 0.48)); // center top
-    points.push(new THREE.Vector2(0.92, 0.48)); // rim top
-    points.push(new THREE.Vector2(0.94, 0.44)); // rim edge
-    points.push(new THREE.Vector2(0.85, 0.22)); // bulge upper
-    points.push(new THREE.Vector2(0.68, 0.0)); // waist inward
-    points.push(new THREE.Vector2(0.68, -0.22)); // waist cylinder
-    points.push(new THREE.Vector2(0.88, -0.52)); // base flare
-    points.push(new THREE.Vector2(0.92, -0.56)); // base rim
-    points.push(new THREE.Vector2(0.82, -0.56)); // base inner hollow
-
-    const drumGeo = new THREE.LatheGeometry(points, 48);
-    const drumMesh = new THREE.Mesh(drumGeo, drumMat);
-    group.add(drumMesh);
-
-    // Top cap with textured star
-    const capGeo = new THREE.CircleGeometry(0.92, 48);
-    const capMesh = new THREE.Mesh(capGeo, topMat);
-    capMesh.rotation.x = -Math.PI / 2;
-    capMesh.position.y = 0.482;
-    group.add(capMesh);
-
-    // 4 Twin Handles (Quai kép hình thừng bện)
-    const handleGeo = new THREE.TorusGeometry(0.12, 0.026, 16, 24, Math.PI);
-    for (let i = 0; i < 4; i++) {
-      const angle = (i * Math.PI) / 2 + Math.PI / 4;
-      const h = new THREE.Mesh(handleGeo, drumMat);
-      h.position.set(Math.cos(angle) * 0.78, 0.12, Math.sin(angle) * 0.78);
-      h.rotation.y = angle;
-      h.rotation.z = Math.PI / 2;
-      group.add(h);
-    }
-
-    return group;
-  }
-
-  // 2. Thạp đồng Đào Thịnh
-  createDaoThinhJar(data) {
-    const group = new THREE.Group();
-    const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(data.primaryColor),
-      roughness: 0.42,
-      metalness: 0.68,
-      wireframe: this.wireframe
-    });
-
-    const points = [];
-    points.push(new THREE.Vector2(0, 0.75)); // knob
-    points.push(new THREE.Vector2(0.1, 0.75));
-    points.push(new THREE.Vector2(0.08, 0.7));
-    points.push(new THREE.Vector2(0.48, 0.58)); // lid rim
-    points.push(new THREE.Vector2(0.44, 0.52)); // neck
-    points.push(new THREE.Vector2(0.65, 0.2)); // upper belly
-    points.push(new THREE.Vector2(0.68, -0.1)); // main belly
-    points.push(new THREE.Vector2(0.48, -0.55)); // lower base
-    points.push(new THREE.Vector2(0.42, -0.6));
-    points.push(new THREE.Vector2(0, -0.6));
-
-    const geo = new THREE.LatheGeometry(points, 36);
-    const mesh = new THREE.Mesh(geo, mat);
-    group.add(mesh);
-
-    // 4 Fertility Statuettes on the lid
-    const statMat = new THREE.MeshStandardMaterial({ color: "#7a6e4d", roughness: 0.35, metalness: 0.8 });
-    for (let i = 0; i < 4; i++) {
-      const a = (i * Math.PI) / 2;
-      const sGroup = new THREE.Group();
-      const b1 = new THREE.Mesh(new THREE.CapsuleGeometry(0.03, 0.08, 8, 8), statMat);
-      b1.position.set(-0.02, 0.04, 0);
-      const b2 = new THREE.Mesh(new THREE.CapsuleGeometry(0.03, 0.08, 8, 8), statMat);
-      b2.position.set(0.02, 0.04, 0);
-      sGroup.add(b1, b2);
-      sGroup.position.set(Math.cos(a) * 0.32, 0.62, Math.sin(a) * 0.32);
-      group.add(sGroup);
-    }
-    return group;
-  }
-
-  // 3. Tượng Rồng thời Lý (Lý Dynasty Dragon)
-  createLyDragon(data) {
-    const group = new THREE.Group();
-    const stoneMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(data.primaryColor),
-      roughness: 0.55,
-      metalness: 0.25,
-      wireframe: this.wireframe
-    });
-
-    // Sinusoidal curving spine
-    const curvePoints = [];
-    const segments = 60;
-    for (let i = 0; i <= segments; i++) {
-      const u = i / segments;
-      const x = (u - 0.5) * 1.8;
-      const y = Math.sin(u * Math.PI * 4) * 0.28 + Math.cos(u * Math.PI * 2) * 0.1;
-      const z = Math.cos(u * Math.PI * 3) * 0.15;
-      curvePoints.push(new THREE.Vector3(x, y, z));
-    }
-    const spline = new THREE.CatmullRomCurve3(curvePoints);
-    const tubeGeo = new THREE.TubeGeometry(spline, 64, 0.12, 16, false);
-    const bodyMesh = new THREE.Mesh(tubeGeo, stoneMat);
-    group.add(bodyMesh);
-
-    // Dragon Head (Đầu Rồng ngậm ngọc)
-    const headGroup = new THREE.Group();
-    const headGeo = new THREE.ConeGeometry(0.18, 0.45, 12);
-    const headMesh = new THREE.Mesh(headGeo, stoneMat);
-    headMesh.rotation.z = -Math.PI / 3;
-    headGroup.add(headMesh);
-
-    // Flaming crest (Mào lửa)
-    const flameGeo = new THREE.TorusGeometry(0.18, 0.03, 8, 16, Math.PI * 1.3);
-    const flameMesh = new THREE.Mesh(flameGeo, new THREE.MeshStandardMaterial({ color: "#d97d2e", roughness: 0.3, metalness: 0.6 }));
-    flameMesh.position.set(0.05, 0.18, 0);
-    headGroup.add(flameMesh);
-
-    // Sacred Pearl (Ngọc minh châu)
-    const pearl = new THREE.Mesh(
-      new THREE.SphereGeometry(0.08, 24, 24),
-      new THREE.MeshStandardMaterial({ color: "#fff3cf", emissive: "#ffbe42", emissiveIntensity: 0.8, roughness: 0.1, metalness: 0.9 })
-    );
-    pearl.position.set(0.28, -0.05, 0);
-    headGroup.add(pearl);
-
-    headGroup.position.copy(curvePoints[segments]);
-    group.add(headGroup);
-
-    return group;
-  }
-
-  // 4. Bảo Kiếm Thuận Thiên (Sacred Sword of Lê Lợi)
-  createThuanThienSword(data) {
-    const group = new THREE.Group();
-
-    // Steel Blade
-    const bladeGeo = new THREE.BoxGeometry(0.1, 1.3, 0.022);
-    const bladeMat = new THREE.MeshStandardMaterial({
-      color: "#dce6f2",
-      metalness: 0.95,
-      roughness: 0.15,
-      wireframe: this.wireframe
-    });
-    const blade = new THREE.Mesh(bladeGeo, bladeMat);
-    blade.position.y = 0.25;
-    group.add(blade);
-
-    // Blade Tip
-    const tipGeo = new THREE.ConeGeometry(0.071, 0.22, 4);
-    tipGeo.rotateY(Math.PI / 4);
-    const tip = new THREE.Mesh(tipGeo, bladeMat);
-    tip.position.y = 0.98;
-    group.add(tip);
-
-    // Crossguard (Chuôi kiếm đầu rồng vàng)
-    const guardMat = new THREE.MeshStandardMaterial({
-      color: "#f5c338",
-      metalness: 0.88,
-      roughness: 0.28,
-      wireframe: this.wireframe
-    });
-    const guardGeo = new THREE.CylinderGeometry(0.06, 0.04, 0.38, 16);
-    guardGeo.rotateZ(Math.PI / 2);
-    const guard = new THREE.Mesh(guardGeo, guardMat);
-    guard.position.y = -0.42;
-    group.add(guard);
-
-    // Hilt / Handle (Cán kiếm)
-    const hiltGeo = new THREE.CylinderGeometry(0.038, 0.042, 0.38, 16);
-    const hiltMat = new THREE.MeshStandardMaterial({ color: "#241e17", roughness: 0.8 });
-    const hilt = new THREE.Mesh(hiltGeo, hiltMat);
-    hilt.position.y = -0.62;
-    group.add(hilt);
-
-    // Pommel (Đốc kiếm đính ngọc)
-    const pommelGeo = new THREE.SphereGeometry(0.075, 16, 16);
-    const pommel = new THREE.Mesh(pommelGeo, guardMat);
-    pommel.position.y = -0.82;
-    group.add(pommel);
-
-    // Glowing inscription "THUẬN THIÊN"
-    const runeLight = new THREE.PointLight("#62c2ff", 8, 1.2);
-    runeLight.position.set(0, 0.1, 0.05);
-    group.add(runeLight);
-
-    group.rotation.z = Math.PI / 6;
-    return group;
-  }
-
-  // 5. Cửu Đỉnh Huế (Cao Đỉnh)
-  createCuuDinh(data) {
-    const group = new THREE.Group();
-    const bronzeMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(data.primaryColor),
-      metalness: 0.82,
-      roughness: 0.45,
-      wireframe: this.wireframe
-    });
-
-    // Cauldron Bowl
-    const bowlGeo = new THREE.SphereGeometry(0.72, 32, 24, 0, Math.PI * 2, 0, Math.PI * 0.75);
-    const bowl = new THREE.Mesh(bowlGeo, bronzeMat);
-    bowl.position.y = 0.1;
-    group.add(bowl);
-
-    // Rim
-    const rimGeo = new THREE.TorusGeometry(0.72, 0.05, 16, 36);
-    rimGeo.rotateX(Math.PI / 2);
-    const rim = new THREE.Mesh(rimGeo, bronzeMat);
-    rim.position.y = 0.38;
-    group.add(rim);
-
-    // 2 Upright Loop Handles (Tai Đỉnh)
-    const handleGeo = new THREE.TorusGeometry(0.22, 0.045, 12, 24, Math.PI);
-    const h1 = new THREE.Mesh(handleGeo, bronzeMat);
-    h1.position.set(0.68, 0.52, 0);
-    h1.rotation.y = Math.PI / 2;
-    const h2 = new THREE.Mesh(handleGeo, bronzeMat);
-    h2.position.set(-0.68, 0.52, 0);
-    h2.rotation.y = Math.PI / 2;
-    group.add(h1, h2);
-
-    // 3 Cylindrical Legs (Chân Vạc)
-    const legGeo = new THREE.CylinderGeometry(0.08, 0.11, 0.65, 16);
-    for (let i = 0; i < 3; i++) {
-      const a = (i * 2 * Math.PI) / 3;
-      const leg = new THREE.Mesh(legGeo, bronzeMat);
-      leg.position.set(Math.cos(a) * 0.48, -0.42, Math.sin(a) * 0.48);
-      group.add(leg);
-    }
-    return group;
-  }
-
-  // 6. Kim Ấn Hoàng Đế Chi Bảo
-  createGoldSeal(data) {
-    const group = new THREE.Group();
-    const goldMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(data.primaryColor),
-      metalness: 0.92,
-      roughness: 0.22,
-      wireframe: this.wireframe
-    });
-
-    // Seal Base (Thân ấn vuông)
-    const baseGeo = new THREE.BoxGeometry(0.9, 0.38, 0.9);
-    const baseMesh = new THREE.Mesh(baseGeo, goldMat);
-    baseMesh.position.y = -0.3;
-    group.add(baseMesh);
-
-    // Dragon Handle (Quai rồng cuộn)
-    const dragonCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-0.25, -0.1, 0),
-      new THREE.Vector3(-0.15, 0.32, 0),
-      new THREE.Vector3(0.05, 0.42, 0),
-      new THREE.Vector3(0.28, 0.18, 0)
-    ]);
-    const dGeo = new THREE.TubeGeometry(dragonCurve, 32, 0.085, 16, false);
-    const dMesh = new THREE.Mesh(dGeo, goldMat);
-    group.add(dMesh);
-
-    // Dragon Head on Seal
-    const dHead = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.25, 8), goldMat);
-    dHead.position.set(0.35, 0.25, 0);
-    dHead.rotation.z = -Math.PI / 3;
-    group.add(dHead);
-
-    return group;
-  }
-
-  // 7. Xe Tăng Số Hiệu 390
-  createTank390(data) {
-    const group = new THREE.Group();
-    const armorMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(data.primaryColor),
-      roughness: 0.65,
-      metalness: 0.4,
-      wireframe: this.wireframe
-    });
-
-    // Hull (Thân xe tăng)
-    const hullGeo = new THREE.BoxGeometry(1.2, 0.35, 0.7);
-    const hull = new THREE.Mesh(hullGeo, armorMat);
-    group.add(hull);
-
-    // Turret (Tháp pháo tròn T-59)
-    const turretGeo = new THREE.SphereGeometry(0.32, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.6);
-    const turret = new THREE.Mesh(turretGeo, armorMat);
-    turret.position.set(0.1, 0.22, 0);
-    group.add(turret);
-
-    // Cannon Barrel (Nòng pháo 100mm)
-    const cannonGeo = new THREE.CylinderGeometry(0.032, 0.038, 0.95, 12);
-    cannonGeo.rotateZ(-Math.PI / 2);
-    const cannon = new THREE.Mesh(cannonGeo, armorMat);
-    cannon.position.set(0.68, 0.3, 0);
-    group.add(cannon);
-
-    // Treads / Wheels (Bánh xích)
-    const wheelMat = new THREE.MeshStandardMaterial({ color: "#181a1d", roughness: 0.8 });
-    const wheelGeo = new THREE.CylinderGeometry(0.11, 0.11, 0.12, 16);
-    wheelGeo.rotateX(Math.PI / 2);
-
-    for (let side = -1; side <= 1; side += 2) {
-      for (let w = -0.45; w <= 0.45; w += 0.22) {
-        const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-        wheel.position.set(w, -0.2, side * 0.38);
-        group.add(wheel);
-      }
-    }
-
-    // National Flag on Antenna
-    const antGeo = new THREE.CylinderGeometry(0.008, 0.008, 0.65, 8);
-    const ant = new THREE.Mesh(antGeo, new THREE.MeshBasicMaterial({ color: "#999" }));
-    ant.position.set(-0.15, 0.58, 0.15);
-    group.add(ant);
-
-    const flagGeo = new THREE.PlaneGeometry(0.24, 0.16);
-    const flagMat = new THREE.MeshBasicMaterial({ color: "#e61c24", side: THREE.DoubleSide });
-    const flag = new THREE.Mesh(flagGeo, flagMat);
-    flag.position.set(-0.27, 0.78, 0.15);
-    group.add(flag);
-
-    return group;
-  }
-
-  // --- INTERACTION CONTROLS ---
 
   nextRelic() {
     this.relicIndex = (this.relicIndex + 1) % VIETNAM_RELICS.length;
-    this.buildCurrentRelic();
+    this.scrollOffset = 0;
+    this.zoomPhoto = false;
   }
 
   prevRelic() {
     this.relicIndex = (this.relicIndex - 1 + VIETNAM_RELICS.length) % VIETNAM_RELICS.length;
-    this.buildCurrentRelic();
+    this.scrollOffset = 0;
+    this.zoomPhoto = false;
+  }
+
+  setTab(tab) {
+    this.tabIndex = Math.max(0, Math.min(2, tab));
+    this.scrollOffset = 0;
   }
 
   toggleWireframe() {
-    this.wireframe = !this.wireframe;
-    this.buildCurrentRelic();
+    this.zoomPhoto = !this.zoomPhoto;
   }
 
   toggleAutoRotate() {
-    this.autoRotate = !this.autoRotate;
+    this.nextRelic();
   }
 
   setLightMode(mode) {
-    this.lightMode = mode % 3;
-    if (this.lightMode === 0) {
-      this.keyLight.color.set("#fff5df");
-      this.rimLight.color.set("#a2c2ff");
-    } else if (this.lightMode === 1) {
-      this.keyLight.color.set("#ff7a29");
-      this.rimLight.color.set("#ffd285");
-    } else {
-      this.keyLight.color.set("#29ffc2");
-      this.rimLight.color.set("#ff29a2");
-    }
+    this.setTab((this.tabIndex + 1) % 3);
   }
 
   handlePointerDown(x, y) {
     this.isDragging = true;
-    this.lastPointer = { x, y };
+    this.dragStartY = y;
+    this.dragStartScroll = this.scrollOffset;
   }
 
   handlePointerMove(x, y) {
     if (!this.isDragging) return;
-    const dx = x - this.lastPointer.x;
-    const dy = y - this.lastPointer.y;
-    this.targetRotY += dx * 0.008;
-    this.targetRotX += dy * 0.008;
-    this.targetRotX = Math.max(-0.6, Math.min(0.9, this.targetRotX));
-    this.lastPointer = { x, y };
+    const dy = (this.dragStartY - y) * 1.5;
+    this.scrollOffset = Math.max(0, Math.min(this.maxScroll, this.dragStartScroll + dy));
   }
 
   handlePointerUp() {
@@ -612,27 +79,506 @@ export class RelicRenderer {
   }
 
   handleWheel(deltaY) {
-    this.targetZoom += deltaY * 0.001;
-    this.targetZoom = Math.max(0.65, Math.min(1.8, this.targetZoom));
+    this.scrollOffset = Math.max(0, Math.min(this.maxScroll, this.scrollOffset + deltaY * 0.5));
   }
 
-  // --- RENDER LOOP ---
-
-  render(t, dt) {
-    if (this.autoRotate && !this.isDragging) {
-      this.targetRotY += dt * 0.0006;
+  handleClick(uvX, uvY) {
+    // uvX: 0 (left) to 1 (right)
+    // uvY: on CRT texture, y can be mapped
+    // Check fullscreen zoom mode first
+    if (this.zoomPhoto) {
+      this.zoomPhoto = false;
+      return true;
     }
 
-    // Smooth spring physics for rotation & zoom
-    this.rotX += (this.targetRotX - this.rotX) * 0.12;
-    this.rotY += (this.targetRotY - this.rotY) * 0.12;
-    this.zoom += (this.targetZoom - this.zoom) * 0.12;
+    // Left controls / Prev button (x: 0.02 - 0.16, y > 0.80)
+    if (uvX < 0.18 && uvY > 0.80) {
+      this.prevRelic();
+      return true;
+    }
+    // Zoom button (x: 0.18 - 0.32, y > 0.80)
+    if (uvX >= 0.18 && uvX <= 0.32 && uvY > 0.80) {
+      this.zoomPhoto = !this.zoomPhoto;
+      return true;
+    }
+    // Next button (x: 0.32 - 0.48, y > 0.80)
+    if (uvX > 0.32 && uvX < 0.50 && uvY > 0.80) {
+      this.nextRelic();
+      return true;
+    }
 
-    this.relicRoot.rotation.x = this.rotX;
-    this.relicRoot.rotation.y = this.rotY;
-    this.relicRoot.scale.set(this.zoom, this.zoom, this.zoom);
-    this.pedestalGroup.rotation.y = this.rotY * 0.4;
+    // Tab buttons on top of right panel (y between 0.10 and 0.18)
+    if (uvY >= 0.10 && uvY <= 0.18 && uvX >= 0.50) {
+      if (uvX < 0.65) this.setTab(0);
+      else if (uvX < 0.82) this.setTab(1);
+      else this.setTab(2);
+      return true;
+    }
 
-    this.renderer.render(this.scene, this.camera);
+    // Left photo click: zoom photo
+    if (uvX < 0.48 && uvY >= 0.10 && uvY <= 0.78) {
+      this.zoomPhoto = true;
+      return true;
+    }
+
+    // Right panel scroll up/down
+    if (uvX >= 0.50 && uvY > 0.80) {
+      this.setTab((this.tabIndex + 1) % 3);
+      return true;
+    }
+
+    return false;
+  }
+
+  render(t, dt) {
+    const g = this.ctx;
+    const w = this.width;
+    const h = this.height;
+    const relic = VIETNAM_RELICS[this.relicIndex] || VIETNAM_RELICS[0];
+
+    // Background: CRT Slate Navy
+    g.fillStyle = "#070a12";
+    g.fillRect(0, 0, w, h);
+
+    if (this.zoomPhoto) {
+      this.renderZoomedPhoto(g, w, h, relic);
+      return;
+    }
+
+    // 1. Top Header Banner
+    this.renderHeader(g, w, h, relic);
+
+    // 2. Left Column: Authentic Museum Photo & Controls
+    this.renderPhotoPanel(g, 24, 75, 444, 550, relic);
+
+    // 3. Right Column: Archival Dossier & Historical Notes
+    this.renderDossierPanel(g, 486, 75, 450, 550, relic);
+
+    // 4. Bottom Navigation & Status Bar
+    this.renderFooter(g, w, h);
+
+    // CRT Scanlines overlay
+    g.fillStyle = "rgba(0, 0, 0, 0.08)";
+    for (let y = 0; y < h; y += 4) {
+      g.fillRect(0, y, w, 1.5);
+    }
+  }
+
+  renderHeader(g, w, h, relic) {
+    // Header container
+    g.fillStyle = "#0c1322";
+    g.fillRect(0, 0, w, 64);
+    g.strokeStyle = "#253450";
+    g.lineWidth = 1;
+    g.strokeRect(0, 0, w, 64);
+
+    // Museum icon & badge
+    g.fillStyle = "#d4a441";
+    g.font = "bold 24px VT323, monospace";
+    g.textAlign = "left";
+    g.fillText("🏛 BẢO TÀNG LỊCH SỬ VIỆT NAM", 24, 28);
+
+    g.fillStyle = "#7ec8f8";
+    g.font = "17px VT323, monospace";
+    g.fillText("HỒ SƠ LƯU TRỮ CỔ VẬT & BẢO VẬT QUỐC GIA", 24, 50);
+
+    // Current Counter
+    g.fillStyle = "#ffd56b";
+    g.font = "bold 22px VT323, monospace";
+    g.textAlign = "right";
+    g.fillText(`BẢO VẬT [ ${String(this.relicIndex + 1).padStart(2, "0")} / ${String(VIETNAM_RELICS.length).padStart(2, "0")} ]`, w - 24, 28);
+
+    g.fillStyle = "#9eb5db";
+    g.font = "16px VT323, monospace";
+    g.fillText(relic.badge, w - 24, 50);
+  }
+
+  renderPhotoPanel(g, x, y, pw, ph, relic) {
+    // Frame background
+    g.fillStyle = "#0c111c";
+    g.fillRect(x, y, pw, ph);
+    g.strokeStyle = "#2d3b55";
+    g.lineWidth = 1.5;
+    g.strokeRect(x, y, pw, ph);
+
+    // Gold brass corners
+    this.drawCornerDeco(g, x, y, pw, ph, "#d4a441");
+
+    // Photo Area
+    const photoX = x + 12;
+    const photoY = y + 12;
+    const photoW = pw - 24;
+    const photoH = 370;
+
+    g.fillStyle = "#04060a";
+    g.fillRect(photoX, photoY, photoW, photoH);
+    g.strokeStyle = "#1b2436";
+    g.strokeRect(photoX, photoY, photoW, photoH);
+
+    // Draw authentic relic photograph
+    const img = this.images.get(this.relicIndex);
+    if (img && img.complete && img.naturalWidth > 0) {
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
+      const scale = Math.min((photoW - 16) / iw, (photoH - 16) / ih);
+      const dw = iw * scale;
+      const dh = ih * scale;
+      const dx = photoX + (photoW - dw) / 2;
+      const dy = photoY + (photoH - dh) / 2;
+
+      g.drawImage(img, dx, dy, dw, dh);
+
+      // Museum spotlight vignette
+      const rad = Math.max(dw, dh) * 0.7;
+      const grad = g.createRadialGradient(photoX + photoW / 2, photoY + photoH / 2, rad * 0.4, photoX + photoW / 2, photoY + photoH / 2, rad);
+      grad.addColorStop(0, "rgba(0,0,0,0)");
+      grad.addColorStop(1, "rgba(0,4,10,0.5)");
+      g.fillStyle = grad;
+      g.fillRect(photoX, photoY, photoW, photoH);
+    } else {
+      // Loading state
+      g.fillStyle = "#8ba0c2";
+      g.font = "20px VT323, monospace";
+      g.textAlign = "center";
+      g.fillText("ĐANG TẢI ẢNH BẢO VẬT…", photoX + photoW / 2, photoY + photoH / 2);
+    }
+
+    // Photo Badge Ribbon
+    g.fillStyle = "rgba(10, 16, 28, 0.88)";
+    g.fillRect(photoX + 8, photoY + photoH - 32, photoW - 16, 26);
+    g.fillStyle = "#f5cb6c";
+    g.font = "bold 15px VT323, monospace";
+    g.textAlign = "center";
+    g.fillText("ẢNH HIỆN VẬT GỐC LƯU TRỮ BẢO TÀNG", photoX + photoW / 2, photoY + photoH - 14);
+
+    // Details below photo
+    const infoY = photoY + photoH + 16;
+    g.textAlign = "left";
+    g.fillStyle = "#ffd56b";
+    g.font = "bold 16px VT323, monospace";
+    g.fillText("CHẤT LIỆU:", x + 16, infoY);
+    g.fillStyle = "#d2dded";
+    g.font = "14px Archivo, sans-serif";
+    this.drawWrappedText(g, relic.material, x + 92, infoY - 1, pw - 108, 18, 2);
+
+    g.fillStyle = "#ffd56b";
+    g.font = "bold 16px VT323, monospace";
+    g.fillText("LƯU GIỮ:", x + 16, infoY + 42);
+    g.fillStyle = "#a8c0e6";
+    g.font = "14px Archivo, sans-serif";
+    this.drawWrappedText(g, relic.location, x + 92, infoY + 41, pw - 108, 18, 1);
+
+    // Navigation buttons
+    const btnY = y + ph - 46;
+    const btnH = 34;
+    
+    // Prev Button
+    this.drawButton(g, x + 12, btnY, 128, btnH, "◀ TRƯỚC (A)", "#19253a", "#ffd56b");
+    // Zoom Button
+    this.drawButton(g, x + 148, btnY, 140, btnH, "🔍 PHÓNG TO (Z)", "#22324e", "#7ec8f8");
+    // Next Button
+    this.drawButton(g, x + 296, btnY, 136, btnH, "TIẾP THEO ▶ (D)", "#19253a", "#ffd56b");
+  }
+
+  renderDossierPanel(g, x, y, pw, ph, relic) {
+    // Panel background
+    g.fillStyle = "#090d16";
+    g.fillRect(x, y, pw, ph);
+    g.strokeStyle = "#253450";
+    g.lineWidth = 1.5;
+    g.strokeRect(x, y, pw, ph);
+
+    // Tab Header Bar
+    const tabH = 38;
+    const tabW = (pw - 8) / 3;
+    const tabs = ["1. TỔNG QUAN", "2. GHI CHÉP LỊCH SỬ", "3. Ý NGHĨA & SỰ KIỆN"];
+
+    for (let i = 0; i < 3; i++) {
+      const tx = x + 4 + i * tabW;
+      const active = this.tabIndex === i;
+      g.fillStyle = active ? "#d4a441" : "#111826";
+      g.fillRect(tx, y + 4, tabW - 4, tabH);
+      g.strokeStyle = active ? "#ffe79a" : "#223149";
+      g.strokeRect(tx, y + 4, tabW - 4, tabH);
+
+      g.fillStyle = active ? "#050912" : "#98aecf";
+      g.font = "bold 16px VT323, monospace";
+      g.textAlign = "center";
+      g.fillText(tabs[i], tx + (tabW - 4) / 2, y + 28);
+    }
+
+    // Content container clip area
+    const cx = x + 16;
+    const cy = y + tabH + 16;
+    const cw = pw - 32;
+    const ch = ph - tabH - 32;
+
+    g.save();
+    g.beginPath();
+    g.rect(cx, cy, cw, ch);
+    g.clip();
+
+    // Render Tab Content
+    if (this.tabIndex === 0) {
+      this.renderOverviewTab(g, cx, cy, cw, relic);
+    } else if (this.tabIndex === 1) {
+      this.renderNotesTab(g, cx, cy, cw, ch, relic);
+    } else {
+      this.renderSignificanceTab(g, cx, cy, cw, ch, relic);
+    }
+
+    g.restore();
+  }
+
+  renderOverviewTab(g, x, y, w, relic) {
+    g.textAlign = "left";
+
+    // Big Relic Title
+    g.fillStyle = "#ffd56b";
+    g.font = "bold 26px Archivo, sans-serif";
+    g.fillText(relic.title, x, y + 24);
+
+    // Era / Period
+    g.fillStyle = "#7ec8f8";
+    g.font = "18px VT323, monospace";
+    g.fillText("🏛 NIÊN ĐẠI: " + relic.era.toUpperCase(), x, y + 54);
+
+    // Divider
+    g.strokeStyle = "#253450";
+    g.beginPath();
+    g.moveTo(x, y + 66);
+    g.lineTo(x + w, y + 66);
+    g.stroke();
+
+    // Archaeological specs grid
+    let curY = y + 90;
+    const row = (label, val, color = "#e3ecf8") => {
+      g.fillStyle = "#d4a441";
+      g.font = "bold 16px VT323, monospace";
+      g.fillText(label, x, curY);
+
+      g.fillStyle = color;
+      g.font = "14px Archivo, sans-serif";
+      const lines = this.drawWrappedText(g, val, x + 115, curY - 1, w - 115, 20);
+      curY += Math.max(26, lines * 20 + 8);
+    };
+
+    row("KÍCH THƯỚC:", relic.dims);
+    row("CHẤT LIỆU:", relic.material);
+    row("XUẤT XỨ:", relic.discovery);
+
+    // Overview paragraph
+    curY += 8;
+    g.fillStyle = "#ffd56b";
+    g.font = "bold 16px VT323, monospace";
+    g.fillText("MÔ TẢ KHẢO CỔ & TỔNG QUAN:", x, curY);
+    curY += 22;
+
+    g.fillStyle = "#cbd8eb";
+    g.font = "14px Archivo, sans-serif";
+    this.drawWrappedText(g, relic.desc, x, curY, w, 22);
+  }
+
+  renderNotesTab(g, x, y, w, h, relic) {
+    g.textAlign = "left";
+    let curY = y + 20 - this.scrollOffset;
+
+    g.fillStyle = "#ffd56b";
+    g.font = "bold 20px VT323, monospace";
+    g.fillText("📜 TƯ LIỆU GHI CHÉP HIỆN TRƯỜNG & KHẢO CỔ HỌC", x, curY);
+    curY += 26;
+
+    g.fillStyle = "#8ba0c2";
+    g.font = "14px VT323, monospace";
+    g.fillText("(DÙNG CUỘN CHUỘT HOẶC KÉO ĐỂ ĐỌC HẾT CÁC GHI CHÉP)", x, curY);
+    curY += 18;
+
+    g.strokeStyle = "#253450";
+    g.beginPath();
+    g.moveTo(x, curY);
+    g.lineTo(x + w, curY);
+    g.stroke();
+    curY += 16;
+
+    // Detailed field notes
+    const notes = relic.notes || [];
+    notes.forEach((note, idx) => {
+      // Note index badge
+      g.fillStyle = "#d4a441";
+      g.font = "bold 17px VT323, monospace";
+      g.fillText(`[GHI CHÉP 0${idx + 1}]`, x, curY);
+      curY += 20;
+
+      // Note content
+      g.fillStyle = "#dce7f5";
+      g.font = "14px Archivo, sans-serif";
+      const lines = this.drawWrappedText(g, note, x + 8, curY, w - 16, 21);
+      curY += lines * 21 + 18;
+    });
+
+    // Calculate maximum scroll
+    const totalH = curY + this.scrollOffset - y;
+    this.maxScroll = Math.max(0, totalH - h);
+
+    // Draw scroll indicator bar if content overflows
+    if (this.maxScroll > 0) {
+      const barH = Math.max(30, (h / totalH) * h);
+      const barY = y + (this.scrollOffset / this.maxScroll) * (h - barH);
+      g.fillStyle = "#1e293b";
+      g.fillRect(x + w - 6, y, 4, h);
+      g.fillStyle = "#d4a441";
+      g.fillRect(x + w - 6, barY, 4, barH);
+    }
+  }
+
+  renderSignificanceTab(g, x, y, w, h, relic) {
+    g.textAlign = "left";
+    let curY = y + 20;
+
+    g.fillStyle = "#ffd56b";
+    g.font = "bold 20px VT323, monospace";
+    g.fillText("🇻🇳 Ý NGHĨA LỊCH SỬ & CHỦ QUYỀN DÂN TỘC", x, curY);
+    curY += 28;
+
+    // Quote Box
+    g.fillStyle = "#111827";
+    g.fillRect(x, curY, w, 110);
+    g.strokeStyle = "#d4a441";
+    g.lineWidth = 1.5;
+    g.strokeRect(x, curY, w, 110);
+
+    g.fillStyle = "#ffd56b";
+    g.font = "bold 28px VT323, monospace";
+    g.fillText("“", x + 12, curY + 28);
+
+    g.fillStyle = "#fef08a";
+    g.font = "italic 15px Archivo, sans-serif";
+    this.drawWrappedText(g, relic.significance, x + 28, curY + 24, w - 40, 22);
+    curY += 135;
+
+    // Highlights list
+    g.fillStyle = "#7ec8f8";
+    g.font = "bold 18px VT323, monospace";
+    g.fillText("★ ĐIỂM NHẤN LỊCH SỬ TIÊU BIỂU:", x, curY);
+    curY += 26;
+
+    const highlights = relic.highlights || [];
+    highlights.forEach((hl) => {
+      g.fillStyle = "#d4a441";
+      g.font = "16px VT323, monospace";
+      g.fillText("◆", x + 8, curY);
+
+      g.fillStyle = "#e2e8f0";
+      g.font = "14px Archivo, sans-serif";
+      const lines = this.drawWrappedText(g, hl, x + 28, curY - 2, w - 36, 20);
+      curY += lines * 20 + 8;
+    });
+
+    // Archival footnote
+    curY += 12;
+    g.fillStyle = "#94a3b8";
+    g.font = "13px VT323, monospace";
+    g.fillText("LƯU TRỮ VÀ GIÁM ĐỊNH THEO QUY CHUẨN BẢO VẬT QUỐC GIA VIỆT NAM", x, curY);
+  }
+
+  renderZoomedPhoto(g, w, h, relic) {
+    // Dim background
+    g.fillStyle = "rgba(4, 7, 14, 0.96)";
+    g.fillRect(0, 0, w, h);
+
+    const img = this.images.get(this.relicIndex);
+    if (img && img.complete && img.naturalWidth > 0) {
+      const maxW = w - 80;
+      const maxH = h - 140;
+      const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
+      const dw = img.naturalWidth * scale;
+      const dh = img.naturalHeight * scale;
+      const dx = (w - dw) / 2;
+      const dy = 50 + (maxH - dh) / 2;
+
+      g.strokeStyle = "#d4a441";
+      g.lineWidth = 2;
+      g.strokeRect(dx - 4, dy - 4, dw + 8, dh + 8);
+      g.drawImage(img, dx, dy, dw, dh);
+    }
+
+    // Title overlay
+    g.fillStyle = "#ffd56b";
+    g.font = "bold 24px Archivo, sans-serif";
+    g.textAlign = "center";
+    g.fillText(relic.title + " – " + relic.era, w / 2, 36);
+
+    // Prompt
+    g.fillStyle = "#7ec8f8";
+    g.font = "18px VT323, monospace";
+    g.fillText("[ NHẤN PHÍM Z HOẶC CLICK VÀO MÀN HÌNH ĐỂ QUAY LẠI HỒ SƠ GHI CHÉP ]", w / 2, h - 28);
+  }
+
+  renderFooter(g, w, h) {
+    g.fillStyle = "#060911";
+    g.fillRect(0, h - 56, w, 56);
+    g.strokeStyle = "#1e293b";
+    g.beginPath();
+    g.moveTo(0, h - 56);
+    g.lineTo(w, h - 56);
+    g.stroke();
+
+    g.fillStyle = "#facc15";
+    g.font = "bold 16px VT323, monospace";
+    g.textAlign = "center";
+    g.fillText("PHÍM ◀ / ▶: ĐỔI CỔ VẬT · PHÍM 1, 2, 3: ĐỔI TAB GHI CHÉP · CUỘN CHUỘT: ĐỌC TIẾP · PHÍM Z: PHÓNG TO ẢNH", w / 2, h - 22);
+  }
+
+  drawButton(g, bx, by, bw, bh, text, bg, color) {
+    g.fillStyle = bg;
+    g.fillRect(bx, by, bw, bh);
+    g.strokeStyle = color;
+    g.lineWidth = 1;
+    g.strokeRect(bx, by, bw, bh);
+
+    g.fillStyle = color;
+    g.font = "bold 15px VT323, monospace";
+    g.textAlign = "center";
+    g.fillText(text, bx + bw / 2, by + bh / 2 + 5);
+  }
+
+  drawCornerDeco(g, x, y, w, h, color) {
+    const s = 10;
+    g.strokeStyle = color;
+    g.lineWidth = 2;
+    // Top-left
+    g.strokeRect(x, y, s, s);
+    // Top-right
+    g.strokeRect(x + w - s, y, s, s);
+    // Bottom-left
+    g.strokeRect(x, y + h - s, s, s);
+    // Bottom-right
+    g.strokeRect(x + w - s, y + h - s, s, s);
+  }
+
+  drawWrappedText(g, text, x, y, maxWidth, lineHeight, maxLines = 100) {
+    const words = String(text || "").split(" ");
+    let line = "";
+    let linesDrawn = 0;
+
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + " ";
+      const metrics = g.measureText(testLine);
+      const testWidth = metrics.width;
+      if (testWidth > maxWidth && n > 0) {
+        g.fillText(line, x, y);
+        line = words[n] + " ";
+        y += lineHeight;
+        linesDrawn++;
+        if (linesDrawn >= maxLines) break;
+      } else {
+        line = testLine;
+      }
+    }
+    if (linesDrawn < maxLines && line.length > 0) {
+      g.fillText(line, x, y);
+      linesDrawn++;
+    }
+    return linesDrawn;
   }
 }
