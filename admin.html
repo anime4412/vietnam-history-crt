@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trung Tâm Quản Trị & Điều Hành Bảo Tàng Lịch Sử Việt Nam | Admin CMS</title>
+  
+  <!-- Phông chữ hoài cổ & hiện đại kết hợp -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;900&family=Be+Vietnam+Pro:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
+  
+  <!-- Tệp định kiểu CSS riêng biệt của Admin -->
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+  <!-- =========================================================================
+       THANH ĐIỀU HÀNH TRÊN CÙNG (TOP NAVIGATION BAR)
+       ========================================================================= -->
+  <header class="admin-topbar">
+    <div class="topbar-brand">
+      <span class="brand-glyph">◆</span>
+      <div class="brand-text">
+        <h1>TRUNG TÂM ĐIỀU HÀNH BẢO TÀNG LỊCH SỬ</h1>
+        <p class="brand-subtitle">VIETNAM HISTORY CRT STUDIO · QUẢN TRỊ NỘI DUNG CMS</p>
+      </div>
+    </div>
+
+    <div class="topbar-status">
+      <div class="status-indicator">
+        <span class="status-dot"></span>
+        <span class="status-label">MÁY CHỦ TRỰC TUYẾN</span>
+      </div>
+      <div class="topbar-actions">
+        <a href="index.html" target="_blank" class="btn-topbar" title="Mở phòng trải nghiệm 3D trong tab mới">
+          <svg class="topbar-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          PHÒNG 3D CRT
+        </a>
+        <a href="museum.html" target="_blank" class="btn-topbar" title="Mở bảo tàng số chi tiết">
+          <svg class="topbar-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          BẢO TÀNG SỐ
+        </a>
+        <button id="btnLogout" class="btn-topbar btn-logout" title="Đăng xuất khỏi bảng quản trị">
+          <svg class="topbar-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          KHÓA HỆ THỐNG
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       BỐ CỤC CHÍNH (SIDEBAR + KHUNG NỘI DUNG CHÍNH)
+       ========================================================================= -->
+  <div class="admin-layout">
+    
+    <!-- THANH ĐIỀU HƯỚNG BÊN TRÁI (SIDEBAR) -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-user">
+        <div class="user-avatar">ADM</div>
+        <div class="user-info">
+          <div class="user-name">Quản Trị Viên</div>
+          <div class="user-role">Quyền Tối Cao (Master)</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-tab active" data-tab="tab-overview">
+          <span class="tab-icon">📊</span>
+          <span class="tab-text">Tổng Quan Hệ Thống</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-relics">
+          <span class="tab-icon">🏛️</span>
+          <span class="tab-text">Bảo Vật Quốc Gia</span>
+          <span class="tab-badge" id="badgeRelicCount">07</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-tapes">
+          <span class="tab-icon">📼</span>
+          <span class="tab-text">Băng Phim Tư Liệu</span>
+          <span class="tab-badge" id="badgeTapeCount">10</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-settings">
+          <span class="tab-icon">⚙️</span>
+          <span class="tab-text">Cấu Hình Phòng 3D</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-backup">
+          <span class="tab-icon">💾</span>
+          <span class="tab-text">Sao Lưu & Dữ Liệu</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="footer-tip">
+          <span class="tip-glyph">■</span>
+          <span class="tip-text">Dữ liệu lưu vào máy chủ sẽ tự động đồng bộ ngay lập tức sang TV CRT và Bảo tàng số.</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- NỘI DUNG CHÍNH (MAIN VIEWPORT) -->
+    <main class="admin-main">
+
+      <!-- =====================================================================
+           TAB 1: TỔNG QUAN HỆ THỐNG (DASHBOARD OVERVIEW)
+           ===================================================================== -->
+      <section id="tab-overview" class="tab-pane active">
+        <div class="pane-header">
+          <div>
+            <h2 class="pane-title">TỔNG QUAN BẢO TÀNG SỐ</h2>
+            <p class="pane-desc">Theo dõi thông số dữ liệu, tình trạng đồng bộ 3D và các thao tác quản trị nhanh.</p>
+          </div>
+          <button class="btn-primary" id="btnQuickAddRelic">
+            <span>+ THÊM BẢO VẬT MỚI</span>
+          </button>
+        </div>
+
+        <!-- CÁC THẺ THỐNG KÊ (KPI STAT CARDS) -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon">🏛️</div>
+            <div class="kpi-content">
+              <div class="kpi-num" id="kpiRelicNum">7</div>
+              <div class="kpi-label">BẢO VẬT QUỐC GIA</div>
+              <div class="kpi-sub">Đã xác lập hồ sơ khảo cổ học</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon">📼</div>
+            <div class="kpi-content">
+              <div class="kpi-num" id="kpiTapeNum">10</div>
+              <div class="kpi-label">CUỘN BĂNG LỊCH SỬ</div>
+              <div class="kpi-sub">Trưng bày trên bàn làm việc retro</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon">🎬</div>
+            <div class="kpi-content">
+              <div class="kpi-num" id="kpiVideoNum">8</div>
+              <div class="kpi-label">PHIM VIDEO MP4</div>
+              <div class="kpi-sub">Hỗ trợ tua trực tuyến HTTP 206</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon">⚡</div>
+            <div class="kpi-content">
+              <div class="kpi-num" id="kpiSyncStatus">TỰ ĐỘNG</div>
+              <div class="kpi-label">ĐỒNG BỘ THREE.JS</div>
+              <div class="kpi-sub">Không cần biên dịch lại mã nguồn</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BẢNG ĐIỀU KHIỂN NHANH (QUICK OPERATIONS) -->
+        <div class="dashboard-sections">
+          <div class="panel-box">
+            <div class="panel-title">
+              <span>◆ THAO TÁC QUẢN TRỊ NHANH</span>
+            </div>
+            <div class="quick-btn-grid">
+              <button class="btn-action-card" id="qaGoRelics">
+                <span class="action-icon">🔍</span>
+                <span class="action-name">Duyệt hồ sơ bảo vật</span>
+                <span class="action-desc">Chỉnh sửa thông số, kích thước, ảnh hiện vật</span>
+              </button>
+              <button class="btn-action-card" id="qaGoTapes">
+                <span class="action-icon">📼</span>
+                <span class="action-name">Quản lý băng tư liệu</span>
+                <span class="action-desc">Thay đổi trích dẫn, đường dẫn video MP4</span>
+              </button>
+              <button class="btn-action-card" id="qaExport">
+                <span class="action-icon">📥</span>
+                <span class="action-name">Tải bản sao lưu JSON</span>
+                <span class="action-desc">Tải dữ liệu về máy an toàn để lưu trữ</span>
+              </button>
+              <button class="btn-action-card" id="qaGo3D">
+                <span class="action-icon">📺</span>
+                <span class="action-name">Mở màn hình TV CRT</span>
+                <span class="action-desc">Kiểm tra kết quả hiển thị trên bóng đèn hình</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="panel-box">
+            <div class="panel-title">
+              <span>◆ HƯỚNG DẪN QUẢN TRỊ VIÊN</span>
+            </div>
+            <div class="guide-list">
+              <div class="guide-item">
+                <span class="guide-step">1</span>
+                <div>
+                  <strong>Cập nhật bảo vật:</strong> Vào mục <em>"Bảo Vật Quốc Gia"</em> để bổ sung hoặc sửa đổi các ghi chép khảo cổ học, thay đổi ảnh trưng bày.
+                </div>
+              </div>
+              <div class="guide-item">
+                <span class="guide-step">2</span>
+                <div>
+                  <strong>Thêm video tư liệu mới:</strong> Đặt file MP4 vào thư mục <code>videos/</code> rồi vào mục <em>"Băng Phim Tư Liệu"</em> nhập đường dẫn tương ứng.
+                </div>
+              </div>
+              <div class="guide-item">
+                <span class="guide-step">3</span>
+                <div>
+                  <strong>Sao lưu định kỳ:</strong> Hãy dùng chức năng <em>"Sao Lưu & Dữ Liệu"</em> để tải về tệp JSON dự phòng trước khi thay đổi quy mô lớn.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           TAB 2: QUẢN LÝ BẢO VẬT QUỐC GIA (RELICS MANAGEMENT)
+           ===================================================================== -->
+      <section id="tab-relics" class="tab-pane">
+        <div class="pane-header">
+          <div>
+            <h2 class="pane-title">HỒ SƠ BẢO VẬT QUỐC GIA</h2>
+            <p class="pane-desc">Quản lý chi tiết 7 Bảo vật Quốc gia vô giá, hình ảnh gốc và các ghi chép thực địa.</p>
+          </div>
+          <button class="btn-primary" id="btnOpenAddRelicModal">
+            <span>+ THÊM BẢO VẬT MỚI</span>
+          </button>
+        </div>
+
+        <!-- THANH TÌM KIẾM BẢO VẬT -->
+        <div class="filter-bar">
+          <div class="search-box">
+            <svg class="search-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="relicSearchInput" placeholder="Tìm theo tên bảo vật, niên đại, chất liệu hoặc nơi lưu giữ...">
+          </div>
+          <div class="filter-stats" id="relicFilterCount">Đang hiển thị 7 bảo vật</div>
+        </div>
+
+        <!-- BẢNG DANH SÁCH BẢO VẬT -->
+        <div class="data-table-container">
+          <table class="data-table" id="relicsTable">
+            <thead>
+              <tr>
+                <th width="80">Ảnh</th>
+                <th>Tên Bảo Vật & Niên Đại</th>
+                <th>Căn Cứ Pháp Lý</th>
+                <th>Nơi Lưu Giữ Hiện Tại</th>
+                <th>Kích Thước & Chất Liệu</th>
+                <th width="130" class="text-right">Hành Động</th>
+              </tr>
+            </thead>
+            <tbody id="relicsTbody">
+              <!-- Render tự động bởi admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           TAB 3: QUẢN LÝ CUỘN BĂNG TƯ LIỆU (TAPES & VIDEOS MANAGEMENT)
+           ===================================================================== -->
+      <section id="tab-tapes" class="tab-pane">
+        <div class="pane-header">
+          <div>
+            <h2 class="pane-title">DANH SÁCH CUỘN BĂNG TƯ LIỆU VHS</h2>
+            <p class="pane-desc">Quản lý 10 cuộn băng lịch sử trên bàn làm việc 3D, liên kết video MP4 và sa bàn trận đánh.</p>
+          </div>
+          <button class="btn-primary" id="btnOpenAddTapeModal">
+            <span>+ THÊM CUỘN PHIM MỚI</span>
+          </button>
+        </div>
+
+        <!-- BẢNG DANH SÁCH CUỘN BĂNG -->
+        <div class="data-table-container">
+          <table class="data-table" id="tapesTable">
+            <thead>
+              <tr>
+                <th width="60">STT</th>
+                <th>Tiêu Đề & Mốc Năm</th>
+                <th>Thời Kỳ Lịch Sử</th>
+                <th>Tư Liệu Trình Chiếu</th>
+                <th>Trích Dẫn Hào Hùng</th>
+                <th width="130" class="text-right">Hành Động</th>
+              </tr>
+            </thead>
+            <tbody id="tapesTbody">
+              <!-- Render tự động bởi admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           TAB 4: CẤU HÌNH PHÒNG 3D & CRT (STUDIO SETTINGS)
+           ===================================================================== -->
+      <section id="tab-settings" class="tab-pane">
+        <div class="pane-header">
+          <div>
+            <h2 class="pane-title">CẤU HÌNH KHÔNG GIAN 3D & TV RETRO</h2>
+            <p class="pane-desc">Tinh chỉnh chế độ khởi động mặc định, hiệu ứng quét dòng phốt-pho và bảo mật.</p>
+          </div>
+          <button class="btn-primary" id="btnSaveSettings">
+            <span>LƯU CÀI ĐẶT</span>
+          </button>
+        </div>
+
+        <div class="settings-form-grid">
+          <div class="settings-group">
+            <h3 class="group-title">◆ CHẾ ĐỘ MÀN HÌNH TV CRT</h3>
+            
+            <div class="form-field">
+              <label for="settingStudioName">Tên không gian bảo tàng hiển thị</label>
+              <input type="text" id="settingStudioName" class="form-input">
+            </div>
+
+            <div class="form-field">
+              <label for="settingDefaultChannel">Kênh hiển thị mặc định khi khách vào phòng 3D</label>
+              <select id="settingDefaultChannel" class="form-select">
+                <option value="relics">Hồ Sơ Cổ Vật & Bảo Vật Quốc Gia (Relics Mode)</option>
+                <option value="work">Xem Băng Phim Tư Liệu Lịch Sử (Video Tape Mode)</option>
+                <option value="home">Màn Hình Chào Mừng Lịch Sử (Welcome Film)</option>
+              </select>
+              <span class="field-hint">Khách mở trang index.html sẽ thấy màn hình này đầu tiên.</span>
+            </div>
+
+            <div class="form-field">
+              <label for="settingDefaultVolume">Âm lượng khởi động mặc định (0.0 đến 1.0)</label>
+              <input type="number" id="settingDefaultVolume" class="form-input" min="0" max="1" step="0.05">
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <h3 class="group-title">◆ HIỆU ỨNG HÌNH ẢNH & ÂM THANH</h3>
+
+            <div class="form-switch-row">
+              <div>
+                <strong>Dòng quét CRT Scanlines:</strong>
+                <p class="field-hint">Vẽ các đường kẻ ngang phốt-pho retro mô phỏng màn hình đèn hình cũ.</p>
+              </div>
+              <input type="checkbox" id="settingCrtScanlines" class="form-checkbox">
+            </div>
+
+            <div class="form-switch-row">
+              <div>
+                <strong>Quầng sáng Bloom (UnrealBloomPass):</strong>
+                <p class="field-hint">Phát sáng viền đèn bàn và ánh sáng xanh phát ra từ màn hình TV vào ban đêm.</p>
+              </div>
+              <input type="checkbox" id="settingCrtBloom" class="form-checkbox">
+            </div>
+
+            <div class="form-switch-row">
+              <div>
+                <strong>Âm thanh máy nghe đĩa CD & Phòng:</strong>
+                <p class="field-hint">Cho phép phát nhạc nền và tiếng lách cách cơ học của nút bấm công tắc.</p>
+              </div>
+              <input type="checkbox" id="settingMusicEnabled" class="form-checkbox">
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <h3 class="group-title">◆ BẢO MẬT TRANG QUẢN TRỊ</h3>
+            
+            <div class="form-field">
+              <label for="settingAdminPin">Mã PIN bảo mật truy cập Admin</label>
+              <input type="password" id="settingAdminPin" class="form-input" placeholder="admin123">
+              <span class="field-hint">Mã PIN này dùng để mở khóa khi bạn đăng nhập trang quản trị. Mặc định: <code>admin123</code>.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           TAB 5: SAO LƯU & DỮ LIỆU (BACKUP & RESTORE)
+           ===================================================================== -->
+      <section id="tab-backup" class="tab-pane">
+        <div class="pane-header">
+          <div>
+            <h2 class="pane-title">SAO LƯU & PHỤC HỒI CƠ SỞ DỮ LIỆU</h2>
+            <p class="pane-desc">Đảm bảo an toàn dữ liệu, hỗ trợ xuất và nạp dữ liệu lịch sử nhanh chóng.</p>
+          </div>
+        </div>
+
+        <div class="backup-cards-grid">
+          <!-- THẺ XUẤT SAO LƯU -->
+          <div class="backup-card">
+            <div class="backup-icon">📥</div>
+            <h3 class="backup-card-title">XUẤT SAO LƯU HỆ THỐNG</h3>
+            <p class="backup-card-desc">Tải về toàn bộ cơ sở dữ liệu hiện tại (gồm tất cả 7 bảo vật, 10 cuộn băng và cấu hình) dưới dạng tệp tin JSON tiêu chuẩn.</p>
+            <a href="/api/export" class="btn-primary btn-block" download="vietnam-history-backup.json">
+              TẢI TỆP SAO LƯU (.JSON)
+            </a>
+          </div>
+
+          <!-- THẺ PHỤC HỒI DỮ LIỆU -->
+          <div class="backup-card">
+            <div class="backup-icon">📤</div>
+            <h3 class="backup-card-title">PHỤC HỒI TỪ TỆP SAO LƯU</h3>
+            <p class="backup-card-desc">Chọn tệp tin JSON đã sao lưu từ máy tính để cập nhật hoặc khôi phục lại toàn bộ dữ liệu lịch sử.</p>
+            <div class="file-upload-box">
+              <input type="file" id="importFileInput" accept=".json" class="file-input-hidden">
+              <label for="importFileInput" class="btn-secondary btn-block">CHỌN TỆP JSON TẢI LÊN</label>
+              <div id="importFileName" class="import-file-name">Chưa chọn tệp tin</div>
+            </div>
+            <button id="btnConfirmImport" class="btn-primary btn-block" disabled>
+              TIẾN HÀNH PHỤC HỒI
+            </button>
+          </div>
+
+          <!-- THẺ ĐẶT LẠI NGUYÊN BẢN -->
+          <div class="backup-card">
+            <div class="backup-icon">⚠️</div>
+            <h3 class="backup-card-title text-danger">ĐẶT LẠI NGUYÊN BẢN</h3>
+            <p class="backup-card-desc">Nếu dữ liệu bị lỗi, bạn có thể hoàn nguyên toàn bộ 7 Bảo vật Quốc gia và 10 cuộn băng về trạng thái mặc định của viện bảo tàng.</p>
+            <button id="btnResetDefaults" class="btn-danger btn-block">
+              KHÔI PHỤC VỀ DỮ LIỆU GỐC
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- =========================================================================
+       MODAL: THÊM / CHỈNH SỬA BẢO VẬT QUỐC GIA (RELIC EDIT MODAL)
+       ========================================================================= -->
+  <div id="relicModal" class="modal-backdrop" hidden>
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <h3 id="relicModalTitle">CHỈNH SỬA HỒ SƠ BẢO VẬT QUỐC GIA</h3>
+        <button class="modal-close" data-close="relicModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="relicForm">
+          <input type="hidden" id="relicFormId">
+
+          <div class="form-row-2">
+            <div class="form-field">
+              <label for="relicFormTitle">Tên Bảo Vật Quốc Gia *</label>
+              <input type="text" id="relicFormTitle" class="form-input" required placeholder="Ví dụ: Trống Đồng Ngọc Lũ">
+            </div>
+            <div class="form-field">
+              <label for="relicFormEra">Niên Đại Lịch Sử *</label>
+              <input type="text" id="relicFormEra" class="form-input" required placeholder="Ví dụ: Thế kỷ III - II TCN">
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-field">
+              <label for="relicFormBadge">Huy Hiệu Pháp Lý / Quyết Định Thủ Tướng</label>
+              <input type="text" id="relicFormBadge" class="form-input" placeholder="Ví dụ: Bảo vật Quốc gia số 01/QĐ-TTg">
+            </div>
+            <div class="form-field">
+              <label for="relicFormLocation">Nơi Lưu Giữ & Trưng Bày Hiện Tại</label>
+              <input type="text" id="relicFormLocation" class="form-input" placeholder="Ví dụ: Bảo tàng Lịch sử Quốc gia, Hà Nội">
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-field">
+              <label for="relicFormImage">Đường Dẫn Hình Ảnh Hiện Vật Gốc *</label>
+              <input type="text" id="relicFormImage" class="form-input" required placeholder="images/relics/trongdong.jpg">
+              <span class="field-hint">Chọn ảnh từ thư mục images/relics/ hoặc dán link</span>
+            </div>
+            <div class="form-field">
+              <label for="relicFormMaterial">Chất Liệu & Bề Mặt Patina</label>
+              <input type="text" id="relicFormMaterial" class="form-input" placeholder="Ví dụ: Đồng thau cổ nguyên khối">
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-field">
+              <label for="relicFormDims">Thông Số Kích Thước & Trọng Lượng</label>
+              <input type="text" id="relicFormDims" class="form-input" placeholder="Ví dụ: Cao 63cm · Đk mặt 86cm · Nặng 86kg">
+            </div>
+            <div class="form-field">
+              <label for="relicFormDiscovery">Hoàn Cảnh Khai Quật / Phát Hiện</label>
+              <input type="text" id="relicFormDiscovery" class="form-input" placeholder="Ví dụ: Phát hiện năm 1893 tại Hà Nam...">
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="relicFormDesc">Mô Tả Tổng Quan & Tư Duy Thẩm Mỹ</label>
+            <textarea id="relicFormDesc" class="form-textarea" rows="3" placeholder="Đoạn văn bản giới thiệu tổng quan về bảo vật..."></textarea>
+          </div>
+
+          <div class="form-field">
+            <label for="relicFormSignificance">Ý Nghĩa Lịch Sử & Chủ Quyền Dân Tộc</label>
+            <textarea id="relicFormSignificance" class="form-textarea" rows="2" placeholder="Khẳng định giá trị độc lập và tự hào non sông..."></textarea>
+          </div>
+
+          <div class="form-field">
+            <div class="label-with-action">
+              <label>Các Mục Ghi Chép Khảo Cổ Học (Field Notes)</label>
+              <button type="button" class="btn-text-gold" id="btnAddNoteRow">+ Thêm đoạn ghi chép</button>
+            </div>
+            <div id="notesContainer" class="dynamic-rows-list">
+              <!-- Render động bởi JS -->
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" data-close="relicModal">HỦY BỎ</button>
+            <button type="submit" class="btn-primary">LƯU HỒ SƠ BẢO VẬT</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL: THÊM / CHỈNH SỬA CUỘN BĂNG TƯ LIỆU (TAPE EDIT MODAL)
+       ========================================================================= -->
+  <div id="tapeModal" class="modal-backdrop" hidden>
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <h3 id="tapeModalTitle">CHỈNH SỬA CUỘN BĂNG TƯ LIỆU LỊCH SỬ</h3>
+        <button class="modal-close" data-close="tapeModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="tapeForm">
+          <input type="hidden" id="tapeFormId">
+
+          <div class="form-row-2">
+            <div class="form-field">
+              <label for="tapeFormTitle">Tiêu Đề Cuộn Băng (In trên nhãn VHS) *</label>
+              <input type="text" id="tapeFormTitle" class="form-input" required placeholder="Ví dụ: Bạch Đằng Giang 938">
+            </div>
+            <div class="form-field">
+              <label for="tapeFormYear">Mốc Năm / Thời Điểm Diễn Ra *</label>
+              <input type="text" id="tapeFormYear" class="form-input" required placeholder="Ví dụ: Năm 938">
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-field">
+              <label for="tapeFormEra">Thời Kỳ Lịch Sử</label>
+              <input type="text" id="tapeFormEra" class="form-input" placeholder="Ví dụ: Chiến thắng Bạch Đằng - Ngô Quyền">
+            </div>
+            <div class="form-field">
+              <label for="tapeFormVideoUrl">Đường Dẫn Video Tư Liệu MP4</label>
+              <input type="text" id="tapeFormVideoUrl" class="form-input" placeholder="Ví dụ: videos/bachdang938.mp4">
+              <span class="field-hint">Nếu để trống, TV sẽ tự chuyển sang sa bàn hoạt họa mô phỏng</span>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="tapeFormDesc">Tóm Tắt Bối Cảnh Lịch Sử</label>
+            <textarea id="tapeFormDesc" class="form-textarea" rows="3" placeholder="Tóm lược diễn biến hào hùng của sự kiện..."></textarea>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-field">
+              <label for="tapeFormQuote">Trích Dẫn Hào Hùng (Hiệu ứng máy đánh chữ)</label>
+              <textarea id="tapeFormQuote" class="form-textarea" rows="2" placeholder="Câu nói nổi tiếng hoặc trích dẫn lịch sử..."></textarea>
+            </div>
+            <div class="form-field">
+              <label for="tapeFormAuthor">Tác Giả Trích Dẫn</label>
+              <input type="text" id="tapeFormAuthor" class="form-input" placeholder="Ví dụ: Đại Việt Sử Ký Toàn Thư">
+              <label for="tapeFormScene" style="margin-top: 10px;">Kiểu Sa Bàn Đồ Họa (Khi không có video)</label>
+              <select id="tapeFormScene" class="form-select">
+                <option value="river_battle">Thủy Chiến Cọc Nhọn Sông Bạch Đằng</option>
+                <option value="mongol_battle">Hội Nghị Diên Hồng & Sát Thát Ba Lần Kháng Mông</option>
+                <option value="tay_son_fire">Hành Quân Thần Tốc Hoàng Đế Quang Trung</option>
+                <option value="ba_dinh_flag">Quảng Trường Ba Đình 2/9/1945</option>
+                <option value="artillery_hills">Điện Biên Phủ Kéo Pháo & Hầm De Castries</option>
+                <option value="palace_gates">Xe Tăng 390 Húc Tung Cổng Dinh Độc Lập</option>
+                <option value="generic">Sa Bàn Bản Đồ Lịch Sử Mặc Định</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row-3">
+            <div class="form-field">
+              <label for="tapeFormBg">Màu Nền TV CRT</label>
+              <input type="color" id="tapeFormBg" class="form-color-picker" value="#132d4a">
+            </div>
+            <div class="form-field">
+              <label for="tapeFormInk">Màu Chữ Màn Hình</label>
+              <input type="color" id="tapeFormInk" class="form-color-picker" value="#d6ebff">
+            </div>
+            <div class="form-field">
+              <label for="tapeFormBig">Từ Khóa Lớn Trên Băng</label>
+              <input type="text" id="tapeFormBig" class="form-input" placeholder="BẠCH, ĐẰNG 938">
+              <span class="field-hint">Phân cách 2 dòng bằng dấu phẩy</span>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" data-close="tapeModal">HỦY BỎ</button>
+            <button type="submit" class="btn-primary">LƯU CUỘN BĂNG</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL: MÀN HÌNH KHÓA ĐĂNG NHẬP ADMIN (PIN LOCK MODAL)
+       ========================================================================= -->
+  <div id="authModal" class="modal-backdrop auth-backdrop" hidden>
+    <div class="auth-dialog">
+      <div class="auth-emblem">◆</div>
+      <h2 class="auth-title">BẢO MẬT HỆ THỐNG</h2>
+      <p class="auth-desc">Vui lòng nhập mã PIN quản trị viên để mở khóa bảng điều khiển Bảo tàng Lịch sử.</p>
+
+      <form id="authForm" class="auth-form">
+        <div class="auth-input-wrapper">
+          <input type="password" id="authPinInput" maxlength="16" autofocus placeholder="••••••" class="auth-pin-input">
+        </div>
+        <div id="authErrorMsg" class="auth-error-msg" hidden>Mã PIN không chính xác!</div>
+        <button type="submit" class="btn-primary btn-block btn-lg">MỞ KHÓA BẢO TÀNG</button>
+      </form>
+      <div class="auth-hint">Gợi ý mã mặc định: <code>admin123</code></div>
+    </div>
+  </div>
+
+  <!-- THÔNG BÁO TỨC THÌ (TOAST NOTIFICATIONS) -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- KỊCH BẢN JS CỦA TRANG QUẢN TRỊ -->
+  <script src="admin.js"></script>
+</body>
+</html>

@@ -12,6 +12,14 @@ retro-portfolio/
 vgpu-3d-prism/
 Lab7_2*
 *.docx
+*.xlsx
+crawl-audit-*
+excel-reporter.js
+nhaccuatui*
+playwright*
+test-results/
+tests/
+tests-screenshot-*
 
 # Temporary Diagnostic Scripts
 analyze_*.js

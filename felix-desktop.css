@@ -124,6 +124,8 @@ nav.menu a[aria-current="page"]{color:#0b0b0d;background:var(--ink)}
 nav.menu a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 nav.menu a.menu-museum{color:#ffd56b;border:1px solid rgba(212,164,65,0.45);background:rgba(212,164,65,0.1);transition:all .25s ease}
 nav.menu a.menu-museum:hover{color:#fff;border-color:#ffd56b;background:rgba(212,164,65,0.28);box-shadow:0 0 16px rgba(212,164,65,0.35)}
+nav.menu a.menu-admin{color:#7dd3fc;border:1px solid rgba(125,211,252,0.35);background:rgba(125,211,252,0.08);transition:all .25s ease}
+nav.menu a.menu-admin:hover{color:#fff;border-color:#7dd3fc;background:rgba(125,211,252,0.25);box-shadow:0 0 16px rgba(125,211,252,0.35)}
 
 
 /* page card: a typed sheet that sits beside the desk object the camera flies to */
