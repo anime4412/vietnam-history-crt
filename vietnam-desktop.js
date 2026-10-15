@@ -1,12 +1,11 @@
 // Vietnam National History & Relics CRT Experience
 import { VIETNAM_TAPES, VIETNAM_RELICS } from "./vietnam-history-data.js";
-import { RelicRenderer } from "./relic-renderer.js?v=20261015a";
+import { RelicRenderer } from "./relic-renderer.js?v=20261015b";
 import { HistoryFilmPlayer } from "./history-film-player.js?v=20261014f";
 
 let relicRenderer = null;
 let relicCanvas = null;
 let filmPlayer = null;
-let relicDrag = false;
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   const words = text.split(" ");
@@ -2910,11 +2909,20 @@ function act(hit){
   else if(info.kind==="screen"){
     if(state.page==="relics"){
       if(!zoomed){ setZoomed(true); flyTo(tvZoomFrame()); return; }
-      const handled = relicRenderer?.handleClick(pickUV.x, pickUV.y);
-      click("button");
-      if (relicRenderer) {
-        live("Bảo vật: " + VIETNAM_RELICS[relicRenderer.relicIndex].title);
-        if (panel && !panel.hidden) renderPanel("relics");
+      if(fly){
+        controls.target.copy(tvZoomFrame().tgt);
+        camera.position.copy(tvZoomFrame().pos);
+        fly = null;
+        pageLimits();
+      }
+      const uv = sigUV(pickUV) || pickUV;
+      if (uv && typeof uv.x === "number" && typeof uv.y === "number") {
+        relicRenderer?.handleClick(uv.x, uv.y);
+        click("button");
+        if (relicRenderer) {
+          live("Bảo vật: " + VIETNAM_RELICS[relicRenderer.relicIndex].title);
+          if (panel && !panel.hidden) renderPanel("relics");
+        }
       }
       return;
     }
@@ -3084,7 +3092,6 @@ function teletextRow(uv){ const p=sigUV(uv); if(!p) return -1; const y=p.y*25,  
 let hoverEv=null;
 canvas.addEventListener("pointermove",e=>{
   if(PC.press===e.pointerId){ const uv=pcRayUV(e); if(uv&&PC.inst) PC.inst.input({type:"pointermove",buttons:e.buttons,...pcUV(uv)}); return; }
-  if(relicDrag){ relicRenderer?.handlePointerMove(e.clientX, e.clientY); return; }
   if(cdDrag){ cd.drag(e); return; }
   if(dragKnob){ const dy=(dragKnob.y-e.clientY)/160; setKnob(dragKnob.i,dragKnob.v+dy);
     const q=Math.round([state.volume,state.tracking,state.chroma][dragKnob.i]*20); if(q!==dragKnob.q){dragKnob.q=q;click("tick");} return; }
@@ -3115,26 +3122,16 @@ canvas.addEventListener("pointerdown",e=>{
   if(e.pointerType!=="touch"&&down.hit===PC.mesh&&PC.inst&&PC.zoom&&PC.focused&&(PC.audio||PC.used)&&e.button===0&&pickUV&&PC.inst.input({type:"pointerdown",button:0,...pcUV(pickUV)})){
     PC.press=e.pointerId; controls.enabled=false; try{ canvas.setPointerCapture(e.pointerId); }catch{} return; }
   const info=down.hit&&interact.get(down.hit);
-  if(info&&info.kind==="screen"&&state.page==="relics"){
-    controls.enabled=false;
-    relicDrag=true;
-    relicRenderer?.handlePointerDown(e.clientX, e.clientY);
-    try{ canvas.setPointerCapture(e.pointerId); }catch{}
-  }
   if(info&&info.kind==="cd"&&cd?.near&&cd.grab(down.hit,e)){ controls.enabled=false; cdDrag=true; gesture(); }
   if(info&&info.kind==="knob"){ controls.enabled=false; dragKnob={i:info.i,y:e.clientY,v:[state.volume,state.tracking,state.chroma][info.i]}; gesture(); }
 });
 addEventListener("pointerup",e=>{
   if(PC.press===e.pointerId) return pcRelease(e,"pointerup");
-  if(relicDrag){
-    relicDrag=false;
-    controls.enabled=true;
-    relicRenderer?.handlePointerUp();
-    try{ canvas.releasePointerCapture(e.pointerId); }catch{}
-  }
   if(cdDrag){ cdDrag=false; controls.enabled=true; cd.release(e); down=null; return; }
   if(dragKnob){ if(Math.abs(e.clientY-dragKnob.y)<=3) act(down.hit); dragKnob=null; controls.enabled=true; down=null; return; }
-  const tap=down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<6;
+  const isScreen=down&&down.hit&&interact.get(down.hit)?.kind==="screen";
+  const tapDist=isScreen?45:6;
+  const tap=down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<tapDist;
   // With the notepad up, a click on its paper goes to the pad (padClick), and any other click only puts the pad down (Felix,
   // 27 Sep 02:36Z: "any click/tap outside the notepad should just put it down (as opposed to immediately performing another
   // action)"): the TV, the PC, a tape on the shelf and the rest answer the next click, and the pad's own rows put tapes in.
@@ -3154,7 +3151,12 @@ addEventListener("pointerup",e=>{
   else if(down) gesture();
   down=null;
 });
-addEventListener("pointercancel",e=>{ if(PC.press===e.pointerId) pcRelease(e,"pointercancel"); if(cdDrag){ cdDrag=false; controls.enabled=true; cd.release(null); } });
+addEventListener("pointercancel",e=>{
+  if(PC.press===e.pointerId) pcRelease(e,"pointercancel");
+  if(cdDrag){ cdDrag=false; controls.enabled=true; cd.release(null); }
+  controls.enabled=true;
+  down=null;
+});
 // the end of a press at the PC, sent from the event itself: a link it opens, and a copy, stay inside the visitor's gesture
 function pcRelease(e,type){
   PC.press=null; down=null; controls.enabled=true; try{ canvas.releasePointerCapture(e.pointerId); }catch{}
@@ -3484,7 +3486,26 @@ window.__BM.enter = enter;
 window.__BM.tapes = VIETNAM_TAPES;
 window.__BM.relics = VIETNAM_RELICS;
 
-document.addEventListener("DOMContentLoaded", () => {
+function initRelicBtn() {
   const relicBtn = document.getElementById("btn-relics");
-  if (relicBtn) relicBtn.addEventListener("click", () => go("relics"));
-});
+  if (relicBtn && !relicBtn._relicWired) {
+    relicBtn._relicWired = true;
+    relicBtn.addEventListener("click", () => {
+      if (state.page === "relics") {
+        if (!zoomed) {
+          setZoomed(true);
+          flyTo(tvZoomFrame());
+        } else {
+          relicRenderer?.nextRelic();
+        }
+      } else {
+        go("relics");
+      }
+    });
+  }
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initRelicBtn);
+} else {
+  initRelicBtn();
+}

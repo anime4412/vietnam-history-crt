@@ -83,46 +83,77 @@ export class RelicRenderer {
   }
 
   handleClick(uvX, uvY) {
-    // uvX: 0 (left) to 1 (right)
-    // uvY: on CRT texture, y can be mapped
-    // Check fullscreen zoom mode first
+    if (typeof uvX !== "number" || typeof uvY !== "number" || isNaN(uvX) || isNaN(uvY)) {
+      return false;
+    }
+
+    // Check fullscreen zoom mode first: clicking anywhere exits zoom mode
     if (this.zoomPhoto) {
       this.zoomPhoto = false;
       return true;
     }
 
-    // Left controls / Prev button (x: 0.02 - 0.16, y > 0.80)
-    if (uvX < 0.18 && uvY > 0.80) {
-      this.prevRelic();
-      return true;
-    }
-    // Zoom button (x: 0.18 - 0.32, y > 0.80)
-    if (uvX >= 0.18 && uvX <= 0.32 && uvY > 0.80) {
-      this.zoomPhoto = !this.zoomPhoto;
-      return true;
-    }
-    // Next button (x: 0.32 - 0.48, y > 0.80)
-    if (uvX > 0.32 && uvX < 0.50 && uvY > 0.80) {
-      this.nextRelic();
-      return true;
+    // Top Header: Counter area (top right) or Title area
+    if (uvY < 0.10) {
+      if (uvX > 0.70) {
+        this.nextRelic();
+        return true;
+      }
+      if (uvX < 0.30) {
+        this.prevRelic();
+        return true;
+      }
     }
 
-    // Tab buttons on top of right panel (y between 0.10 and 0.18)
-    if (uvY >= 0.10 && uvY <= 0.18 && uvX >= 0.50) {
+    // Tab buttons on top of right panel (uvY between 0.08 and 0.20, uvX >= 0.48)
+    if (uvY >= 0.08 && uvY <= 0.20 && uvX >= 0.48) {
       if (uvX < 0.65) this.setTab(0);
       else if (uvX < 0.82) this.setTab(1);
       else this.setTab(2);
       return true;
     }
 
-    // Left photo click: zoom photo
-    if (uvX < 0.48 && uvY >= 0.10 && uvY <= 0.78) {
+    // Bottom Navigation Bar on Left Panel (Buttons: Prev, Zoom, Next)
+    // Drawn at y = 579 to 613 (uvY ~ 0.75 to 0.90)
+    if (uvY >= 0.75 && uvY <= 0.90 && uvX < 0.50) {
+      // Prev Button: x from 0 to 0.18
+      if (uvX <= 0.18) {
+        this.prevRelic();
+        return true;
+      }
+      // Zoom Button: x from 0.18 to 0.32
+      if (uvX > 0.18 && uvX <= 0.32) {
+        this.zoomPhoto = true;
+        return true;
+      }
+      // Next Button: x from 0.32 to 0.50
+      if (uvX > 0.32) {
+        this.nextRelic();
+        return true;
+      }
+    }
+
+    // Bottom Status Bar across the whole screen (uvY > 0.90)
+    if (uvY > 0.90) {
+      if (uvX > 0.50) {
+        this.nextRelic();
+        return true;
+      } else {
+        this.prevRelic();
+        return true;
+      }
+    }
+
+    // Authentic Museum Photograph click strictly in photo box:
+    // photoX = 36, photoY = 87, photoW = 420, photoH = 370
+    // uvX: 0.03 to 0.48, uvY: 0.11 to 0.64
+    if (uvX >= 0.03 && uvX <= 0.48 && uvY >= 0.11 && uvY <= 0.64) {
       this.zoomPhoto = true;
       return true;
     }
 
-    // Right panel scroll up/down
-    if (uvX >= 0.50 && uvY > 0.80) {
+    // Right panel content click (can cycle tabs if clicked on tab content header)
+    if (uvX >= 0.50 && uvY >= 0.20 && uvY <= 0.30) {
       this.setTab((this.tabIndex + 1) % 3);
       return true;
     }
