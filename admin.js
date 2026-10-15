@@ -31,8 +31,13 @@ document.addEventListener("DOMContentLoaded", () => {
   initBackupEvents();
 
   // Kiểm tra phiên đăng nhập đã có từ trước chưa
-  const token = sessionStorage.getItem("admin_token");
+  const token = localStorage.getItem("admin_token") || sessionStorage.getItem("admin_token");
+  const authModal = document.getElementById("authModal");
   if (token) {
+    if (authModal) {
+      authModal.hidden = true;
+      authModal.style.display = "none";
+    }
     loadAllData();
   } else {
     showAuthModal();
@@ -64,33 +69,41 @@ function initAuth() {
       const data = await res.json();
 
       if (data.success) {
+        localStorage.setItem("admin_token", data.token);
         sessionStorage.setItem("admin_token", data.token);
         authModal.hidden = true;
+        authModal.style.display = "none";
         authErrorMsg.hidden = true;
+        authErrorMsg.style.display = "none";
         authPinInput.value = "";
         showToast("Mở khóa hệ thống quản trị thành công!", "success");
         loadAllData();
       } else {
         authErrorMsg.textContent = data.message || "Mã PIN không đúng!";
         authErrorMsg.hidden = false;
+        authErrorMsg.style.display = "block";
         authPinInput.select();
       }
     } catch (err) {
       // Chế độ chạy Offline / Không có server Node.js: kiểm tra cục bộ mã pin mặc định
       if (pin === "admin123") {
+        localStorage.setItem("admin_token", "local-token");
         sessionStorage.setItem("admin_token", "local-token");
         authModal.hidden = true;
+        authModal.style.display = "none";
         showToast("Đăng nhập thành công (Chế độ cục bộ)!", "success");
         loadAllData();
       } else {
         authErrorMsg.textContent = "Không thể kết nối đến máy chủ API.";
         authErrorMsg.hidden = false;
+        authErrorMsg.style.display = "block";
       }
     }
   });
 
   // Xử lý nút Đăng xuất / Khóa hệ thống
   btnLogout.addEventListener("click", () => {
+    localStorage.removeItem("admin_token");
     sessionStorage.removeItem("admin_token");
     showAuthModal();
     showToast("Đã khóa bảng điều khiển bảo tàng.", "info");
@@ -101,6 +114,7 @@ function showAuthModal() {
   const authModal = document.getElementById("authModal");
   const authPinInput = document.getElementById("authPinInput");
   authModal.hidden = false;
+  authModal.style.display = "flex";
   setTimeout(() => authPinInput.focus(), 100);
 }
 
@@ -366,6 +380,7 @@ function openRelicModal(relic = null) {
   }
 
   modal.hidden = false;
+  modal.style.display = "flex";
 }
 
 function addNoteRow(content = "") {
@@ -551,6 +566,7 @@ function openTapeModal(tape = null) {
   }
 
   modal.hidden = false;
+  modal.style.display = "flex";
 }
 
 async function deleteTape(id) {
@@ -713,21 +729,30 @@ function initModals() {
   window.addEventListener("click", (e) => {
     if (e.target.classList.contains("modal-backdrop") && !e.target.classList.contains("auth-backdrop")) {
       e.target.hidden = true;
+      e.target.style.display = "none";
     }
   });
 
   // Phím Escape để đóng modal
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
-      const activeModal = document.querySelector(".modal-backdrop:not([hidden]):not(.auth-backdrop)");
-      if (activeModal) activeModal.hidden = true;
+      const activeModals = document.querySelectorAll(".modal-backdrop:not(.auth-backdrop)");
+      activeModals.forEach(m => {
+        if (!m.hidden || m.style.display !== "none") {
+          m.hidden = true;
+          m.style.display = "none";
+        }
+      });
     }
   });
 }
 
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
-  if (modal) modal.hidden = true;
+  if (modal) {
+    modal.hidden = true;
+    modal.style.display = "none";
+  }
 }
 
 // ==============================================================================

@@ -898,6 +898,12 @@ body {
 /* ==============================================================================
    9. HỘP THOẠI MODAL
    ============================================================================== */
+[hidden],
+.modal-backdrop[hidden],
+.auth-backdrop[hidden] {
+  display: none !important;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
