@@ -5,6 +5,21 @@
 
 import { VIETNAM_RELICS } from "./vietnam-history-data.js";
 
+// Clean, monochrome vector SVG icons
+const ICONS = {
+  search: `<svg class="mono-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
+  zoomHint: `<svg class="mono-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>`,
+  museum: `<svg class="mono-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"></line><line x1="6" y1="18" x2="6" y2="11"></line><line x1="10" y1="18" x2="10" y2="11"></line><line x1="14" y1="18" x2="14" y2="11"></line><line x1="18" y1="18" x2="18" y2="11"></line><polygon points="12 2 2 7 22 7 12 2"></polygon></svg>`,
+  arrowRight: `<svg class="mono-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`,
+  audioPlay: `<svg class="mono-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`,
+  audioStop: `<svg class="mono-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12"></rect></svg>`,
+  excavation: `<svg class="mono-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>`,
+  star: `<svg class="mono-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`,
+  document: `<svg class="mono-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`,
+  shield: `<svg class="mono-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
+  legal: `<svg class="mono-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"></path><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h18"></path></svg>`
+};
+
 class VietnamNationalMuseum {
   constructor() {
     this.relics = VIETNAM_RELICS || [];
@@ -94,7 +109,9 @@ class VietnamNationalMuseum {
     if (list.length === 0) {
       this.gridEl.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
-          <div style="font-size: 3rem; margin-bottom: 16px;">🔍</div>
+          <div style="margin-bottom: 16px; color: var(--gold-primary); opacity: 0.6;">
+            <svg class="mono-svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
           <h3 style="color: var(--text-secondary); margin-bottom: 8px;">Không tìm thấy bảo vật phù hợp</h3>
           <p>Thử tìm kiếm với từ khóa khác hoặc chuyển sang danh mục "Tất cả bảo vật".</p>
         </div>
@@ -106,7 +123,7 @@ class VietnamNationalMuseum {
 
     this.gridEl.innerHTML = list.map((relic) => {
       const idx = this.relics.findIndex(r => r.id === relic.id);
-      const highlightsHtml = (relic.highlights || []).slice(0, 3).map(h => `<span class="highlight-tag">✦ ${this.escapeHtml(h)}</span>`).join("");
+      const highlightsHtml = (relic.highlights || []).slice(0, 3).map(h => `<span class="highlight-tag"><span class="mono-bullet">◆</span> ${this.escapeHtml(h)}</span>`).join("");
 
       return `
         <article class="exhibit-card" data-index="${idx}">
@@ -116,13 +133,14 @@ class VietnamNationalMuseum {
               <span class="badge-national">BẢO VẬT QUỐC GIA</span>
               <span class="badge-era-chip">${this.escapeHtml(relic.era.split("(")[0].trim())}</span>
             </div>
-            <div class="card-zoom-hint" title="Xem ảnh gốc & hồ sơ">🔍</div>
+            <div class="card-zoom-hint" title="Xem ảnh gốc & hồ sơ">${ICONS.zoomHint}</div>
           </div>
 
           <div class="card-body">
             <h3 class="card-title">${this.escapeHtml(relic.title)}</h3>
             <div class="card-period">
-              <span>🏛</span> ${this.escapeHtml(relic.era)}
+              ${ICONS.museum}
+              <span>${this.escapeHtml(relic.era)}</span>
             </div>
 
             <p class="card-desc">${this.escapeHtml(relic.desc)}</p>
@@ -144,7 +162,7 @@ class VietnamNationalMuseum {
 
             <button type="button" class="btn-open-dossier" onclick="window.museumApp.openDossier(${idx})">
               <span>KHÁM PHÁ HỒ SƠ DI SẢN</span>
-              <span>→</span>
+              ${ICONS.arrowRight}
             </button>
           </div>
         </article>
@@ -224,14 +242,14 @@ class VietnamNationalMuseum {
         </div>
 
         <div class="dossier-section">
-          <h4 class="dossier-section-title"><span>⛏</span> Bối Cảnh Phát Hiện & Khảo Cổ Học</h4>
+          <h4 class="dossier-section-title">${ICONS.excavation} <span>Bối Cảnh Phát Hiện & Khảo Cổ Học</span></h4>
           <p style="color: #cbd5e1; margin-bottom: 16px;">${this.escapeHtml(relic.discovery || "Hiện vật được sưu tầm và gìn giữ theo hồ sơ di sản quốc gia.")}</p>
         </div>
 
         <div class="dossier-section">
-          <h4 class="dossier-section-title"><span>🏛</span> Đặc Điểm Nổi Bật</h4>
+          <h4 class="dossier-section-title">${ICONS.museum} <span>Đặc Điểm Nổi Bật</span></h4>
           <div class="card-highlights">
-            ${(relic.highlights || []).map(h => `<span class="highlight-tag" style="font-size: 0.85rem; padding: 5px 12px;">★ ${this.escapeHtml(h)}</span>`).join("")}
+            ${(relic.highlights || []).map(h => `<span class="highlight-tag" style="font-size: 0.85rem; padding: 5px 12px;"><span class="mono-bullet">◆</span> ${this.escapeHtml(h)}</span>`).join("")}
           </div>
         </div>
       </div>
@@ -239,7 +257,7 @@ class VietnamNationalMuseum {
       <!-- TAB 2: GHI CHÉP KHẢO CỔ -->
       <div class="tab-pane" id="paneNotes">
         <div class="dossier-section">
-          <h4 class="dossier-section-title"><span>📋</span> Nhật Ký Hiện Trường & Giám Định Chuyên Sâu</h4>
+          <h4 class="dossier-section-title">${ICONS.document} <span>Nhật Ký Hiện Trường & Giám Định Chuyên Sâu</span></h4>
           <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.88rem;">
             Dữ liệu đối sánh từ hồ sơ khoa học Bảo tàng Lịch sử Quốc gia và Hội đồng Di sản Văn hóa Quốc gia:
           </p>
@@ -252,14 +270,14 @@ class VietnamNationalMuseum {
       <!-- TAB 3: Ý NGHĨA & BIỂU TƯỢNG -->
       <div class="tab-pane" id="paneSignificance">
         <div class="dossier-section">
-          <h4 class="dossier-section-title"><span>🇻🇳</span> Ý Nghĩa Lịch Sử & Chủ Quyền Dân Tộc</h4>
+          <h4 class="dossier-section-title">${ICONS.star} <span>Ý Nghĩa Lịch Sử & Chủ Quyền Dân Tộc</span></h4>
           <p style="color: #f1f5f9; font-size: 1.05rem; line-height: 1.8; margin-bottom: 20px;">
             ${this.escapeHtml(relic.significance || "Bảo vật quốc gia là di sản vô giá khẳng định truyền thống văn hiến và bản sắc độc lập tự chủ của dân tộc Việt Nam.")}
           </p>
         </div>
 
         <div class="dossier-section" style="background: rgba(18, 24, 38, 0.5); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-          <h4 class="dossier-section-title"><span>🛡</span> Giá Trị Tinh Thần & Di Sản Văn Hóa</h4>
+          <h4 class="dossier-section-title">${ICONS.shield} <span>Giá Trị Tinh Thần & Di Sản Văn Hóa</span></h4>
           <p style="color: var(--text-secondary); font-size: 0.9rem;">
             Hiện vật không chỉ là bằng chứng vật chất cho trình độ chế tác bậc thầy mà còn phản ánh thế giới quan nhân sinh, tâm thức hướng về cội nguồn và ý chí quật cường bảo vệ chủ quyền non sông đất nước của các bậc tiền nhân.
           </p>
@@ -269,7 +287,7 @@ class VietnamNationalMuseum {
       <!-- TAB 4: THÔNG SỐ PHÁP LÝ & KHOA HỌC -->
       <div class="tab-pane" id="paneSpecs">
         <div class="dossier-section">
-          <h4 class="dossier-section-title"><span>⚖️</span> Hồ Sơ Pháp Lý & Thông Số Kỹ Thuật</h4>
+          <h4 class="dossier-section-title">${ICONS.legal} <span>Hồ Sơ Pháp Lý & Thông Số Kỹ Thuật</span></h4>
           <table class="specs-table">
             <tbody>
               <tr>
@@ -362,7 +380,7 @@ class VietnamNationalMuseum {
     this.audioSpeech.onstart = () => {
       this.isSpeaking = true;
       this.btnAudio.classList.add("playing");
-      this.btnAudio.innerHTML = `<span>⏹</span> <span>ĐANG PHÁT THUYẾT MINH…</span>`;
+      this.btnAudio.innerHTML = `${ICONS.audioStop} <span>ĐANG PHÁT THUYẾT MINH…</span>`;
     };
 
     this.audioSpeech.onend = this.audioSpeech.onerror = () => {
@@ -379,7 +397,7 @@ class VietnamNationalMuseum {
     this.isSpeaking = false;
     if (this.btnAudio) {
       this.btnAudio.classList.remove("playing");
-      this.btnAudio.innerHTML = `<span>🔊</span> <span>NGHE THUYẾT MINH AUDIO</span>`;
+      this.btnAudio.innerHTML = `${ICONS.audioPlay} <span>NGHE THUYẾT MINH AUDIO</span>`;
     }
   }
 

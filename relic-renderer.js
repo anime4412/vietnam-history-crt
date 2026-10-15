@@ -207,7 +207,7 @@ export class RelicRenderer {
     g.fillStyle = "#d4a441";
     g.font = "bold 24px VT323, monospace";
     g.textAlign = "left";
-    g.fillText("🏛 BẢO TÀNG LỊCH SỬ VIỆT NAM", 24, 28);
+    g.fillText("◆ BẢO TÀNG LỊCH SỬ VIỆT NAM", 24, 28);
 
     g.fillStyle = "#7ec8f8";
     g.font = "17px VT323, monospace";
@@ -306,7 +306,7 @@ export class RelicRenderer {
     // Prev Button
     this.drawButton(g, x + 12, btnY, 128, btnH, "◀ TRƯỚC (A)", "#19253a", "#ffd56b");
     // Zoom Button
-    this.drawButton(g, x + 148, btnY, 140, btnH, "🔍 PHÓNG TO (Z)", "#22324e", "#7ec8f8");
+    this.drawButton(g, x + 148, btnY, 140, btnH, "[+] PHÓNG TO (Z)", "#22324e", "#7ec8f8");
     // Next Button
     this.drawButton(g, x + 296, btnY, 136, btnH, "TIẾP THEO ▶ (D)", "#19253a", "#ffd56b");
   }
@@ -372,7 +372,7 @@ export class RelicRenderer {
     // Era / Period
     g.fillStyle = "#7ec8f8";
     g.font = "18px VT323, monospace";
-    g.fillText("🏛 NIÊN ĐẠI: " + relic.era.toUpperCase(), x, y + 54);
+    g.fillText("◆ NIÊN ĐẠI: " + relic.era.toUpperCase(), x, y + 54);
 
     // Divider
     g.strokeStyle = "#253450";
@@ -416,7 +416,7 @@ export class RelicRenderer {
 
     g.fillStyle = "#ffd56b";
     g.font = "bold 20px VT323, monospace";
-    g.fillText("📜 TƯ LIỆU GHI CHÉP HIỆN TRƯỜNG & KHẢO CỔ HỌC", x, curY);
+    g.fillText("■ TƯ LIỆU GHI CHÉP HIỆN TRƯỜNG & KHẢO CỔ HỌC", x, curY);
     curY += 26;
 
     g.fillStyle = "#8ba0c2";
@@ -468,7 +468,7 @@ export class RelicRenderer {
 
     g.fillStyle = "#ffd56b";
     g.font = "bold 20px VT323, monospace";
-    g.fillText("🇻🇳 Ý NGHĨA LỊCH SỬ & CHỦ QUYỀN DÂN TỘC", x, curY);
+    g.fillText("◆ Ý NGHĨA LỊCH SỬ & CHỦ QUYỀN DÂN TỘC", x, curY);
     curY += 28;
 
     // Quote Box
@@ -490,7 +490,7 @@ export class RelicRenderer {
     // Highlights list
     g.fillStyle = "#7ec8f8";
     g.font = "bold 18px VT323, monospace";
-    g.fillText("★ ĐIỂM NHẤN LỊCH SỬ TIÊU BIỂU:", x, curY);
+    g.fillText("◆ ĐIỂM NHẤN LỊCH SỬ TIÊU BIỂU:", x, curY);
     curY += 26;
 
     const highlights = relic.highlights || [];

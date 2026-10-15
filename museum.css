@@ -63,6 +63,22 @@ body {
   min-height: 100vh;
 }
 
+/* Monochromatic vector icons & markers */
+.mono-svg {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  stroke: currentColor;
+}
+
+.mono-bullet {
+  display: inline-block;
+  font-size: 0.65em;
+  vertical-align: 1px;
+  color: var(--gold-primary);
+  margin-right: 4px;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -372,6 +388,14 @@ body {
   transform: translateY(-50%);
   color: var(--text-muted);
   pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.search-wrapper:focus-within .search-icon {
+  color: var(--gold-primary);
 }
 
 .search-input {
@@ -851,6 +875,10 @@ body {
   text-align: center;
   letter-spacing: 0.05em;
   font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 /* Modal Right: Dossier Details */

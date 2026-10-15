@@ -2554,7 +2554,9 @@ function relicsPanel(){
   return `<div class="sec">7 BẢO VẬT QUỐC GIA & HỒ SƠ TƯ LIỆU</div>
   <div style="padding: 8px 12px; margin-bottom: 10px; background: rgba(212,164,65,0.12); border: 1px solid rgba(212,164,65,0.4); border-radius: 4px; text-align: center;">
     <a href="museum.html" style="color: #ffd56b; font-weight: bold; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-      <span>🏛</span> <span>MỞ BẢO TÀNG TRỰC TUYẾN TOÀN CẢNH</span> <span>→</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><line x1="3" y1="22" x2="21" y2="22"></line><line x1="6" y1="18" x2="6" y2="11"></line><line x1="10" y1="18" x2="10" y2="11"></line><line x1="14" y1="18" x2="14" y2="11"></line><line x1="18" y1="18" x2="18" y2="11"></line><polygon points="12 2 2 7 22 7 12 2"></polygon></svg>
+      <span>MỞ BẢO TÀNG TRỰC TUYẾN TOÀN CẢNH</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
     </a>
   </div>
   <ul class="list">${VIETNAM_RELICS.map(row).join("")}</ul>
