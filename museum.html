@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảo Tàng Bảo Vật Quốc Gia Việt Nam · Không Gian Khảo Cứu Di Sản</title>
+  <meta name="description" content="Khám phá toàn bộ bảo vật quốc gia Việt Nam: Trống đồng Ngọc Lũ, Thạp đồng Đào Thịnh, Tượng Rồng thời Lý, Gươm báu Lam Sơn, Cửu Đỉnh Huế, Kim ấn Hoàng đế chi bảo và Xe tăng 390 với ảnh chụp bảo tàng gốc và hồ sơ ghi chép khảo cổ chi tiết.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Cinzel:wght@600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,400&family=VT323&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Museum Stylesheet -->
+  <link rel="stylesheet" href="museum.css?v=20261015">
+</head>
+<body class="museum-page">
+
+  <!-- ================= TOP HEADER ================= -->
+  <header class="museum-header" id="museumHeader">
+    <div class="header-container">
+      
+      <!-- Brand & Emblem -->
+      <a href="#hero" class="museum-brand" aria-label="Bảo Tàng Bảo Vật Quốc Gia">
+        <svg class="brand-emblem" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="50" cy="50" r="46" stroke="#d4a441" stroke-width="2.5" stroke-dasharray="4 2"/>
+          <circle cx="50" cy="50" r="38" stroke="#d4a441" stroke-width="1.5" opacity="0.6"/>
+          <circle cx="50" cy="50" r="16" fill="#ffd56b" opacity="0.3"/>
+          <polygon points="50,12 53,47 88,50 53,53 50,88 47,53 12,50 47,47" fill="#ffd56b"/>
+          <circle cx="50" cy="50" r="5" fill="#fff"/>
+        </svg>
+        <div class="brand-text">
+          <h1>BẢO TÀNG BẢO VẬT QUỐC GIA</h1>
+          <span>VIETNAM NATIONAL HERITAGE MUSEUM</span>
+        </div>
+      </a>
+
+      <!-- Desktop Nav Links -->
+      <nav class="nav-links" aria-label="Điều hướng bảo tàng">
+        <a href="#exhibits" class="active">Bộ Sưu Tập</a>
+        <a href="#timeline">Niên Biểu Lịch Sử</a>
+        <a href="#preservation">Bảo Tồn & Giám Định</a>
+      </nav>
+
+      <!-- Action Buttons -->
+      <div class="header-actions">
+        <a href="index.html" class="btn-retro-room" title="Trở về Phòng chiếu phim tài liệu cổ điển 3D">
+          <span>◀</span>
+          <span>PHÒNG CHIẾU RETRO 3D</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= HERO SECTION ================= -->
+  <section class="museum-hero" id="hero">
+    <div class="hero-backdrop-symbol" aria-hidden="true"></div>
+
+    <div class="hero-tag">
+      <span class="tag-dot"></span>
+      <span>DI SẢN NGHÌN NĂM VĂN HIẾN VIỆT NAM</span>
+    </div>
+
+    <h2 class="hero-title">
+      KHO TÀNG BẢO VẬT <br>
+      <span class="text-gold">QUỐC GIA VIỆT NAM</span>
+    </h2>
+
+    <p class="hero-subtitle">
+      Không gian trưng bày & khảo cứu trực tuyến các kiệt tác đỉnh cao của nền văn minh Đại Việt. 
+      Nơi lưu giữ linh hồn non sông, hào khí độc lập và bằng chứng lịch sử thiêng liêng về chủ quyền toàn vẹn lãnh thổ qua hơn 2.500 năm dựng nước và giữ nước.
+    </p>
+
+    <!-- Key Stats Grid -->
+    <div class="hero-stats-grid">
+      <div class="stat-box">
+        <div class="stat-number">07</div>
+        <div class="stat-label">Bảo vật Quốc gia độc bản</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">2.500+</div>
+        <div class="stat-label">Năm dòng chảy lịch sử</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">Ảnh chụp hiện vật bảo tàng gốc</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">UNESCO</div>
+        <div class="stat-label">Di sản Tư liệu Ký ức Thế giới</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONTROLS SECTION (STICKY) ================= -->
+  <section class="exhibition-controls-section" id="controls">
+    <div class="controls-container">
+      
+      <!-- Search Input -->
+      <div class="search-wrapper">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input type="text" id="relicSearch" class="search-input" placeholder="Tìm theo tên bảo vật, chất liệu, địa điểm lưu giữ..." aria-label="Tìm kiếm bảo vật">
+      </div>
+
+      <!-- Filter Era Tabs -->
+      <div class="filter-tabs" role="tablist" aria-label="Lọc theo thời kỳ">
+        <button type="button" class="filter-btn active" data-filter="all">Tất cả bảo vật (7)</button>
+        <button type="button" class="filter-btn" data-filter="dongson">Văn minh Đông Sơn (2)</button>
+        <button type="button" class="filter-btn" data-filter="lytran">Thời Lý - Thăng Long (1)</button>
+        <button type="button" class="filter-btn" data-filter="lamson">Khởi nghĩa Lam Sơn (1)</button>
+        <button type="button" class="filter-btn" data-filter="nguyen">Hoàng triều Nguyễn (2)</button>
+        <button type="button" class="filter-btn" data-filter="modern">Thời đại Hồ Chí Minh (1)</button>
+      </div>
+
+      <!-- View Mode Switchers -->
+      <div class="view-switchers" aria-label="Chế độ hiển thị">
+        <button type="button" class="view-btn active" data-view="grid" title="Chế độ trưng bày gallery">
+          <span>🖼</span>
+          <span>Trưng bày</span>
+        </button>
+        <button type="button" class="view-btn" data-view="list" title="Chế độ danh mục hồ sơ">
+          <span>📋</span>
+          <span>Hồ sơ</span>
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= MAIN EXHIBITS SHOWCASE ================= -->
+  <main class="exhibits-main-section" id="exhibits">
+    <div class="section-header">
+      <div>
+        <h3 class="section-title">Gian Trưng Bày Bảo Vật</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 4px;">
+          Bấm vào bất kỳ hiện vật nào để mở hồ sơ giám định khoa học và chiêm ngưỡng ảnh chụp bảo tàng độ phân giải cao.
+        </p>
+      </div>
+      <div class="section-counter" id="exhibitsCounter">HIỂN THỊ [ 07 / 07 BẢO VẬT ]</div>
+    </div>
+
+    <!-- Dynamic Exhibits Container -->
+    <div class="exhibits-grid" id="exhibitsGrid">
+      <!-- Injected by museum.js -->
+    </div>
+  </main>
+
+  <!-- ================= TIMELINE SECTION ================= -->
+  <section class="timeline-section" id="timeline">
+    <div class="timeline-container">
+      <div style="text-align: center; max-width: 700px; margin: 0 auto 30px;">
+        <span class="hero-tag" style="margin-bottom: 12px;"><span class="tag-dot"></span> NIÊN BIỂU DI SẢN</span>
+        <h3 class="section-title" style="font-size: 2.2rem; margin-bottom: 12px;">Dòng Chảy Lịch Sử Ngàn Năm</h3>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Mỗi bảo vật quốc gia là một dấu son bất diệt ghi dấu các bước ngoặt thăng trầm và vinh quang của dân tộc Việt Nam.
+        </p>
+      </div>
+
+      <!-- Timeline Track -->
+      <div class="timeline-track" id="timelineTrack">
+        <!-- Injected by museum.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PRESERVATION & ETHICS SECTION ================= -->
+  <section class="timeline-section" id="preservation" style="background: #060911;">
+    <div class="timeline-container" style="max-width: 1000px; text-align: center;">
+      <span class="hero-tag" style="margin-bottom: 12px;"><span class="tag-dot"></span> GIÁ TRỊ BẢO TỒN</span>
+      <h3 class="section-title" style="font-size: 2rem; margin-bottom: 20px;">Không Gian Lưu Giữ Hào Khí Dân Tộc</h3>
+      
+      <p style="color: var(--text-secondary); font-size: 1rem; line-height: 1.8; margin-bottom: 30px;">
+        Các bảo vật được vinh danh trong triển lãm này hiện đang được gìn giữ, bảo quản nghiêm ngặt theo chế độ đặc biệt cấp Quốc gia tại các viện bảo tàng đầu ngành: 
+        <strong>Bảo tàng Lịch sử Quốc gia</strong> (Hà Nội), 
+        <strong>Khu di tích Hoàng thành Thăng Long</strong>, 
+        <strong>Trung tâm Bảo tồn Di tích Cố đô Huế</strong> và 
+        <strong>Bảo tàng Binh chủng Tăng Thiết giáp</strong>.
+      </p>
+
+      <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+        <a href="index.html" class="btn-retro-room" style="padding: 12px 24px; font-size: 0.95rem;">
+          <span>◀ TRỞ VỀ PHÒNG CHIẾU PHIM RETRO 3D</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="museum-footer">
+    <div class="footer-container">
+      <nav class="footer-nav">
+        <a href="#hero">Đầu trang</a>
+        <a href="#exhibits">Bộ sưu tập bảo vật</a>
+        <a href="#timeline">Niên biểu lịch sử</a>
+        <a href="index.html">Phòng chiếu phim CRT 3D</a>
+      </nav>
+
+      <p class="footer-disclaimer">
+        Bảo Tàng Bảo Vật Quốc Gia Việt Nam · Dự án số hóa di sản văn hóa và lịch sử phục vụ cộng đồng, nghiên cứu và giáo dục truyền thống yêu nước. 
+        Dữ liệu đối sánh theo các Quyết định công nhận Bảo vật Quốc gia của Thủ tướng Chính phủ nước Cộng hòa Xã hội Chủ nghĩa Việt Nam.
+      </p>
+
+      <div class="footer-copyright">
+        © 2026 LỊCH SỬ VIỆT NAM · BẢO TÀNG BẢO VẬT QUỐC GIA · ALL RIGHTS RESERVED
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= INTERACTIVE DOSSIER MODAL ================= -->
+  <div class="dossier-modal-backdrop" id="dossierModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="dossier-modal-box">
+      
+      <!-- Left Column: Photo & Zoom Tools -->
+      <div class="modal-photo-column">
+        <div class="modal-photo-viewport">
+          <img src="" alt="" class="modal-photo-img" id="modalRelicImg">
+
+          <!-- Zoom Floating Tools -->
+          <div class="photo-tools-bar">
+            <button type="button" class="tool-btn" id="btnZoomIn" title="Phóng to ảnh">🔍+</button>
+            <button type="button" class="tool-btn" id="btnZoomOut" title="Thu nhỏ ảnh">🔍-</button>
+            <button type="button" class="tool-btn" id="btnZoomReset" title="Đặt lại kích thước">↺ Đặt lại</button>
+          </div>
+        </div>
+
+        <div class="photo-authenticity-label">
+          🏛 ẢNH CHỤP HIỆN VẬT GỐC LƯU GIỮ BẢO TÀNG · ĐỘ PHÂN GIẢI CAO
+        </div>
+      </div>
+
+      <!-- Right Column: Archival Dossier Details -->
+      <div class="modal-content-column">
+        
+        <!-- Header -->
+        <div class="modal-header-bar">
+          <div>
+            <div class="modal-badge-row">
+              <span class="badge-national" id="modalRelicBadge">BẢO VẬT QUỐC GIA</span>
+              <span class="badge-era-chip" id="modalRelicEra">NIÊN ĐẠI</span>
+            </div>
+            <h3 class="modal-relic-title" id="modalRelicTitle">Tên Bảo Vật</h3>
+          </div>
+
+          <button type="button" class="btn-close-modal" id="btnModalClose" aria-label="Đóng hồ sơ">✕</button>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="modal-tabs" role="tablist">
+          <button type="button" class="modal-tab-btn active" role="tab">1. Tổng Quan & Khai Quật</button>
+          <button type="button" class="modal-tab-btn" role="tab">2. Ghi Chép Khảo Cổ</button>
+          <button type="button" class="modal-tab-btn" role="tab">3. Ý Nghĩa & Biểu Tượng</button>
+          <button type="button" class="modal-tab-btn" role="tab">4. Thông Số Pháp Lý</button>
+        </div>
+
+        <!-- Scrollable Tab Content -->
+        <div class="modal-tab-content-area" id="modalTabContent">
+          <!-- Dynamically populated by museum.js -->
+        </div>
+
+        <!-- Modal Footer Navigation & Audio Guide -->
+        <div class="modal-footer-nav">
+          <button type="button" class="btn-nav-relic" id="btnModalPrev">
+            <span>◀</span> <span>Bảo vật trước</span>
+          </button>
+
+          <button type="button" class="btn-audio-guide" id="btnAudioGuide">
+            <span>🔊</span> <span>NGHE THUYẾT MINH AUDIO</span>
+          </button>
+
+          <button type="button" class="btn-nav-relic" id="btnModalNext">
+            <span>Bảo vật tiếp ▶</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Main Museum ES Module -->
+  <script type="module" src="museum.js?v=20261015"></script>
+
+</body>
+</html>

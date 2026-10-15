@@ -2552,6 +2552,11 @@ function relicsPanel(){
   const cur = VIETNAM_RELICS[relicRenderer ? relicRenderer.relicIndex : 0];
   const notesList = (cur.notes || []).map(n => `<li>${esc(n)}</li>`).join("");
   return `<div class="sec">7 BẢO VẬT QUỐC GIA & HỒ SƠ TƯ LIỆU</div>
+  <div style="padding: 8px 12px; margin-bottom: 10px; background: rgba(212,164,65,0.12); border: 1px solid rgba(212,164,65,0.4); border-radius: 4px; text-align: center;">
+    <a href="museum.html" style="color: #ffd56b; font-weight: bold; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+      <span>🏛</span> <span>MỞ BẢO TÀNG TRỰC TUYẾN TOÀN CẢNH</span> <span>→</span>
+    </a>
+  </div>
   <ul class="list">${VIETNAM_RELICS.map(row).join("")}</ul>
   <div class="detail"><div class="m">HỒ SƠ BẢO VẬT · ${esc(cur.badge)}</div>
   <h3>${esc(cur.title)}</h3>

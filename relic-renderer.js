@@ -557,7 +557,7 @@ export class RelicRenderer {
     g.fillStyle = "#facc15";
     g.font = "bold 16px VT323, monospace";
     g.textAlign = "center";
-    g.fillText("PHÍM ◀ / ▶: ĐỔI CỔ VẬT · PHÍM 1, 2, 3: ĐỔI TAB GHI CHÉP · CUỘN CHUỘT: ĐỌC TIẾP · PHÍM Z: PHÓNG TO ẢNH", w / 2, h - 22);
+    g.fillText("PHÍM ◀ / ▶: ĐỔI CỔ VẬT · PHÍM 1, 2, 3: ĐỔI TAB GHI CHÉP · MENU BẢO TÀNG: XEM TRƯNG BÀY CHI TIẾT", w / 2, h - 22);
   }
 
   drawButton(g, bx, by, bw, bh, text, bg, color) {
