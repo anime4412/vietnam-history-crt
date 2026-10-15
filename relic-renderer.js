@@ -1,30 +1,60 @@
-// Vietnamese Historical Relics Archive & Historical Dossier Renderer
-// Displays authentic photographs and comprehensive archaeological field records on the CRT TV
+// ==============================================================================
+// relic-renderer.js - BỘ KẾ XUẤT HỒ SƠ LƯU TRỮ VÀ HÌNH ẢNH CỔ VẬT LỊCH SỬ VIỆT NAM
+// Dự án: Vietnam History CRT Experience (Không gian Bảo tàng Lịch sử CRT 3D)
+// ==============================================================================
+// Chức năng:
+// 1. Kết xuất đồ họa 2D trực tiếp lên Canvas độ phân giải cao (960x720) để ánh xạ
+//    làm chất liệu hiển thị (CanvasTexture) trên màn hình TV CRT retro trong phòng 3D.
+// 2. Trình diễn toàn bộ hình ảnh thực tế, hồ sơ giám định khảo cổ học, thông số
+//    chất liệu, niên đại, địa điểm khai quật và ý nghĩa chủ quyền của 7 Bảo vật Quốc gia.
+// 3. Hỗ trợ hệ thống chuyển tab (Tổng quan, Ghi chép khảo cổ, Ý nghĩa dân tộc),
+//    cuộn trang mượt mà bằng chuột/kéo thả, và chế độ phóng to toàn cảnh (Zoom).
+// ==============================================================================
 
 import { VIETNAM_RELICS } from "./vietnam-history-data.js";
 
 export class RelicRenderer {
+  /**
+   * Khởi tạo bộ kết xuất cổ vật trên màn hình TV CRT
+   * @param {HTMLCanvasElement} canvas - Thẻ Canvas dùng để vẽ giao diện 2D
+   * @param {number} width - Chiều rộng Canvas (mặc định 960px tỉ lệ chuẩn 4:3)
+   * @param {number} height - Chiều cao Canvas (mặc định 720px)
+   */
   constructor(canvas, width = 960, height = 720) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.width = width;
     this.height = height;
 
+    // Chỉ số cổ vật hiện hành đang được trưng bày (0 đến VIETNAM_RELICS.length - 1)
     this.relicIndex = 0;
-    this.tabIndex = 0; // 0: Tổng quan, 1: Ghi chép lịch sử, 2: Ý nghĩa & Sự kiện
+
+    // Chỉ số tab nội dung:
+    // 0: Tổng quan & Thông số kỹ thuật
+    // 1: Tư liệu ghi chép hiện trường & Khảo cổ học
+    // 2: Ý nghĩa lịch sử & Điểm nhấn chủ quyền
+    this.tabIndex = 0;
+
+    // Quản lý vị trí cuộn văn bản cho các tab nội dung dài
     this.scrollOffset = 0;
     this.maxScroll = 0;
+
+    // Trạng thái phóng to ảnh cổ vật toàn màn hình TV
     this.zoomPhoto = false;
 
-    // Load authentic museum photographs
+    // Bộ nhớ đệm (Cache) lưu trữ ảnh đã tải của tất cả bảo vật để chuyển đổi tức thì
     this.images = new Map();
     this.loadImages();
   }
 
+  /**
+   * Tải trước toàn bộ hình ảnh cổ vật gốc vào bộ nhớ đệm
+   * Đảm bảo khi người dùng chuyển cổ vật không bị giật lag hay nhấp nháy màn hình
+   */
   loadImages() {
     VIETNAM_RELICS.forEach((relic, idx) => {
       const img = new Image();
-      img.crossOrigin = "anonymous";
+      img.crossOrigin = "anonymous"; // Cho phép tải chéo nguồn khi deploy
       img.src = relic.image;
       img.onload = () => {
         this.images.set(idx, img);
@@ -33,67 +63,112 @@ export class RelicRenderer {
     });
   }
 
+  /**
+   * Chuyển sang xem bảo vật kế tiếp (vòng lặp vô tận từ 0 đến n-1)
+   */
   nextRelic() {
     this.relicIndex = (this.relicIndex + 1) % VIETNAM_RELICS.length;
-    this.scrollOffset = 0;
-    this.zoomPhoto = false;
+    this.scrollOffset = 0; // Đặt lại cuộn trang về đầu
+    this.zoomPhoto = false; // Thoát chế độ zoom nếu đang mở
   }
 
+  /**
+   * Quay lại xem bảo vật phía trước
+   */
   prevRelic() {
     this.relicIndex = (this.relicIndex - 1 + VIETNAM_RELICS.length) % VIETNAM_RELICS.length;
     this.scrollOffset = 0;
     this.zoomPhoto = false;
   }
 
+  /**
+   * Chuyển tab nội dung trực tiếp theo chỉ số (0, 1 hoặc 2)
+   * @param {number} tab - Chỉ số tab mục tiêu
+   */
   setTab(tab) {
     this.tabIndex = Math.max(0, Math.min(2, tab));
     this.scrollOffset = 0;
   }
 
+  /**
+   * Bật/Tắt chế độ xem ảnh toàn màn hình phóng to
+   */
   toggleWireframe() {
     this.zoomPhoto = !this.zoomPhoto;
   }
 
+  /**
+   * Tự động duyệt sang cổ vật tiếp theo
+   */
   toggleAutoRotate() {
     this.nextRelic();
   }
 
+  /**
+   * Xoay vòng qua 3 tab ghi chép
+   */
   setLightMode(mode) {
     this.setTab((this.tabIndex + 1) % 3);
   }
 
+  /**
+   * Bắt đầu thao tác kéo chuột để cuộn văn bản
+   * @param {number} x - Tọa độ X chuột
+   * @param {number} y - Tọa độ Y chuột
+   */
   handlePointerDown(x, y) {
     this.isDragging = true;
     this.dragStartY = y;
     this.dragStartScroll = this.scrollOffset;
   }
 
+  /**
+   * Cập nhật vị trí cuộn khi người dùng đang di chuyển chuột kéo thả
+   * @param {number} x - Tọa độ X chuột hiện tại
+   * @param {number} y - Tọa độ Y chuột hiện tại
+   */
   handlePointerMove(x, y) {
     if (!this.isDragging) return;
     const dy = (this.dragStartY - y) * 1.5;
     this.scrollOffset = Math.max(0, Math.min(this.maxScroll, this.dragStartScroll + dy));
   }
 
+  /**
+   * Kết thúc thao tác kéo chuột
+   */
   handlePointerUp() {
     this.isDragging = false;
   }
 
+  /**
+   * Xử lý sự kiện lăn bánh xe chuột (Mouse Wheel) để cuộn văn bản đọc hồ sơ
+   * @param {number} deltaY - Độ lệch lăn chuột dọc
+   */
   handleWheel(deltaY) {
     this.scrollOffset = Math.max(0, Math.min(this.maxScroll, this.scrollOffset + deltaY * 0.5));
   }
 
+  /**
+   * Xử lý tương tác nhấn chuột dựa trên tọa độ UV chuẩn hóa (0.0 đến 1.0)
+   * Được ánh xạ từ va chạm tia Raycaster 3D trên bề mặt cong của màn hình CRT
+   * @param {number} uvX - Tọa độ UV ngang (0.0: mép trái, 1.0: mép phải)
+   * @param {number} uvY - Tọa độ UV dọc (0.0: đỉnh màn hình, 1.0: đáy màn hình)
+   * @returns {boolean} - Trả về true nếu sự kiện click được xử lý thành công
+   */
   handleClick(uvX, uvY) {
     if (typeof uvX !== "number" || typeof uvY !== "number" || isNaN(uvX) || isNaN(uvY)) {
       return false;
     }
 
-    // Check fullscreen zoom mode first: clicking anywhere exits zoom mode
+    // 1. Nếu đang ở chế độ xem ảnh phóng to: Click bất kỳ đâu trên màn hình sẽ quay lại hồ sơ
     if (this.zoomPhoto) {
       this.zoomPhoto = false;
       return true;
     }
 
-    // Top Header: Counter area (top right) or Title area
+    // 2. Thanh tiêu đề phía trên cùng (uvY < 0.10)
+    // - Click góc trên bên phải: Chuyển sang cổ vật tiếp theo
+    // - Click góc trên bên trái: Quay lại cổ vật trước đó
     if (uvY < 0.10) {
       if (uvX > 0.70) {
         this.nextRelic();
@@ -105,35 +180,32 @@ export class RelicRenderer {
       }
     }
 
-    // Tab buttons on top of right panel (uvY between 0.08 and 0.20, uvX >= 0.48)
+    // 3. Hệ thống 3 nút Tab ở cột phải (uvY từ 0.08 đến 0.20, uvX >= 0.48)
     if (uvY >= 0.08 && uvY <= 0.20 && uvX >= 0.48) {
-      if (uvX < 0.65) this.setTab(0);
-      else if (uvX < 0.82) this.setTab(1);
-      else this.setTab(2);
+      if (uvX < 0.65) this.setTab(0);       // Tab 1: Tổng quan
+      else if (uvX < 0.82) this.setTab(1);  // Tab 2: Ghi chép lịch sử
+      else this.setTab(2);                  // Tab 3: Ý nghĩa & Sự kiện
       return true;
     }
 
-    // Bottom Navigation Bar on Left Panel (Buttons: Prev, Zoom, Next)
-    // Drawn at y = 579 to 613 (uvY ~ 0.75 to 0.90)
+    // 4. Thanh điều khiển phía dưới ảnh ở cột trái (Nút: Trước, Phóng to, Tiếp theo)
+    // Tọa độ tương ứng: uvY ~ 0.75 đến 0.90, uvX < 0.50
     if (uvY >= 0.75 && uvY <= 0.90 && uvX < 0.50) {
-      // Prev Button: x from 0 to 0.18
       if (uvX <= 0.18) {
-        this.prevRelic();
+        this.prevRelic(); // Nút Trước
         return true;
       }
-      // Zoom Button: x from 0.18 to 0.32
       if (uvX > 0.18 && uvX <= 0.32) {
-        this.zoomPhoto = true;
+        this.zoomPhoto = true; // Nút Phóng to
         return true;
       }
-      // Next Button: x from 0.32 to 0.50
       if (uvX > 0.32) {
-        this.nextRelic();
+        this.nextRelic(); // Nút Tiếp theo
         return true;
       }
     }
 
-    // Bottom Status Bar across the whole screen (uvY > 0.90)
+    // 5. Thanh trạng thái ở đáy màn hình (uvY > 0.90)
     if (uvY > 0.90) {
       if (uvX > 0.50) {
         this.nextRelic();
@@ -144,15 +216,14 @@ export class RelicRenderer {
       }
     }
 
-    // Authentic Museum Photograph click strictly in photo box:
-    // photoX = 36, photoY = 87, photoW = 420, photoH = 370
-    // uvX: 0.03 to 0.48, uvY: 0.11 to 0.64
+    // 6. Nhấp chuột trực tiếp vào khung ảnh hiện vật để phóng to toàn màn hình
+    // Tọa độ khung ảnh: uvX từ 0.03 đến 0.48, uvY từ 0.11 đến 0.64
     if (uvX >= 0.03 && uvX <= 0.48 && uvY >= 0.11 && uvY <= 0.64) {
       this.zoomPhoto = true;
       return true;
     }
 
-    // Right panel content click (can cycle tabs if clicked on tab content header)
+    // 7. Nhấp vào tiêu đề hồ sơ bên phải để chuyển nhanh qua các tab
     if (uvX >= 0.50 && uvY >= 0.20 && uvY <= 0.30) {
       this.setTab((this.tabIndex + 1) % 3);
       return true;
@@ -161,49 +232,58 @@ export class RelicRenderer {
     return false;
   }
 
+  /**
+   * Chu trình vẽ chính của Canvas mỗi khung hình (Render Loop)
+   * @param {number} t - Thời gian tính bằng giây
+   * @param {number} dt - Khoảng cách thời gian giữa 2 khung hình (delta time)
+   */
   render(t, dt) {
     const g = this.ctx;
     const w = this.width;
     const h = this.height;
     const relic = VIETNAM_RELICS[this.relicIndex] || VIETNAM_RELICS[0];
 
-    // Background: CRT Slate Navy
+    // Vẽ màu nền đen xanh đậm đặc trưng của màn hình CRT studio
     g.fillStyle = "#070a12";
     g.fillRect(0, 0, w, h);
 
+    // Nếu đang ở trạng thái phóng to ảnh, ưu tiên vẽ màn hình Zoom riêng biệt
     if (this.zoomPhoto) {
       this.renderZoomedPhoto(g, w, h, relic);
       return;
     }
 
-    // 1. Top Header Banner
+    // 1. Vẽ thanh tiêu đề chính (Header Banner)
     this.renderHeader(g, w, h, relic);
 
-    // 2. Left Column: Authentic Museum Photo & Controls
+    // 2. Vẽ cột bên trái: Khung ảnh chụp hiện vật gốc & Các nút điều hướng
     this.renderPhotoPanel(g, 24, 75, 444, 550, relic);
 
-    // 3. Right Column: Archival Dossier & Historical Notes
+    // 3. Vẽ cột bên phải: Hồ sơ giám định khảo cổ học & Ghi chép chi tiết
     this.renderDossierPanel(g, 486, 75, 450, 550, relic);
 
-    // 4. Bottom Navigation & Status Bar
+    // 4. Vẽ thanh trạng thái và hướng dẫn phím tắt ở đáy màn hình
     this.renderFooter(g, w, h);
 
-    // CRT Scanlines overlay
+    // 5. Hiệu ứng quét dòng quét ngang Retro Scanlines của màn hình bóng đèn CRT
     g.fillStyle = "rgba(0, 0, 0, 0.08)";
     for (let y = 0; y < h; y += 4) {
       g.fillRect(0, y, w, 1.5);
     }
   }
 
+  /**
+   * Vẽ thanh tiêu đề phía trên cùng của màn hình CRT
+   */
   renderHeader(g, w, h, relic) {
-    // Header container
+    // Khung nền tiêu đề
     g.fillStyle = "#0c1322";
     g.fillRect(0, 0, w, 64);
     g.strokeStyle = "#253450";
     g.lineWidth = 1;
     g.strokeRect(0, 0, w, 64);
 
-    // Museum icon & badge
+    // Biểu tượng và tên bảo tàng
     g.fillStyle = "#d4a441";
     g.font = "bold 24px VT323, monospace";
     g.textAlign = "left";
@@ -213,29 +293,33 @@ export class RelicRenderer {
     g.font = "17px VT323, monospace";
     g.fillText("HỒ SƠ LƯU TRỮ CỔ VẬT & BẢO VẬT QUỐC GIA", 24, 50);
 
-    // Current Counter
+    // Bộ đếm số thứ tự bảo vật [ 01 / 07 ]
     g.fillStyle = "#ffd56b";
     g.font = "bold 22px VT323, monospace";
     g.textAlign = "right";
     g.fillText(`BẢO VẬT [ ${String(this.relicIndex + 1).padStart(2, "0")} / ${String(VIETNAM_RELICS.length).padStart(2, "0")} ]`, w - 24, 28);
 
+    // Huy hiệu pháp lý công nhận bảo vật quốc gia
     g.fillStyle = "#9eb5db";
     g.font = "16px VT323, monospace";
     g.fillText(relic.badge, w - 24, 50);
   }
 
+  /**
+   * Vẽ cột bên trái hiển thị ảnh chụp thực tế và thông tin vắn tắt
+   */
   renderPhotoPanel(g, x, y, pw, ph, relic) {
-    // Frame background
+    // Khung viền ngoài
     g.fillStyle = "#0c111c";
     g.fillRect(x, y, pw, ph);
     g.strokeStyle = "#2d3b55";
     g.lineWidth = 1.5;
     g.strokeRect(x, y, pw, ph);
 
-    // Gold brass corners
+    // Họa tiết góc bằng đồng kim loại cổ điển
     this.drawCornerDeco(g, x, y, pw, ph, "#d4a441");
 
-    // Photo Area
+    // Vùng ảnh cổ vật
     const photoX = x + 12;
     const photoY = y + 12;
     const photoW = pw - 24;
@@ -246,7 +330,7 @@ export class RelicRenderer {
     g.strokeStyle = "#1b2436";
     g.strokeRect(photoX, photoY, photoW, photoH);
 
-    // Draw authentic relic photograph
+    // Vẽ ảnh chụp thật của cổ vật với tỉ lệ co giãn thích ứng hoàn hảo (Aspect Ratio Fit)
     const img = this.images.get(this.relicIndex);
     if (img && img.complete && img.naturalWidth > 0) {
       const iw = img.naturalWidth;
@@ -259,7 +343,7 @@ export class RelicRenderer {
 
       g.drawImage(img, dx, dy, dw, dh);
 
-      // Museum spotlight vignette
+      // Hiệu ứng ánh sáng tỏa tròn (Radial Vignette Spotlight) tập trung vào cổ vật
       const rad = Math.max(dw, dh) * 0.7;
       const grad = g.createRadialGradient(photoX + photoW / 2, photoY + photoH / 2, rad * 0.4, photoX + photoW / 2, photoY + photoH / 2, rad);
       grad.addColorStop(0, "rgba(0,0,0,0)");
@@ -267,14 +351,14 @@ export class RelicRenderer {
       g.fillStyle = grad;
       g.fillRect(photoX, photoY, photoW, photoH);
     } else {
-      // Loading state
+      // Trạng thái đang tải ảnh
       g.fillStyle = "#8ba0c2";
       g.font = "20px VT323, monospace";
       g.textAlign = "center";
       g.fillText("ĐANG TẢI ẢNH BẢO VẬT…", photoX + photoW / 2, photoY + photoH / 2);
     }
 
-    // Photo Badge Ribbon
+    // Dải ruy băng chứng nhận ảnh hiện vật gốc
     g.fillStyle = "rgba(10, 16, 28, 0.88)";
     g.fillRect(photoX + 8, photoY + photoH - 32, photoW - 16, 26);
     g.fillStyle = "#f5cb6c";
@@ -282,7 +366,7 @@ export class RelicRenderer {
     g.textAlign = "center";
     g.fillText("ẢNH HIỆN VẬT GỐC LƯU TRỮ BẢO TÀNG", photoX + photoW / 2, photoY + photoH - 14);
 
-    // Details below photo
+    // Thông tin chất liệu & địa điểm lưu giữ phía dưới ảnh
     const infoY = photoY + photoH + 16;
     g.textAlign = "left";
     g.fillStyle = "#ffd56b";
@@ -299,27 +383,30 @@ export class RelicRenderer {
     g.font = "14px Archivo, sans-serif";
     this.drawWrappedText(g, relic.location, x + 92, infoY + 41, pw - 108, 18, 1);
 
-    // Navigation buttons
+    // Các nút bấm điều hướng bên dưới khung ảnh
     const btnY = y + ph - 46;
     const btnH = 34;
     
-    // Prev Button
+    // Nút lùi về cổ vật trước
     this.drawButton(g, x + 12, btnY, 128, btnH, "◀ TRƯỚC (A)", "#19253a", "#ffd56b");
-    // Zoom Button
+    // Nút phóng to ảnh
     this.drawButton(g, x + 148, btnY, 140, btnH, "[+] PHÓNG TO (Z)", "#22324e", "#7ec8f8");
-    // Next Button
+    // Nút chuyển sang cổ vật tiếp theo
     this.drawButton(g, x + 296, btnY, 136, btnH, "TIẾP THEO ▶ (D)", "#19253a", "#ffd56b");
   }
 
+  /**
+   * Vẽ cột bên phải chứa hồ sơ khảo cổ học và các tab chi tiết
+   */
   renderDossierPanel(g, x, y, pw, ph, relic) {
-    // Panel background
+    // Khung nền bảng hồ sơ
     g.fillStyle = "#090d16";
     g.fillRect(x, y, pw, ph);
     g.strokeStyle = "#253450";
     g.lineWidth = 1.5;
     g.strokeRect(x, y, pw, ph);
 
-    // Tab Header Bar
+    // Thanh chuyển 3 Tab nội dung
     const tabH = 38;
     const tabW = (pw - 8) / 3;
     const tabs = ["1. TỔNG QUAN", "2. GHI CHÉP LỊCH SỬ", "3. Ý NGHĨA & SỰ KIỆN"];
@@ -338,7 +425,7 @@ export class RelicRenderer {
       g.fillText(tabs[i], tx + (tabW - 4) / 2, y + 28);
     }
 
-    // Content container clip area
+    // Thiết lập vùng cắt xén (Clip Area) để nội dung cuộn không bị tràn ra ngoài khung
     const cx = x + 16;
     const cy = y + tabH + 16;
     const cw = pw - 32;
@@ -349,7 +436,7 @@ export class RelicRenderer {
     g.rect(cx, cy, cw, ch);
     g.clip();
 
-    // Render Tab Content
+    // Rẽ nhánh kết xuất nội dung tương ứng theo tab đang chọn
     if (this.tabIndex === 0) {
       this.renderOverviewTab(g, cx, cy, cw, relic);
     } else if (this.tabIndex === 1) {
@@ -361,27 +448,30 @@ export class RelicRenderer {
     g.restore();
   }
 
+  /**
+   * Kết xuất Tab 0: Tổng quan cổ vật, niên đại và thông số kích thước
+   */
   renderOverviewTab(g, x, y, w, relic) {
     g.textAlign = "left";
 
-    // Big Relic Title
+    // Tên bảo vật in lớn nổi bật
     g.fillStyle = "#ffd56b";
     g.font = "bold 26px Archivo, sans-serif";
     g.fillText(relic.title, x, y + 24);
 
-    // Era / Period
+    // Niên đại lịch sử
     g.fillStyle = "#7ec8f8";
     g.font = "18px VT323, monospace";
     g.fillText("◆ NIÊN ĐẠI: " + relic.era.toUpperCase(), x, y + 54);
 
-    // Divider
+    // Đường gạch ngang phân cách
     g.strokeStyle = "#253450";
     g.beginPath();
     g.moveTo(x, y + 66);
     g.lineTo(x + w, y + 66);
     g.stroke();
 
-    // Archaeological specs grid
+    // Lưới thông số khảo cổ học (Kích thước, Chất liệu, Xuất xứ)
     let curY = y + 90;
     const row = (label, val, color = "#e3ecf8") => {
       g.fillStyle = "#d4a441";
@@ -398,7 +488,7 @@ export class RelicRenderer {
     row("CHẤT LIỆU:", relic.material);
     row("XUẤT XỨ:", relic.discovery);
 
-    // Overview paragraph
+    // Đoạn văn bản mô tả khảo cổ tổng quan
     curY += 8;
     g.fillStyle = "#ffd56b";
     g.font = "bold 16px VT323, monospace";
@@ -410,6 +500,9 @@ export class RelicRenderer {
     this.drawWrappedText(g, relic.desc, x, curY, w, 22);
   }
 
+  /**
+   * Kết xuất Tab 1: Tư liệu ghi chép hiện trường khảo cổ chi tiết (Hỗ trợ cuộn chuột)
+   */
   renderNotesTab(g, x, y, w, h, relic) {
     g.textAlign = "left";
     let curY = y + 20 - this.scrollOffset;
@@ -431,27 +524,27 @@ export class RelicRenderer {
     g.stroke();
     curY += 16;
 
-    // Detailed field notes
+    // Duyệt và vẽ từng mục ghi chép khảo cổ học với huy hiệu số thứ tự vàng
     const notes = relic.notes || [];
     notes.forEach((note, idx) => {
-      // Note index badge
+      // Huy hiệu số thứ tự [GHI CHÉP 01]
       g.fillStyle = "#d4a441";
       g.font = "bold 17px VT323, monospace";
       g.fillText(`[GHI CHÉP 0${idx + 1}]`, x, curY);
       curY += 20;
 
-      // Note content
+      // Nội dung đoạn ghi chép chi tiết
       g.fillStyle = "#dce7f5";
       g.font = "14px Archivo, sans-serif";
       const lines = this.drawWrappedText(g, note, x + 8, curY, w - 16, 21);
       curY += lines * 21 + 18;
     });
 
-    // Calculate maximum scroll
+    // Tính toán độ cuộn tối đa cho thanh cuộn dọc
     const totalH = curY + this.scrollOffset - y;
     this.maxScroll = Math.max(0, totalH - h);
 
-    // Draw scroll indicator bar if content overflows
+    // Vẽ thanh chỉ báo cuộn (Scrollbar) nếu nội dung vượt quá chiều cao khung nhìn
     if (this.maxScroll > 0) {
       const barH = Math.max(30, (h / totalH) * h);
       const barY = y + (this.scrollOffset / this.maxScroll) * (h - barH);
@@ -462,6 +555,9 @@ export class RelicRenderer {
     }
   }
 
+  /**
+   * Kết xuất Tab 2: Ý nghĩa lịch sử, trích dẫn văn kiện và điểm nhấn chủ quyền
+   */
   renderSignificanceTab(g, x, y, w, h, relic) {
     g.textAlign = "left";
     let curY = y + 20;
@@ -471,7 +567,7 @@ export class RelicRenderer {
     g.fillText("◆ Ý NGHĨA LỊCH SỬ & CHỦ QUYỀN DÂN TỘC", x, curY);
     curY += 28;
 
-    // Quote Box
+    // Hộp trích dẫn nổi bật viền vàng sang trọng
     g.fillStyle = "#111827";
     g.fillRect(x, curY, w, 110);
     g.strokeStyle = "#d4a441";
@@ -487,7 +583,7 @@ export class RelicRenderer {
     this.drawWrappedText(g, relic.significance, x + 28, curY + 24, w - 40, 22);
     curY += 135;
 
-    // Highlights list
+    // Danh sách các điểm nhấn lịch sử tiêu biểu
     g.fillStyle = "#7ec8f8";
     g.font = "bold 18px VT323, monospace";
     g.fillText("◆ ĐIỂM NHẤN LỊCH SỬ TIÊU BIỂU:", x, curY);
@@ -505,15 +601,18 @@ export class RelicRenderer {
       curY += lines * 20 + 8;
     });
 
-    // Archival footnote
+    // Chú thích quy chuẩn giám định bảo vật quốc gia ở cuối trang
     curY += 12;
     g.fillStyle = "#94a3b8";
     g.font = "13px VT323, monospace";
     g.fillText("LƯU TRỮ VÀ GIÁM ĐỊNH THEO QUY CHUẨN BẢO VẬT QUỐC GIA VIỆT NAM", x, curY);
   }
 
+  /**
+   * Kết xuất chế độ xem ảnh toàn màn hình phóng to (Fullscreen Photo Mode)
+   */
   renderZoomedPhoto(g, w, h, relic) {
-    // Dim background
+    // Nền tối mờ che phủ toàn bộ màn hình TV
     g.fillStyle = "rgba(4, 7, 14, 0.96)";
     g.fillRect(0, 0, w, h);
 
@@ -527,24 +626,28 @@ export class RelicRenderer {
       const dx = (w - dw) / 2;
       const dy = 50 + (maxH - dh) / 2;
 
+      // Khung viền thếp vàng trang trọng quanh bức ảnh
       g.strokeStyle = "#d4a441";
       g.lineWidth = 2;
       g.strokeRect(dx - 4, dy - 4, dw + 8, dh + 8);
       g.drawImage(img, dx, dy, dw, dh);
     }
 
-    // Title overlay
+    // Tiêu đề bảo vật phía trên đỉnh ảnh
     g.fillStyle = "#ffd56b";
     g.font = "bold 24px Archivo, sans-serif";
     g.textAlign = "center";
     g.fillText(relic.title + " – " + relic.era, w / 2, 36);
 
-    // Prompt
+    // Hướng dẫn quay lại
     g.fillStyle = "#7ec8f8";
     g.font = "18px VT323, monospace";
     g.fillText("[ NHẤN PHÍM Z HOẶC CLICK VÀO MÀN HÌNH ĐỂ QUAY LẠI HỒ SƠ GHI CHÉP ]", w / 2, h - 28);
   }
 
+  /**
+   * Vẽ thanh điều hướng và phím tắt ở chân màn hình TV
+   */
   renderFooter(g, w, h) {
     g.fillStyle = "#060911";
     g.fillRect(0, h - 56, w, 56);
@@ -560,6 +663,9 @@ export class RelicRenderer {
     g.fillText("PHÍM ◀ / ▶: ĐỔI CỔ VẬT · PHÍM 1, 2, 3: ĐỔI TAB GHI CHÉP · MENU BẢO TÀNG: XEM TRƯNG BÀY CHI TIẾT", w / 2, h - 22);
   }
 
+  /**
+   * Hàm tiện ích vẽ nút bấm retro với viền sáng
+   */
   drawButton(g, bx, by, bw, bh, text, bg, color) {
     g.fillStyle = bg;
     g.fillRect(bx, by, bw, bh);
@@ -573,20 +679,34 @@ export class RelicRenderer {
     g.fillText(text, bx + bw / 2, by + bh / 2 + 5);
   }
 
+  /**
+   * Hàm tiện ích vẽ các họa tiết góc trang trí hình học
+   */
   drawCornerDeco(g, x, y, w, h, color) {
     const s = 10;
     g.strokeStyle = color;
     g.lineWidth = 2;
-    // Top-left
+    // Góc trên bên trái
     g.strokeRect(x, y, s, s);
-    // Top-right
+    // Góc trên bên phải
     g.strokeRect(x + w - s, y, s, s);
-    // Bottom-left
+    // Góc dưới bên trái
     g.strokeRect(x, y + h - s, s, s);
-    // Bottom-right
+    // Góc dưới bên phải
     g.strokeRect(x + w - s, y + h - s, s, s);
   }
 
+  /**
+   * Hàm tiện ích tự động xuống dòng chữ khi vượt quá chiều rộng cho phép (Word Wrap)
+   * @param {CanvasRenderingContext2D} g - Ngữ cảnh vẽ 2D
+   * @param {string} text - Đoạn văn bản cần vẽ
+   * @param {number} x - Tọa độ X bắt đầu
+   * @param {number} y - Tọa độ Y bắt đầu
+   * @param {number} maxWidth - Độ rộng tối đa của mỗi dòng
+   * @param {number} lineHeight - Khoảng cách chiều cao giữa các dòng
+   * @param {number} maxLines - Số dòng tối đa được phép vẽ (tránh tràn khung)
+   * @returns {number} - Tổng số dòng thực tế đã vẽ
+   */
   drawWrappedText(g, text, x, y, maxWidth, lineHeight, maxLines = 100) {
     const words = String(text || "").split(" ");
     let line = "";

@@ -1,6 +1,36 @@
-// Vietnam National History Dataset: Tapes & 3D Historical Relics
-// Curated for the Retro CRT Museum Studio
+// ==============================================================================
+// vietnam-history-data.js - CƠ SỞ DỮ LIỆU LỊCH SỬ VÀ BẢO VẬT QUỐC GIA VIỆT NAM
+// Dự án: Vietnam History CRT Experience (Không gian Bảo tàng Lịch sử CRT 3D)
+// ==============================================================================
+// Chức năng:
+// 1. Chứa toàn bộ dữ liệu số hóa của 10 Cuộn băng Tư liệu Lịch sử (VIETNAM_TAPES)
+//    dùng cho đầu máy băng từ VHS, bao gồm mốc thời gian, trích dẫn bất hủ, màu sắc CRT,
+//    sa bàn chiến thuật đồ họa và đường dẫn video MP4 phục vụ trình chiếu.
+// 2. Chứa toàn bộ hồ sơ giám định của 7 Bảo vật Quốc gia vô giá (VIETNAM_RELICS)
+//    bao gồm hình ảnh hiện vật gốc, niên đại khảo cổ học, thông số kích thước, chất liệu,
+//    hoàn cảnh khai quật, các ghi chép thực địa và ý nghĩa chủ quyền quốc gia dân tộc.
+// ==============================================================================
 
+/**
+ * DANH SÁCH 10 CUỘN BĂNG TƯ LIỆU LỊCH SỬ VIỆT NAM (VHS TAPES)
+ * Các trường dữ liệu (Schema):
+ * - id: Định danh duy nhất của cuộn băng
+ * - t: Tiêu đề hiển thị trên nhãn băng và màn hình OSD
+ * - y: Niên đại / Mốc năm diễn ra sự kiện
+ * - era: Tên thời kỳ / Triều đại lịch sử
+ * - videoUrl: Đường dẫn tệp video MP4 tư liệu (nếu có)
+ * - d: Tóm tắt diễn biến lịch sử hào hùng
+ * - quote: Câu trích dẫn hoặc khẩu hiệu lịch sử bất hủ
+ * - quoteAuthor: Tác giả của câu trích dẫn
+ * - bg: Màu nền gradient CRT mô phỏng không khí thời kỳ
+ * - ink: Màu chữ chủ đạo tương phản với nền
+ * - big: Mảng 2 từ khóa lớn hiển thị trên nhãn cuộn băng
+ * - relicName: Cổ vật biểu trưng tương ứng với thời kỳ
+ * - sceneType: Loại sa bàn đồ họa mô phỏng (river_battle, mongol_battle,...)
+ * - videoDuration: Thời lượng ước tính của đoạn phim (giây)
+ * - highlights: Mảng các sự kiện mốc son đáng chú ý nhất
+ * - mapData: Tọa độ trung tâm và các địa danh chiến lược trên sa bàn
+ */
 export const VIETNAM_TAPES = [
   {
     id: "hungvuong",
@@ -198,6 +228,23 @@ export const VIETNAM_TAPES = [
   }
 ];
 
+/**
+ * DANH SÁCH 7 BẢO VẬT QUỐC GIA VIỆT NAM VÔ GIÁ (VIETNAM_RELICS)
+ * Các trường dữ liệu (Schema):
+ * - id: Mã định danh hiện vật
+ * - title: Tên chính thức của Bảo vật Quốc gia
+ * - era: Niên đại lịch sử khảo cổ
+ * - badge: Số quyết định Thủ tướng Chính phủ công nhận bảo vật
+ * - location: Cơ quan bảo tàng đang trực tiếp lưu giữ và bảo quản
+ * - image: Đường dẫn ảnh chụp hiện vật thật chất lượng cao
+ * - material: Thành phần cấu tạo, chất liệu và tình trạng bề mặt patina
+ * - dims: Kích thước vật lý (đường kính, chiều cao, trọng lượng)
+ * - discovery: Hoàn cảnh, thời gian và địa điểm phát hiện/khai quật
+ * - desc: Giới thiệu tổng quan và giá trị nghệ thuật
+ * - notes: Mảng các ghi chép khảo cổ học chuyên sâu từ hiện trường
+ * - significance: Ý nghĩa lịch sử, tinh thần dân tộc và chủ quyền lãnh thổ
+ * - highlights: Các điểm nhấn cốt lõi phục vụ tra cứu nhanh
+ */
 export const VIETNAM_RELICS = [
   {
     id: "trongdong",

@@ -1,13 +1,27 @@
 <!DOCTYPE html>
 <html lang="vi" data-accent="gold">
 <head>
+  <!-- ==========================================================================
+       PHÒNG CHIẾU PHIM TÀI LIỆU LỊCH SỬ VIỆT NAM & BẢO TÀNG BẢO VẬT QUỐC GIA RETRO 3D
+       Thiết kế không gian phòng làm việc cổ điển thập niên 90 với Tivi CRT, đầu băng VCR,
+       máy vi tính IBM PC/AT và hệ thống tra cứu khảo cứu di sản lịch sử Việt Nam.
+       ========================================================================== -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Lịch Sử Việt Nam · Phòng Chiếu Retro & Hồ Sơ Bảo Vật Quốc Gia</title>
+
+  <!-- Kết nối trước đến máy chủ Google Fonts để tối ưu tốc độ nạp phông chữ -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Nạp các font chữ đặc trưng:
+       - Archivo: Tiêu đề hiện đại, dứt khoát
+       - VT323: Font chữ ma trận điểm điện tử retro trên màn hình CRT TV và OSD
+       - Caveat: Font chữ viết tay trên sổ tay ghi chép khảo cổ và vé phim
+       - Courier Prime: Font máy đánh chữ tài liệu quân sự và hồ sơ khảo cổ -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=VT323&family=Caveat:wght@600&family=Courier+Prime:wght@400;700&display=swap">
 
+  <!-- Bản đồ ánh xạ thư viện JavaScript (Import Map) cho Three.js 3D Engine -->
   <script type="importmap">
   {
     "imports": {
@@ -17,8 +31,10 @@
   }
   </script>
 
+  <!-- Kiểu định dạng cơ bản ban đầu khi trang đang tải -->
   <style>
     html { background: #07080d; }
+    /* Giao diện dự phòng khi trình duyệt không hỗ trợ WebGL 3D */
     .bm-fallback { color: #efe9dc; font: 18px/1.6 system-ui, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
     .bm-fallback a { color: #ffb867; text-decoration: underline; }
     .bm-fallback h1 { font-family: "Archivo", sans-serif; font-size: 36px; color: #ffcc00; margin-bottom: 12px; }
@@ -30,16 +46,28 @@
 </head>
 <body class="home-template">
 
+<!-- Điểm gắn kết DOM gốc chứa không gian 3D Three.js -->
 <div id="bm-root" data-assets="https://c96b3c59.berlin-monitor-scene.pages.dev"></div>
 
+<!-- ==========================================================================
+     GIAO DIỆN DỰ PHÒNG (FALLBACK NAVIGATION)
+     Hiển thị nếu máy tính/trình duyệt không bật card đồ họa WebGL
+     ========================================================================== -->
 <nav class="bm-fallback" aria-label="Lịch sử Việt Nam" style="display:none">
   <h1>LỊCH SỬ VIỆT NAM · PHÒNG CHIẾU RETRO</h1>
   <p>Chào mừng bạn đến với không gian trải nghiệm lịch sử Việt Nam trên màn hình CRT và đầu băng từ VCR cổ điển. Mỗi cuộn phim trên bàn làm việc là một mốc son hào hùng: Hùng Vương dựng nước, Ngô Quyền cọc nhọn Bạch Đằng, Hào khí Đông A ba lần thắng Nguyên Mông, Bình Ngô đại cáo, Quang Trung đại phá quân Thanh, Bác Hồ đọc Tuyên ngôn Độc lập, và đại thắng mùa xuân 1975.</p>
   <p><a href="#work">Xem các cuộn phim lịch sử</a> · <a href="#relics">Xem Hồ sơ Cổ vật & Bảo vật Quốc gia</a> · <a href="museum.html">Tham quan Bảo tàng Bảo vật Quốc gia</a></p>
 </nav>
 
+<!-- ==========================================================================
+     KHUNG MẪU GIAO DIỆN PHÒNG RETRO 3D (BM-DESKTOP TEMPLATE)
+     Được nhân bản và chèn vào DOM sau khi tải xong WebGL
+     ========================================================================== -->
 <template id="bm-desktop">
+  <!-- Hiệu ứng ánh sáng lan tỏa từ bóng đèn hình CRT ra bàn -->
   <div id="still" aria-hidden="true"><div class="tv-spill"><i></i></div></div>
+
+  <!-- Màn hình OSD (On-Screen Display) lúc khởi động Tivi và mở khóa âm thanh trình duyệt -->
   <div id="osd" aria-hidden="true">
     <div class="tv-scr">
       <div class="tv-pic">
@@ -56,18 +84,26 @@
     </div>
   </div>
 
+  <!-- Các nút kích hoạt sự kiện tương tác chuột để vượt qua chính sách Autoplay của Browser -->
   <button id="enter" hidden aria-label="Bước vào phòng chiếu"></button>
   <button id="enter-muted" hidden>Vào phòng chiếu tắt tiếng</button>
 
+  <!-- Canvas WebGL chính nơi Three.js kết xuất toàn bộ căn phòng 3D -->
   <canvas id="gl" aria-label="Phòng chiếu phim tài liệu lịch sử Việt Nam với tivi CRT, đầu băng VCR, máy tính cổ điển và cửa sổ mưa đêm."></canvas>
 
+  <!-- ================= THANH ĐIỀU HƯỚNG TRÊN CÙNG (HUD TOP) ================= -->
   <div class="hud top">
     <button class="name" id="home-link">LỊCH SỬ VIỆT NAM · PHÒNG CHIẾU RETRO</button>
     <nav class="menu" aria-label="Điều hướng">
+      <!-- Mục Giới thiệu tổng quan -->
       <a href="#about" data-page="about">GIỚI THIỆU</a>
+      <!-- Mục Danh mục 11 cuộn phim lịch sử trên bàn -->
       <a href="#work" data-page="work">CUỘN PHIM</a>
+      <!-- Mục Cổ vật bảo vật quốc gia xem trên màn hình Tivi CRT -->
       <a href="#relics" data-page="relics">CỔ VẬT</a>
+      <!-- Nút chuyển trực tiếp sang trang Bảo Tàng Trực Tuyến Toàn Cảnh (museum.html) -->
       <a href="museum.html" class="menu-museum" title="Khám phá Bảo Tàng Bảo Vật Quốc Gia Việt Nam">BẢO TÀNG</a>
+      <!-- Bản đồ chiến dịch lịch sử trên màn hình máy tính cổ -->
       <a href="#online" data-page="online">BẢN ĐỒ CHIẾN DỊCH</a>
     </nav>
   </div>
@@ -75,6 +111,8 @@
   <h1 class="sr">Lịch Sử Việt Nam · Phòng Chiếu Retro</h1>
   <p class="sr">Trải nghiệm các thước phim tư liệu lịch sử Việt Nam và chiêm ngưỡng hình ảnh cùng hồ sơ ghi chép các bảo vật quốc gia trên tivi CRT cổ điển.</p>
 
+  <!-- ================= BẢNG THÔNG TIN CHI TIẾT (HUD PANEL) ================= -->
+  <!-- Hiện ra khi bấm vào Cuộn phim, Cổ vật hoặc Sổ tay ghi chép -->
   <section class="hud panel" id="panel" hidden aria-labelledby="p-title">
     <header>
       <div>
@@ -89,8 +127,11 @@
     <div class="body" id="p-body"></div>
   </section>
 
+  <!-- ================= BẢNG ĐIỀU KHIỂN & PHÍM TẮT DƯỚI CÙNG (HUD CTL) ================= -->
   <div class="hud ctl">
+    <!-- Dòng hướng dẫn phím tắt nhanh -->
     <div class="hint" id="hint">C máy tính cổ · M nghe đài · Z zoom TV · 1–6 nút TV · Cuộn phim trên bàn</div>
+    <!-- Cụm nút thao tác âm thanh và chuyển góc nhìn -->
     <div class="btns">
       <button class="sound" id="cardon" aria-label="Hiện sổ tay" hidden>XEM THẺ · N</button>
       <button class="sound" id="unzoom">TRỞ VỀ BÀN · ESC</button>
@@ -100,6 +141,7 @@
     </div>
   </div>
 
+  <!-- Các thẻ trợ năng và thông báo trạng thái -->
   <div id="tip" hidden></div>
   <a id="plink" hidden target="_blank" rel="noopener"></a>
   <div id="err" hidden></div>
@@ -107,6 +149,9 @@
   <div id="pc-sr" class="sr" aria-live="polite"></div>
 </template>
 
+<!-- ==========================================================================
+     DANH MỤC CÁC MỐC SON LỊCH SỬ DỮ LIỆU GỐC (SEO & FALLBACK LIST)
+     ========================================================================== -->
 <ol id="bm-posts" class="bm-fallback" style="display:none">
   <li><a href="#work" data-date="Thế kỷ VII TCN">01. Khởi nguyên Văn Lang và đỉnh cao nghệ thuật đúc đồng Đông Sơn</a></li>
   <li><a href="#work" data-date="Năm 938">02. Trận cọc nhọn Bạch Đằng Giang của Ngô Quyền rửa sạch nghìn năm Bắc thuộc</a></li>
@@ -125,6 +170,9 @@
   <li><a href="#online" data-date="2026">15. Bảo tồn và số hóa 3D di sản văn hóa dân tộc Việt Nam</a></li>
 </ol>
 
+<!-- ==========================================================================
+     NỘI DUNG GIỚI THIỆU PHÒNG CHIẾU (ABOUT TEMPLATE)
+     ========================================================================== -->
 <template id="bm-about">
   <h2>PHÒNG CHIẾU TƯ LIỆU LỊCH SỬ VIỆT NAM</h2>
   <p>Chào mừng bạn đến với <strong>Phòng Chiếu Phim Tài Liệu Lịch Sử Việt Nam</strong>. Đây là không gian phục dựng tương tác cổ điển, kết hợp thẩm mỹ retro cuối thập niên 90 với kho tàng lịch sử và bảo vật hào hùng của dân tộc Việt Nam.</p>
@@ -141,6 +189,10 @@
   </ul>
 </template>
 
+<!-- ==========================================================================
+     KỊCH BẢN KHỞI TẠO & KẾT NỐI (BOOTSTRAP SCRIPT)
+     Kiểm tra hỗ trợ đồ họa WebGL, nạp stylesheet và module 3D chính
+     ========================================================================== -->
 <script>
 (function(){
   var d = document, root = d.documentElement, q = new URLSearchParams(location.search).get("view");
@@ -151,13 +203,16 @@
     assetBase: d.getElementById("bm-root").dataset.assets || null
   };
 
+  // Cấu hình đường dẫn tài nguyên đám mây
   if (BM.assetBase) BM.assetBase = BM.assetBase.replace(/\/*$/, "/") + "3e11de40/";
 
+  // Trích xuất danh sách bài viết/mốc lịch sử vào bộ nhớ
   BM.posts = [].map.call(d.querySelectorAll("#bm-posts a"), function(a){
     return { t: a.textContent, u: a.href, d: a.dataset.date };
   });
   BM.postsA = BM.posts.map(function(p){ return [p.t, p.u, p.d]; });
 
+  // Bộ phân tích cú pháp khối nội dung Giới thiệu
   BM.about = (function(){
     var t = d.getElementById("bm-about"), out = [], sp = function(x){ return x.replace(/\s+/g," ").trim(); };
     if (!t) return out;
@@ -190,12 +245,14 @@
     return out;
   })();
 
+  // 1. Kiểm tra hỗ trợ WebGL (Web Graphics Library)
   var gl = false;
   try {
     var c = d.createElement("canvas");
     gl = !!(window.WebGLRenderingContext && (c.getContext("webgl2") || c.getContext("webgl")));
   } catch(e) {}
 
+  // Nếu thiết bị không hỗ trợ WebGL, hiện giao diện fallback phẳng
   if (!gl) {
     [].forEach.call(d.querySelectorAll(".bm-fallback"), function(e){ e.style.display = "block"; });
     return;
@@ -203,25 +260,26 @@
 
   root.classList.add("bm-scene", "bm-desktop");
 
-  // Load stylesheet
+  // 2. Tải stylesheet giao diện phòng retro 3D
   var css = d.createElement("link");
   css.rel = "stylesheet";
   css.href = "felix-desktop.css";
   d.head.appendChild(css);
 
   var mounted = false;
+  // 3. Khởi tạo và gắn kết khung cảnh 3D
   function mount() {
     if (mounted) return;
     mounted = true;
     d.getElementById("bm-root").appendChild(d.getElementById("bm-desktop").content.cloneNode(true));
     
-    // Boot loader display
+    // Nạp kịch bản màn hình khởi động Tivi (Bootloader OSD)
     var b = d.createElement("script");
     b.src = "felix-boot.js";
     b.async = false;
     d.body.appendChild(b);
 
-    // Main 3D scene module
+    // Nạp module 3D chính (Three.js Engine phòng làm việc & màn hình CRT TV)
     var s = d.createElement("script");
     s.type = "module";
     s.src = "vietnam-desktop.js?v=" + Date.now();
@@ -229,7 +287,7 @@
   }
 
   css.onload = css.onerror = mount;
-  setTimeout(mount, 3000);
+  setTimeout(mount, 3000); // Đảm bảo khởi động sau tối đa 3 giây kể cả khi mạng chậm
 })();
 </script>
 

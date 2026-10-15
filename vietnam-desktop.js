@@ -1,12 +1,32 @@
-// Vietnam National History & Relics CRT Experience
+// ==============================================================================
+// vietnam-desktop.js - TRỤC ĐIỀU HÀNH 3D THREE.JS VÀ KHÔNG GIAN BẢO TÀNG CRT RETRO
+// Dự án: Vietnam History CRT Experience
+// ==============================================================================
+// Chức năng kiến trúc tổng thể:
+// 1. Khởi tạo không gian phòng trưng bày 3D bằng Three.js (WebGL): bàn làm việc retro,
+//    TV bóng đèn hình CRT cổ, máy tính cổ điển, đầu máy băng từ VHS, máy nghe đĩa CD,
+//    cửa sổ nhìn ra thành phố đêm, đèn bàn và đồng hồ quả lắc treo tường.
+// 2. Tích hợp tương tác vật lý 3D: Nhấp chuột cầm băng VHS nhét vào đầu đọc, bấm nút
+//    điều khiển trên TV CRT, vặn núm âm lượng, mở sổ tay ghi chép lịch sử, gõ phím PC.
+// 3. Kết nối hai bộ giải mã nội dung cốt lõi:
+//    - HistoryFilmPlayer: Trình chiếu các đoạn phim tài liệu lịch sử hào hùng trên TV.
+//    - RelicRenderer: Khám phá 7 Bảo vật Quốc gia với ảnh gốc và hồ sơ khảo cổ học chi tiết.
+// 4. Quản lý hệ thống chuyển trang mượt mà (Camera Orbit & Pan transitions),
+//    hậu kỳ xử lý đồ họa (UnrealBloomPass, CRT ShaderPass, Scanlines) và âm thanh không gian.
+// ==============================================================================
+
 import { VIETNAM_TAPES, VIETNAM_RELICS } from "./vietnam-history-data.js";
 import { RelicRenderer } from "./relic-renderer.js?v=20261015b";
 import { HistoryFilmPlayer } from "./history-film-player.js?v=20261014f";
 
+// Bộ điều khiển trình chiếu cổ vật và phim tư liệu (khởi tạo lười khi người dùng truy cập tab)
 let relicRenderer = null;
 let relicCanvas = null;
 let filmPlayer = null;
 
+/**
+ * Hàm tiện ích tự động ngắt dòng văn bản theo chiều rộng cho phép trên Canvas 2D
+ */
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   const words = text.split(" ");
   let line = "";

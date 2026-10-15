@@ -1,9 +1,28 @@
-// Vietnam Historical Video & Documentary Reel Player for Retro CRT TV
-// Generates authentic archival film reels, strategic battle maps, and documentary sequences
+// ==============================================================================
+// history-film-player.js - TRÌNH PHÁT BĂNG TƯ LIỆU VÀ PHIM LỊCH SỬ VIỆT NAM TRÊN TV CRT
+// Dự án: Vietnam History CRT Experience (Không gian Bảo tàng Lịch sử CRT 3D)
+// ==============================================================================
+// Chức năng:
+// 1. Quản lý việc phát các cuộn băng tư liệu lịch sử (VHS Tapes) trên màn hình CRT.
+// 2. Tích hợp video tài liệu thật (HTML5 Video Element) đồng bộ cùng hiệu ứng màn hình
+//    bóng đèn hình CRT: quét dòng (scanlines), bụi phim xước (scratches), đếm ngược 3-2-1.
+// 3. Cung cấp sa bàn chiến thuật đồ họa mô phỏng (Tactical Scenarios) cho các sự kiện
+//    lịch sử lớn: Trận Bạch Đằng 938, Ba lần kháng chiến Nguyên Mông, Hành quân Quang Trung,
+//    Tuyên ngôn Độc lập Ba Đình 1945, Chiến dịch Điện Biên Phủ 1954, Xe tăng 390 húc cổng Dinh 1975.
+// 4. Đồng bộ âm thanh, kiểm soát triệt để chống phát tiếng ngầm khi tắt TV hoặc đẩy băng ra.
+// ==============================================================================
 
 import { VIETNAM_TAPES } from "./vietnam-history-data.js";
 
 export class HistoryFilmPlayer {
+  /**
+   * Khởi tạo trình phát phim tư liệu lịch sử
+   * @param {HTMLCanvasElement} canvas - Canvas dùng để vẽ lên màn hình TV
+   * @param {CanvasRenderingContext2D} ctx - Ngữ cảnh vẽ 2D
+   * @param {number} width - Độ phân giải chiều rộng (1024px)
+   * @param {number} height - Độ phân giải chiều cao (768px)
+   * @param {AudioContext|null} audioCtx - Bộ máy âm thanh Web Audio API
+   */
   constructor(canvas, ctx, width = 1024, height = 768, audioCtx = null) {
     this.canvas = canvas;
     this.ctx = ctx;
@@ -11,11 +30,14 @@ export class HistoryFilmPlayer {
     this.height = height;
     this.audioCtx = audioCtx;
 
+    // Chỉ số cuộn băng đang phát (-1 nếu chưa lắp băng)
     this.tapeIndex = 0;
-    this.time = 0; // playback time in seconds
+
+    // Thời gian phát tính bằng giây
+    this.time = 0;
     this.isPlaying = true;
 
-    // Archival Film grain / scratches seed
+    // Khởi tạo các vết xước và bụi phim nhựa 35mm giả lập
     this.scratches = Array.from({ length: 14 }, () => ({
       x: Math.random() * width,
       speed: (Math.random() - 0.5) * 8,
@@ -23,13 +45,17 @@ export class HistoryFilmPlayer {
       width: Math.random() * 2 + 1
     }));
 
-    // Audio beep synthesis
+    // Bộ nhớ giây đã phát tiếng bíp đếm ngược gần nhất (tránh bíp lặp)
     this.lastBeepSec = -1;
 
-    // Optional HTML5 Video element support
+    // Phần tử HTML5 Video ẩn dùng để giải mã và đọc khung hình video thật
     this.videoElement = null;
   }
 
+  /**
+   * Dừng hẳn việc phát phim, tắt hoàn toàn video và âm thanh ngầm
+   * Gọi khi người dùng ấn nút Eject (Đẩy băng ra) hoặc Tắt nguồn TV
+   */
   stop() {
     this.isPlaying = false;
     this.time = 0;
@@ -39,13 +65,16 @@ export class HistoryFilmPlayer {
       try {
         this.videoElement.pause();
         this.videoElement.currentTime = 0;
-        this.videoElement.removeAttribute("src");
+        this.videoElement.removeAttribute("src"); // Xóa nguồn để trình duyệt giải phóng bộ nhớ
         this.videoElement.load();
       } catch (e) {}
       this.videoElement = null;
     }
   }
 
+  /**
+   * Tạm dừng phát phim (Pause)
+   */
   pause() {
     this.isPlaying = false;
     if (this.videoElement && !this.videoElement.paused) {
@@ -55,6 +84,9 @@ export class HistoryFilmPlayer {
     }
   }
 
+  /**
+   * Tiếp tục phát phim (Resume)
+   */
   resume() {
     this.isPlaying = true;
     if (this.videoElement && this.videoElement.paused && this.videoElement.src) {
@@ -64,6 +96,10 @@ export class HistoryFilmPlayer {
     }
   }
 
+  /**
+   * Bắt đầu phát một cuộn băng VHS cụ thể
+   * @param {number} index - Số thứ tự cuộn băng trong danh sách VIETNAM_TAPES
+   */
   playTape(index) {
     this.tapeIndex = Math.max(0, Math.min(VIETNAM_TAPES.length - 1, index));
     this.time = 0;
@@ -79,24 +115,29 @@ export class HistoryFilmPlayer {
     }
   }
 
+  /**
+   * Khởi tạo phần tử Video HTML5 và nạp đường dẫn tệp MP4
+   * Áp dụng cơ chế Autoplay Muted thông minh để vượt qua giới hạn chặn phát tự động của trình duyệt
+   * @param {string} url - Đường dẫn tệp video (ví dụ: videos/bachdang938.mp4)
+   */
   loadVideo(url) {
     if (!this.videoElement) {
       this.videoElement = document.createElement("video");
       this.videoElement.crossOrigin = "anonymous";
-      this.videoElement.loop = true;
-      this.videoElement.playsInline = true;
+      this.videoElement.loop = true;          // Lặp lại tự động khi hết đoạn
+      this.videoElement.playsInline = true;   // Phát nội dòng trên di động
     }
     const soundOn = (window.__roomSoundOn !== undefined) ? window.__roomSoundOn : true;
     const tvVol = (window.__tvVolume !== undefined) ? window.__tvVolume : 0.85;
 
-    // Start muted to guarantee autoplay approval by browser policy
+    // Bắt đầu ở chế độ tắt tiếng (Muted) để trình duyệt luôn cho phép tự động phát (Autoplay Approval)
     this.videoElement.muted = !soundOn;
     this.videoElement.volume = Math.max(0, Math.min(1, tvVol));
     this.videoElement.src = url;
     this.videoElement.currentTime = 0;
     
     this.videoElement.play().then(() => {
-      // If room sound is on, unmute video
+      // Nếu âm thanh phòng đang bật, mở tiếng video
       if (soundOn) {
         this.videoElement.muted = false;
         this.videoElement.volume = Math.max(0, Math.min(1, tvVol));
@@ -113,6 +154,11 @@ export class HistoryFilmPlayer {
     });
   }
 
+  /**
+   * Cập nhật trạng thái âm thanh và âm lượng từ núm vặn TV hoặc công tắc tổng
+   * @param {boolean} enabled - Trạng thái bật/tắt tiếng
+   * @param {number} volume - Mức âm lượng (0.0 đến 1.0)
+   */
   setAudio(enabled, volume = 0.85) {
     if (this.videoElement) {
       this.videoElement.muted = !enabled;
@@ -125,6 +171,11 @@ export class HistoryFilmPlayer {
     }
   }
 
+  /**
+   * Phát âm thanh bíp tần số cao cổ điển lúc đếm ngược bằng Web Audio API
+   * @param {number} freq - Tần số âm thanh (Hz)
+   * @param {number} duration - Thời lượng tiếng bíp (giây)
+   */
   triggerBeep(freq = 880, duration = 0.08) {
     if (!this.audioCtx || !this.isPlaying) return;
     try {
@@ -141,11 +192,17 @@ export class HistoryFilmPlayer {
     } catch (e) {}
   }
 
+  /**
+   * Vẽ từng khung hình phát phim theo chu kỳ hoạt họa Canvas
+   * @param {number} t - Thời gian thực (giây)
+   * @param {number} dt - Độ chênh lệch thời gian (mili giây)
+   */
   frame(t, dt) {
     if (this.isPlaying) {
       this.time += dt / 1000;
     }
-    if (this.tapeIndex < 0) return;
+    if (this.tapeIndex < 0) return; // Không có băng nào đang nạp
+
     const g = this.ctx;
     const w = this.width;
     const h = this.height;
@@ -154,18 +211,19 @@ export class HistoryFilmPlayer {
     g.save();
     g.clearRect(0, 0, w, h);
 
+    // GIAI ĐOẠN 1: ĐẦU BĂNG ĐẾM NGƯỢC 3 - 2 - 1 (TỪ 0.0s ĐẾN 3.2s)
     if (this.time < 3.2) {
-      // Stage 1: Film Leader & 3-2-1 Countdown (0.0s - 3.2s)
       this.drawCountdownLeader(g, w, h, tape);
       if (this.videoElement && this.videoElement.currentTime > 0.1) {
         this.videoElement.currentTime = 0;
       }
-    } else if (this.videoElement && this.videoElement.readyState >= 2) {
-      // Stage 2: Real Historical Video Footage!
+    } 
+    // GIAI ĐOẠN 2A: PHÁT VIDEO THẬT NẾU ĐÃ NẠP XONG KHUNG HÌNH (HTML5 MP4)
+    else if (this.videoElement && this.videoElement.readyState >= 2) {
       const vw = this.videoElement.videoWidth || 16;
       const vh = this.videoElement.videoHeight || 9;
       const vRatio = vw / vh;
-      const sRatio = w / h; // 960 / 720 = 1.333 (4:3)
+      const sRatio = w / h; // Tỉ lệ màn hình TV 4:3 (1024x768)
 
       let dw, dh, dx, dy;
       if (vRatio > sRatio) {
@@ -180,42 +238,47 @@ export class HistoryFilmPlayer {
         dy = 0;
       }
 
+      // Nền đen và vẽ khung hình video căn giữa hoàn hảo
       g.fillStyle = "#020307";
       g.fillRect(0, 0, w, h);
       g.drawImage(this.videoElement, dx, dy, dw, dh);
 
-      // CRT phosphor vignette
+      // Hiệu ứng ánh sáng ống phóng điện tử CRT (Phosphor Vignette Gradient)
       const grad = g.createRadialGradient(w / 2, h / 2, h / 3, w / 2, h / 2, w / 1.35);
       grad.addColorStop(0, "rgba(0,0,0,0)");
       grad.addColorStop(1, "rgba(0,0,0,0.35)");
       g.fillStyle = grad;
       g.fillRect(0, 0, w, h);
 
+      // Hiển thị phụ đề lịch sử và trích dẫn hào hùng bên dưới
       this.drawHistoricalCaptions(g, w, h, tape, this.time - 3.2);
-    } else {
-      // Stage 2 fallback: Procedural animated tactical battle scenario
+    } 
+    // GIAI ĐOẠN 2B: SA BÀN CHIẾN THUẬT ĐỒ HỌA MÔ PHỎNG NẾU KHÔNG CÓ FILE VIDEO
+    else {
       this.drawDocumentaryReel(g, w, h, tape, this.time - 3.2);
     }
 
-    // Archival Film Scratches & Jitter
+    // Hiệu ứng bụi bẩn và vết xước cuộn phim nhựa 35mm
     this.drawFilmGrainAndScratches(g, w, h);
 
-    // Retro VHS OSD Header and Telemetry
+    // Bảng thông tin OSD cổ điển của đầu đọc băng VHS (▶ PLAY, SP, Bộ đếm thời gian)
     this.drawVHSHeader(g, w, h, tape);
 
     g.restore();
   }
 
-  // --- STAGE 1: COUNTDOWN LEADER ---
+  /**
+   * Vẽ đầu băng phim đếm ngược chuẩn quốc tế (SMPTE Countdown Film Leader)
+   */
   drawCountdownLeader(g, w, h, tape) {
     const t = this.time;
-    // Film base
+    // Nền phim màu chì đậm
     g.fillStyle = "#181816";
     g.fillRect(0, 0, w, h);
 
     const cx = w / 2, cy = h / 2;
 
-    // Crosshairs
+    // Đường chữ thập ngắm tâm quang học
     g.strokeStyle = "rgba(220, 215, 200, 0.4)";
     g.lineWidth = 1.5;
     g.beginPath();
@@ -223,13 +286,13 @@ export class HistoryFilmPlayer {
     g.moveTo(0, cy); g.lineTo(w, cy);
     g.stroke();
 
-    // Concentric circles
+    // Các vòng tròn đồng tâm
     g.beginPath();
     g.arc(cx, cy, 220, 0, Math.PI * 2);
     g.arc(cx, cy, 260, 0, Math.PI * 2);
     g.stroke();
 
-    // Rotating sector sweep
+    // Cánh quạt quét tròn 360 độ theo thời gian
     const sweepAngle = ((t % 1) * Math.PI * 2) - Math.PI / 2;
     g.fillStyle = "rgba(220, 215, 200, 0.18)";
     g.beginPath();
@@ -238,12 +301,12 @@ export class HistoryFilmPlayer {
     g.closePath();
     g.fill();
 
-    // Countdown Number
+    // Số đếm ngược: 3, 2, 1
     const countNum = 3 - Math.floor(t);
     const secFloor = Math.floor(t);
     if (secFloor !== this.lastBeepSec && countNum > 0) {
       this.lastBeepSec = secFloor;
-      this.triggerBeep(countNum === 1 ? 1200 : 880, 0.08);
+      this.triggerBeep(countNum === 1 ? 1200 : 880, 0.08); // Bíp cao hơn ở số 1
     }
 
     if (countNum > 0) {
@@ -260,37 +323,42 @@ export class HistoryFilmPlayer {
       g.fillText("BẮT ĐẦU CHIẾU", cx, cy);
     }
 
-    // Archival identification
+    // Thông tin định danh lưu trữ tư liệu
     g.font = "24px VT323, monospace";
     g.fillStyle = "#9c988e";
     g.fillText("TƯ LIỆU QUỐC GIA · BĂNG GỐC 35MM", cx, cy - 300);
     g.fillText(`BĂNG SỐ ${String(this.tapeIndex + 1).padStart(2, "0")}: ${tape.t.toUpperCase()}`, cx, cy + 310);
   }
 
-  // --- STAGE 2: DOCUMENTARY REEL ---
+  /**
+   * Kết xuất sa bàn đồ họa mô phỏng hoạt họa cho cuộn băng
+   */
   drawDocumentaryReel(g, w, h, tape, relTime) {
-    // Background color based on era
+    // Gradient nền tùy biến theo từng thời kỳ lịch sử
     const bgGrad = g.createRadialGradient(w / 2, h / 2, 80, w / 2, h / 2, w * 0.75);
     bgGrad.addColorStop(0, tape.bg);
     bgGrad.addColorStop(1, "#07080d");
     g.fillStyle = bgGrad;
     g.fillRect(0, 0, w, h);
 
-    // 1. Draw animated campaign tactical map or historical scenario
+    // 1. Vẽ sa bàn chiến thuật theo loại cảnh (River battle, Mongol battle,...)
     this.drawTacticalScenario(g, w, h, tape, relTime);
 
-    // 2. Draw historical quote & typewriter caption
+    // 2. Vẽ trích dẫn lịch sử với hiệu ứng máy đánh chữ (Typewriter)
     this.drawHistoricalCaptions(g, w, h, tape, relTime);
 
-    // 3. Audio visualizer bar
+    // 3. Thanh sóng âm thanh phát biểu tư liệu
     this.drawAudioWaveform(g, w, h, relTime);
   }
 
+  /**
+   * Phân luồng sa bàn chiến dịch dựa trên mã cảnh của cuộn băng
+   */
   drawTacticalScenario(g, w, h, tape, relTime) {
     const cx = w / 2;
     const cy = h / 2 - 25;
 
-    // Strategic map grid
+    // Lưới tọa độ quân sự chiến thuật
     g.strokeStyle = "rgba(255, 255, 255, 0.07)";
     g.lineWidth = 1;
     for (let x = 60; x < w - 60; x += 60) {
@@ -300,24 +368,23 @@ export class HistoryFilmPlayer {
       g.beginPath(); g.moveTo(60, y); g.lineTo(w - 60, y); g.stroke();
     }
 
-    // Scenic Animation per Tape Type
     switch (tape.sceneType) {
-      case "river_battle": // Bạch Đằng
+      case "river_battle": // Trận thủy chiến Bạch Đằng 938
         this.drawBachDangRiver(g, cx, cy, relTime);
         break;
-      case "mongol_battle": // Hào khí Đông A
+      case "mongol_battle": // Hào khí Đông A ba lần kháng Mông
         this.drawDongABattle(g, cx, cy, relTime);
         break;
-      case "tay_son_fire": // Quang Trung
+      case "tay_son_fire": // Quang Trung thần tốc đại phá quân Thanh 1789
         this.drawTaySonMarch(g, cx, cy, relTime);
         break;
-      case "ba_dinh_flag": // 2/9/1945
+      case "ba_dinh_flag": // Ngày Quốc khánh 2/9/1945
         this.drawBaDinhScene(g, cx, cy, relTime);
         break;
-      case "palace_gates": // 30/4/1975
+      case "palace_gates": // Đại thắng mùa Xuân 30/4/1975
         this.drawTankGateScene(g, cx, cy, relTime);
         break;
-      case "artillery_hills": // Điện Biên Phủ
+      case "artillery_hills": // Chiến dịch Điện Biên Phủ 1954
         this.drawDienBienArtillery(g, cx, cy, relTime);
         break;
       default:
@@ -325,9 +392,11 @@ export class HistoryFilmPlayer {
     }
   }
 
-  // Tactical Scene: Bạch Đằng River & Stakes
+  /**
+   * Sa bàn trận Bạch Đằng: Thủy triều rút để lộ bãi cọc nhọn đâm vỡ thuyền giặc
+   */
   drawBachDangRiver(g, cx, cy, t) {
-    // Water waves
+    // Sóng nước sông Bạch Đằng cuồn cuộn
     g.fillStyle = "rgba(20, 60, 110, 0.35)";
     g.beginPath();
     g.moveTo(100, cy + 120);
@@ -339,9 +408,9 @@ export class HistoryFilmPlayer {
     g.closePath();
     g.fill();
 
-    // Hidden Iron-tipped Stakes (Bãi cọc Bạch Đằng)
+    // Bãi cọc gỗ bọc sắt nhô lên khi thủy triều rút
     const tide = Math.sin(t * 0.8);
-    const stakeRise = Math.max(0, tide * 45); // Ebbing tide exposes stakes!
+    const stakeRise = Math.max(0, tide * 45);
     g.strokeStyle = "#8b6a3e";
     g.lineWidth = 6;
     for (let i = 0; i < 9; i++) {
@@ -350,17 +419,17 @@ export class HistoryFilmPlayer {
       g.beginPath();
       g.moveTo(sx, cy + 190);
       g.lineTo(sx - 8, sy);
-      g.lineTo(sx - 12, sy - 28); // Sharp point
+      g.lineTo(sx - 12, sy - 28); // Đầu cọc vạt nhọn
       g.stroke();
 
-      // Iron tip shine
+      // Ánh thép bọc sắt trên đầu cọc
       g.fillStyle = "#dce8f5";
       g.beginPath();
       g.arc(sx - 12, sy - 28, 3, 0, Math.PI * 2);
       g.fill();
     }
 
-    // Warships (Thuyền chiến)
+    // Thuyền chiến quân Nam Hán trôi dạt vào bãi cọc
     const shipX = 350 + Math.sin(t * 0.5) * 80;
     g.fillStyle = "#5c2a1a";
     g.beginPath();
@@ -371,7 +440,7 @@ export class HistoryFilmPlayer {
     g.closePath();
     g.fill();
 
-    // War banner
+    // Cờ lệnh chiến trận tung bay
     g.fillStyle = "#d42828";
     g.fillRect(shipX - 10, cy + 60, 4, 50);
     g.beginPath();
@@ -381,23 +450,23 @@ export class HistoryFilmPlayer {
     g.closePath();
     g.fill();
 
-    // Tactical text
+    // Trạng thái thủy triều chiến thuật
     g.font = "20px VT323, monospace";
     g.fillStyle = tide > 0 ? "#ff5252" : "#52c4ff";
     g.textAlign = "center";
     g.fillText(tide > 0 ? "TRIỀU RÚT: CỌC NGẦM ĐÂM THỦNG CHIẾN THUYỀN NAM HÁN" : "THỦY TRIỀU LÊN: DỬ ĐỊCH QUA BÃI CỌC", cx, cy + 40);
   }
 
-  // Tactical Scene: Hào khí Đông A
+  /**
+   * Sa bàn Hào khí Đông A: Hội nghị Diên Hồng và 3 lần đại thắng Nguyên Mông
+   */
   drawDongABattle(g, cx, cy, t) {
-    // Battle fire aura
     const flicker = Math.sin(t * 8) * 0.1 + 0.9;
     g.fillStyle = `rgba(180, 40, 20, ${0.15 * flicker})`;
     g.beginPath();
     g.arc(cx, cy + 50, 180, 0, Math.PI * 2);
     g.fill();
 
-    // Big SÁT THÁT Emblem
     g.font = "900 68px Archivo, sans-serif";
     g.fillStyle = "#ffd9d4";
     g.textAlign = "center";
@@ -407,7 +476,7 @@ export class HistoryFilmPlayer {
     g.fillStyle = "#ffb0a3";
     g.fillText("Lời thề 'SÁT THÁT' khắc sâu vào da thịt quân dân nhà Trần", cx, cy + 30);
 
-    // Three Victory Badges (3 Lần đại thắng)
+    // 3 mốc son đại thắng oanh liệt
     const victories = ["1258 · ĐÔNG BỘ ĐẦU", "1285 · VẠN KIẾP - HÀM TỬ", "1288 · BẠCH ĐẰNG GIANG"];
     victories.forEach((v, idx) => {
       const bx = cx - 260 + idx * 260;
@@ -423,24 +492,26 @@ export class HistoryFilmPlayer {
     });
   }
 
-  // Tactical Scene: Quang Trung Lightning March
+  /**
+   * Sa bàn hành quân thần tốc của Vua Quang Trung Tết Kỷ Dậu 1789
+   */
   drawTaySonMarch(g, cx, cy, t) {
     g.font = "900 54px Archivo, sans-serif";
     g.fillStyle = "#ffe082";
     g.textAlign = "center";
     g.fillText("HÀNH QUÂN THẦN TỐC TẾT KỶ DẬU 1789", cx, cy - 50);
 
-    // Lightning route line
+    // Tuyến đường hành quân chớp nhoáng (Phú Xuân -> Tam Điệp -> Thăng Long)
     const marchProgress = (t * 0.4) % 1;
     g.strokeStyle = "rgba(255, 180, 30, 0.4)";
     g.lineWidth = 3;
     g.beginPath();
-    g.moveTo(cx - 300, cy + 80); // Phú Xuân
-    g.lineTo(cx - 80, cy + 40); // Tam Điệp
+    g.moveTo(cx - 300, cy + 80); // Phú Xuân (Huế)
+    g.lineTo(cx - 80, cy + 40);  // Tam Điệp (Ninh Bình)
     g.lineTo(cx + 250, cy - 10); // Thăng Long
     g.stroke();
 
-    // Moving Fire Dragon indicator
+    // Điểm chỉ vị trí đoàn quân áo đỏ Tây Sơn di chuyển
     const curX = cx - 300 + marchProgress * 550;
     const curY = cy + 80 - marchProgress * 90;
     g.fillStyle = "#ff3300";
@@ -452,7 +523,6 @@ export class HistoryFilmPlayer {
     g.fillStyle = "#fff";
     g.fillText("ĐẠO QUÂN TÂY SƠN ÁO ĐỎ THẦN TỐC", curX, curY - 22);
 
-    // Stations
     const stations = [
       { name: "Phú Xuân (Huế)", x: cx - 300, y: cy + 80 },
       { name: "Tam Điệp (Ninh Bình)", x: cx - 80, y: cy + 40 },
@@ -466,16 +536,18 @@ export class HistoryFilmPlayer {
     });
   }
 
-  // Tactical Scene: Ba Đình Square 2/9/1945
+  /**
+   * Cảnh cờ đỏ sao vàng tung bay trên Quảng trường Ba Đình 2/9/1945
+   */
   drawBaDinhScene(g, cx, cy, t) {
-    // Red Flag with Yellow Star
     const flagW = 220, flagH = 145;
     const fx = cx - flagW / 2, fy = cy - 80;
 
+    // Lá Cờ Đỏ
     g.fillStyle = "#db141c";
     g.fillRect(fx, fy, flagW, flagH);
 
-    // Gold Star
+    // Ngôi Sao Vàng năm cánh
     g.fillStyle = "#ffde00";
     g.beginPath();
     const starR = 42;
@@ -490,7 +562,7 @@ export class HistoryFilmPlayer {
     g.closePath();
     g.fill();
 
-    // Historic Broadcast Text
+    // Dòng thông tấn lịch sử
     g.font = "900 36px Archivo, sans-serif";
     g.fillStyle = "#fff";
     g.textAlign = "center";
@@ -501,7 +573,9 @@ export class HistoryFilmPlayer {
     g.fillText("2 THÁNG 9 NĂM 1945 · QUẢNG TRƯỜNG BA ĐÌNH, HÀ NỘI", cx, cy + 140);
   }
 
-  // Tactical Scene: Tank 390 Independence Palace Gates
+  /**
+   * Khoảnh khắc lịch sử Xe tăng 390 húc sập cổng Dinh Độc Lập trưa 30/4/1975
+   */
   drawTankGateScene(g, cx, cy, t) {
     g.font = "900 48px Archivo, sans-serif";
     g.fillStyle = "#fff176";
@@ -512,30 +586,30 @@ export class HistoryFilmPlayer {
     g.fillStyle = "#ffcdd2";
     g.fillText("XE TĂNG 390 HÚC TUNG CỔNG DINH ĐỘC LẬP", cx, cy - 30);
 
-    // Gates (broken open)
+    // Cánh cổng sắt bị húc văng sang hai bên
     g.strokeStyle = "#8d99ae";
     g.lineWidth = 4;
-    // Left gate swing
+    // Cánh cổng trái
     g.save();
     g.translate(cx - 160, cy + 40);
     g.rotate(-Math.PI / 4);
     g.strokeRect(-60, -40, 120, 80);
     g.restore();
 
-    // Right gate swing
+    // Cánh cổng phải
     g.save();
     g.translate(cx + 160, cy + 40);
     g.rotate(Math.PI / 4);
     g.strokeRect(-60, -40, 120, 80);
     g.restore();
 
-    // Tank silhouette breaking through
+    // Hình bóng xe tăng 390 kiên cường tiến vào bãi cỏ
     g.fillStyle = "#2d3725";
-    g.fillRect(cx - 90, cy + 30, 180, 55); // Hull
+    g.fillRect(cx - 90, cy + 30, 180, 55); // Thân xe
     g.beginPath();
-    g.arc(cx, cy + 20, 45, Math.PI, 0); // Turret
+    g.arc(cx, cy + 20, 45, Math.PI, 0);   // Tháp pháo
     g.fill();
-    g.fillRect(cx + 25, cy + 10, 110, 12); // Cannon forward
+    g.fillRect(cx + 25, cy + 10, 110, 12); // Nòng pháo 100mm vươn cao
 
     g.font = "900 24px Archivo, sans-serif";
     g.fillStyle = "#ffd54f";
@@ -546,14 +620,16 @@ export class HistoryFilmPlayer {
     g.fillText("NON SÔNG LIỀN MỘT DẢI · ĐẠI THẮNG MÙA XUÂN", cx, cy + 125);
   }
 
-  // Tactical Scene: Điện Biên Phủ Artillery
+  /**
+   * Sa bàn cứ điểm Điện Biên Phủ và vòng vây pháo binh 1954
+   */
   drawDienBienArtillery(g, cx, cy, t) {
     g.font = "900 46px Archivo, sans-serif";
     g.fillStyle = "#dce775";
     g.textAlign = "center";
     g.fillText("CHIẾN DỊCH ĐIỆN BIÊN PHỦ 1954", cx, cy - 60);
 
-    // Artillery Hills (A1, C1, Him Lam, Doc Lap)
+    // Các ngọn đồi cứ điểm then chốt (A1, Him Lam, C1, Hầm De Castries)
     const hills = [
       { name: "ĐỒI A1", x: cx - 220, y: cy + 40 },
       { name: "CỨ ĐIỂM HIM LAM", x: cx - 70, y: cy + 80 },
@@ -571,7 +647,7 @@ export class HistoryFilmPlayer {
       g.fillText(h.name, h.x, h.y - 10);
     });
 
-    // Siege ring closing in
+    // Vòng vây chiến hào siết chặt lòng chảo Mường Thanh
     g.strokeStyle = "rgba(230, 50, 50, 0.7)";
     g.lineWidth = 2.5;
     g.setLineDash([8, 6]);
@@ -585,7 +661,9 @@ export class HistoryFilmPlayer {
     g.fillText("VÒNG VÂY LÒNG CHẢO MƯỜNG THANH SIẾT CHẶT", cx, cy + 130);
   }
 
-  // Generic Map
+  /**
+   * Sa bàn tổng quát cho các giai đoạn khác
+   */
   drawGenericHistoricalMap(g, cx, cy, tape, t) {
     g.font = "900 52px Archivo, sans-serif";
     g.fillStyle = tape.ink;
@@ -597,7 +675,9 @@ export class HistoryFilmPlayer {
     g.fillText(tape.era, cx, cy + 35);
   }
 
-  // Historical Quotes & Typewriter captions
+  /**
+   * Hiệu ứng máy đánh chữ hiển thị câu trích dẫn và tác giả
+   */
   drawHistoricalCaptions(g, w, h, tape, relTime) {
     const boxY = h - 170;
     g.fillStyle = "rgba(8, 10, 16, 0.88)";
@@ -606,7 +686,7 @@ export class HistoryFilmPlayer {
     g.lineWidth = 1;
     g.strokeRect(60, boxY, w - 120, 110);
 
-    // Typewriter effect on quote
+    // Ký tự hiển thị dần theo tốc độ 28 ký tự/giây
     const fullQuote = tape.quote;
     const charsToShow = Math.min(fullQuote.length, Math.floor(relTime * 28));
     const dispQuote = fullQuote.substring(0, charsToShow);
@@ -620,14 +700,16 @@ export class HistoryFilmPlayer {
     g.fillStyle = "#cbb279";
     g.fillText(`— ${tape.quoteAuthor}`, 85, boxY + 75);
 
-    // Blinking cursor
+    // Con trỏ nhấp nháy mô phỏng đánh máy
     if (charsToShow < fullQuote.length && Math.floor(relTime * 4) % 2 === 0) {
       g.fillStyle = "#ffcc00";
       g.fillRect(85 + g.measureText(`"${dispQuote}"`).width + 4, boxY + 22, 10, 20);
     }
   }
 
-  // Audio Waveform
+  /**
+   * Vẽ phổ sóng âm thanh tư liệu giọng nói trực quan
+   */
   drawAudioWaveform(g, w, h, relTime) {
     const rx = w - 240, ry = h - 145;
     g.fillStyle = "rgba(0, 0, 0, 0.5)";
@@ -649,7 +731,9 @@ export class HistoryFilmPlayer {
     g.fillText("VOICE ARCHIVE ●", rx + 25, ry + 40);
   }
 
-  // VHS OSD Header
+  /**
+   * Bảng hiển thị thông số OSD Retro VHS ở mép trên màn hình
+   */
   drawVHSHeader(g, w, h, tape) {
     g.font = "32px VT323, monospace";
     g.fillStyle = "#f5f6ff";
@@ -668,7 +752,9 @@ export class HistoryFilmPlayer {
     g.fillText(`CH ${String(this.tapeIndex + 1).padStart(2, "0")} · ${tape.t.toUpperCase()}`, w - 65, 88);
   }
 
-  // Archival Film Grain & Dust Scratches
+  /**
+   * Hiệu ứng mô phỏng hạt nhiễu và vết xước dọc của phim nhựa lưu trữ
+   */
   drawFilmGrainAndScratches(g, w, h) {
     g.strokeStyle = "rgba(240, 240, 240, 0.22)";
     this.scratches.forEach(s => {
@@ -682,7 +768,7 @@ export class HistoryFilmPlayer {
       g.stroke();
     });
 
-    // Random dust hair
+    // Sợi lông bụi ngẫu nhiên dính trên thấu kính máy chiếu
     if (Math.random() < 0.25) {
       g.strokeStyle = "rgba(20, 20, 20, 0.35)";
       g.lineWidth = 1;
