@@ -51,6 +51,19 @@
 
   <!-- =========================================================================
        BỐ CỤC CHÍNH (SIDEBAR + KHUNG NỘI DUNG CHÍNH)
+       [KIẾN THỨC HTML5 & BỐ CỤC CSS THUYẾT MINH VỚI THẦY CÔ]:
+       1. Thẻ ngữ nghĩa HTML5 (Semantic Elements):
+          - `<header class="admin-topbar">`: Đại diện cho phần đầu trang, chứa thương hiệu và trạng thái máy chủ.
+          - `<aside class="admin-sidebar">`: Đại diện cho thanh phụ bên cạnh (Sidebar) chứa danh mục quản lý.
+          - `<nav class="sidebar-nav">`: Đại diện cho khối điều hướng (Navigation), giúp công cụ hỗ trợ người khuyết tật (Screen Reader) nhận diện.
+          - `<main class="admin-main">`: Vùng nội dung chính của trang web, độc nhất và không lặp lại giữa các trang.
+       2. Thuộc tính dữ liệu tùy biến HTML5 (Data Attributes `data-tab="..."`):
+          - Cho phép nhúng giá trị tùy chỉnh vào thẻ HTML mà vẫn hợp lệ chuẩn W3C.
+          - JavaScript đọc thuộc tính này thông qua `button.dataset.tab` để kích hoạt tab tương ứng.
+       3. Bố cục 2 cột bằng CSS Flexbox / CSS Grid (`.admin-layout`):
+          - Cột trái (`.admin-sidebar`) cố định chiều rộng 260px.
+          - Cột phải (`.admin-main`) sử dụng `flex: 1` hoặc `grid-template-columns: 260px 1fr`
+            tự động lấp đầy phần diện tích còn lại của màn hình.
        ========================================================================= -->
   <div class="admin-layout">
     

@@ -1,9 +1,32 @@
 // ==============================================================================
 // vietnam-history-data.js - CƠ SỞ DỮ LIỆU LỊCH SỬ VÀ BẢO VẬT QUỐC GIA VIỆT NAM
-// Tự động đồng bộ hóa từ Trung tâm Quản trị Bảo tàng (Admin CMS)
-// Cập nhật lần cuối: 11:34:37 16/10/2026
+// Dự án: Vietnam History CRT Experience (Không gian Bảo tàng Lịch sử CRT 3D)
+// ==============================================================================
+// [KIẾN THỨC KIẾN TRÚC DỮ LIỆU THUYẾT MINH VỚI THẦY CÔ]:
+// 1. ES6 Modules (Cú pháp `export const`):
+//    - Đây là cơ chế mô-đun hóa chính thức của chuẩn ECMAScript 2015 (ES6).
+//    - Cho phép các tệp mã nguồn khác (như `vietnam-desktop.js`, `museum.js`, `history-film-player.js`)
+//      nhập khẩu (import) biến dữ liệu thông qua cú pháp:
+//      `import { VIETNAM_TAPES, VIETNAM_RELICS } from "./vietnam-history-data.js";`
+//    - Tránh ô nhiễm phạm vi biến toàn cục (Global Scope Pollution), giúp mã nguồn an toàn và dễ bảo trì.
+// 2. Mô hình dữ liệu hướng tài liệu (Document-Oriented / NoSQL Data Model):
+//    - Dữ liệu được tổ chức dưới dạng mảng các Đối tượng (Array of Objects), tương tự cấu trúc MongoDB/JSON.
+//    - Mỗi bản ghi là một thực thể độc lập có cấu trúc tự mô tả (Self-describing), bao gồm:
+//      + ID định danh duy nhất (Slug string: "trongdong", "kiman", "bachdang938")
+//      + Thông tin định danh: Tiêu đề (t/title), Niên đại (y/era), Nơi lưu giữ (location)
+//      + Dữ liệu đa phương tiện: Đường dẫn ảnh bảo tàng (image), video tư liệu (videoUrl)
+//      + Siêu dữ liệu đồ họa Retro: Mã màu nền (bg), màu chữ (ink), từ khóa lớn (big)
+//      + Nội dung khảo cổ chuyên sâu: Kích thước (dims), Mô tả (desc), Điểm nhấn (highlights)
+// 3. Cơ chế Đồng bộ Kép (Dual-Persistence Architecture):
+//    - Tệp này được đồng bộ tự động hai chiều từ máy chủ Node.js (`server.js`) và tệp JSON (`data/history-db.json`).
+//    - Lợi ích: Vừa có thể chạy như một trang Web tĩnh thuần túy (Static / Serverless) không cần khởi động
+//      máy chủ backend, vừa có thể nhận các thay đổi dữ liệu thời gian thực từ bảng Quản trị Admin CMS.
 // ==============================================================================
 
+/**
+ * DANH SÁCH CÁC CUỘN BĂNG TƯ LIỆU LỊCH SỬ (VHS TAPES)
+ * Dùng để phát trên màn hình Tivi CRT cổ điển và hiển thị trên khay băng bàn làm việc 3D
+ */
 export const VIETNAM_TAPES = [
   {
     "id": "hungvuong",
@@ -367,6 +390,13 @@ export const VIETNAM_TAPES = [
   }
 ];
 
+/**
+ * DANH SÁCH 07 BẢO VẬT QUỐC GIA VIỆT NAM (VIETNAM NATIONAL TREASURES)
+ * Chứa hồ sơ giám định khảo cổ học chuyên sâu:
+ * - Kích thước, trọng lượng, chất liệu, niên đại, địa điểm khai quật
+ * - Hình ảnh bảo tàng độ phân giải cao phục vụ triển lãm Web và chất liệu Canvas CRT 3D
+ * - Ghi chú lịch sử, bối cảnh khám phá và ý nghĩa khẳng định chủ quyền dân tộc
+ */
 export const VIETNAM_RELICS = [
   {
     "id": "trongdong",

@@ -124,7 +124,16 @@
 
   <!-- ==========================================================================
        3. THANH ĐIỀU KHIỂN & BỘ LỌC CỐ ĐỊNH (STICKY EXHIBITION CONTROLS)
-       Chức năng: Tìm kiếm tức thời, phân loại theo triều đại và đổi chế độ hiển thị
+       [KIẾN THỨC KHẢ NĂNG TRUY CẬP (A11Y) & CSS THUYẾT MINH VỚI THẦY CÔ]:
+       1. Khả năng tiếp cận theo chuẩn W3C WAI-ARIA (Web Accessibility Initiative):
+          - `aria-label`: Cung cấp nhãn văn bản ngữ nghĩa cho trình đọc màn hình (Screen Reader),
+            giúp người khiếm thị biết chính xác chức năng của ô tìm kiếm và danh sách nút lọc.
+          - `aria-hidden="true"`: Ẩn các icon vector trang trí khỏi bộ đọc màn hình để tránh phát âm thanh thừa thãi.
+          - `role="tablist"`: Khai báo đây là tập hợp các tab chuyển đổi danh mục.
+       2. Hiệu ứng bám dính (CSS Sticky Positioning):
+          - Áp dụng `position: sticky; top: 70px; z-index: 100` trong `museum.css`.
+          - Giúp thanh công cụ luôn bám chặt mép trên cùng khi người dùng cuộn xem danh mục,
+            cho phép tìm kiếm và lọc tức thì bất cứ lúc nào mà không cần phải cuộn ngược lên đầu trang.
        ========================================================================== -->
   <section class="exhibition-controls-section" id="controls">
     <div class="controls-container">
@@ -261,7 +270,14 @@
 
   <!-- ==========================================================================
        8. CỬA SỔ HỒ SƠ GIÁM ĐỊNH KHẢO CỔ CHUYÊN SÂU (DEEP INSPECTION MODAL)
-       Bao gồm: Kính lúp zoom ảnh hiện vật, 4 tab nghiên cứu và thuyết minh giọng đọc
+       [KIẾN THỨC MẪU THIẾT KẾ MODAL CHUẨN W3C THUYẾT MINH VỚI THẦY CÔ]:
+       1. Cấu trúc hộp thoại chuẩn (W3C ARIA Dialog Pattern):
+          - `role="dialog"`: Định nghĩa đây là một cửa sổ tương tác tách biệt với tài liệu chính.
+          - `aria-modal="true"`: Báo cho trình duyệt biết các nội dung phía sau đã bị làm mờ và khóa tương tác (Focus Trap).
+       2. Trải nghiệm người dùng cao cấp (UX Polish):
+          - Hiệu ứng kính mờ thời thượng: `backdrop-filter: blur(12px)`.
+          - Đóng mở linh hoạt: Hỗ trợ bấm phím Escape, bấm nút 'x' hoặc click vào vùng mờ bên ngoài.
+          - Phím tắt bàn phím: Mũi tên Trái / Phải để chuyển nhanh sang bảo vật trước / sau.
        ========================================================================== -->
   <div class="dossier-modal-backdrop" id="dossierModal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="dossier-modal-box">

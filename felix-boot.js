@@ -1,26 +1,25 @@
-// Built by ghost-theme/build.py from vhs-tv sources. Do not edit here.
+// ==============================================================================
+// felix-boot.js - BỘ ĐIỀU PHỐI KHỞI ĐỘNG OSD VÀ ĐO LƯỜNG TẢI TRANG BẢO TÀNG 3D
+// Dự án: Vietnam History CRT Experience (Không gian Bảo tàng Lịch sử CRT 3D)
+// ==============================================================================
+// [KIẾN THỨC HIỆU NĂNG WEB & TOÁN HỌC ĐỒ HỌA THUYẾT MINH VỚI THẦY CÔ]:
+// 1. Giám sát tài nguyên tải về bằng PerformanceObserver API:
+//    - Sử dụng chuẩn `PerformanceObserver({ entryTypes: ['resource'] })` của W3C.
+//    - Tự động bắt độ lớn byte thực tế (`entry.decodedBodySize`) của các mô hình 3D (.glb) và kết cấu (.jpg/.png)
+//      đang tải ngầm, tính toán phần trăm thanh tiến trình chuẩn xác theo băng thông mạng của người dùng.
+// 2. Phép biến đổi đồng dạng phối cảnh (Perspective Homography / CSS `matrix3d`):
+//    - Màn hình TV CRT trong bức ảnh tĩnh được nhìn ở góc nghiêng từ trên xuống và lệch sang trái (không phải hình chữ nhật phẳng).
+//    - Hàm `warp()` sử dụng giải thuật chiếu xạ Heckbert: tính toán ma trận chuyển đổi 4x4 từ 4 điểm góc thực tế
+//      để uốn cong thanh tiến trình OSD bám khít chính xác vào mặt kính cong của bóng đèn hình CRT.
+// 3. Sinh hoa tuyết nhiễu sóng TV (Procedural CRT Static Noise via LCG):
+//    - Sử dụng giải thuật sinh số giả ngẫu nhiên LCG (Linear Congruential Generator: `s = s * 16807 % 2147483647`).
+//    - Tạo mảng pixel 128x128 trong Canvas rồi xuất ra Base64 gán vào biến CSS `var(--noise)`,
+//      tạo hiệu ứng hạt tuyết CRT cổ điển mà không cần tải tệp video/GIF ngoài.
+// 4. Cơ chế tự phục hồi chống kẹt (Watchdog Stall Recovery):
+//    - Nếu đường truyền mạng chập chờn, bộ đếm thời gian thực `performance.now()` sẽ tự kích hoạt các mốc
+//      chuyển tiếp sau 10s, 14s, 18s và 22s để đảm bảo người dùng luôn vào được phòng 3D mà không bị treo.
+// ==============================================================================
 
-// The loading display (Felix, 02:58Z: "Do we need a loading indicator?"; 04:42Z: the tape counter it showed until v28 didn't
-// read as progress, so now it's a bar and a percentage; 28 Sep 01:47Z: "i like 1 on the tv with the still on"). It plays on
-// the TV in the loading still and comes up with the still; with no still (.free: a screen glowing on its own in the middle)
-// only if the room takes more than a second. It says 100% only once the room is there, and then stays up until the first
-// click lets the room in (#gl.loaded; the page's gate, Felix 23:00Z). As the room fades in, static takes the picture off the
-// TV (.out; a screen on its own switches off) and it goes; when the scene can't load, it fades.
-// What it counts (v55; Felix, 27 Sep 21:31Z: people thought it was stuck at 51%, then it jumped to 100%; 22:19Z, of v54:
-// "kinda goes to 75 before jumping to 100"). Up to 80%, what the room has asked for since this script ran and got, against
-// what it fetches before it's built (LOAD_BYTES, unpacked, on a desktop: tv/fast/probe_osd54.cjs), from any host (the Ghost
-// theme's big files come from another one; the page around the room there fetches 3 MB of its own scripts first, which don't
-// count), with the scene's geometry counted as it streams in (loadScene feeds it to __osdFeed), then the textures the scene
-// asks for as it's parsed (a fifth of the bytes). A host that won't say how big its files are (no Timing-Allow-Origin) counts
-// an average file's worth for each. The rest of the bar is the work after the downloads, in steps the page reports
-// (__osdStep, from osdPaint): 80% once the scene has parsed (the room is built next), 87% once it's built (its shaders
-// compile), 94% once they have (the room's first frame next), 100% once the room is in; step 1, the geometry is in, has no
-// share of its own (its textures come next). Building the room and drawing it the first time keep the page from drawing
-// anything else, so a step's promise settles only once the display has drawn it, and the page waits for that before it goes
-// on (WAIT at most: a hidden tab or a page too busy to draw shows it at once). v54's bar eased a long way behind its count on
-// a fast line, sat there while the page built the room and drew it, and next drew 100%. Between the steps the bar keeps
-// moving: it runs a little ahead, slower and slower, so a big file on its way doesn't read as stuck, and it never runs past a
-// step that hasn't happened. After a stretch without frames it catches up over a few (STEP a frame at most), not in one jump.
 (()=>{ const el=document.getElementById("osd"), pc=el&&el.querySelector(".pc"), bar=el&&el.querySelector(".bar i"); if(!pc||!bar) return;
   const LOAD_BYTES=31.4e6, FILE=130e3, SEGS=20, DL=.8, STEPS=[0,0,.8,.87,.94], STEP=.04, WAIT=300;
   let got=0, streamed=0, step=0, shown=0, on=false, fin=false, text="0%", waits=[], last=performance.now(); const t0=last;

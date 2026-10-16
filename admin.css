@@ -1,6 +1,19 @@
 /* ==============================================================================
    admin.css - ĐỊNH KIỂU GIAO DIỆN BẢNG QUẢN TRỊ BẢO TÀNG LỊCH SỬ VIỆT NAM (ADMIN CMS)
    Phong cách: Dark Gold Luxury kết hợp Retro CRT Console
+   ==============================================================================
+   [KIẾN THỨC CSS CHUYÊN SÂU THUYẾT MINH VỚI THẦY CÔ]:
+   1. Biến CSS tùy biến (:root CSS Custom Properties):
+      - Khai báo tại phạm vi giả lớp `:root` (tương đương thẻ `<html>`) để toàn bộ trang web kế thừa.
+      - Tuân thủ nguyên tắc DRY (Don't Repeat Yourself): Khi cần đổi tông màu hoàng kim hay chiều rộng sidebar,
+        ta chỉ cần sửa một dòng duy nhất tại biến `--gold-primary` hoặc `--sidebar-width`.
+   2. Chuẩn hóa Mô hình Hộp (Universal Box Model Reset `box-sizing: border-box`):
+      - Mặc định của HTML (`content-box`) là chiều rộng thực tế = width + padding + border (dễ gây vỡ layout).
+      - Thiết lập `*, *::before, *::after { box-sizing: border-box; }` ép `width` bao trọn cả đường viền và khoảng đệm,
+        giúp tính toán kích thước bố cục giao diện chính xác 100%.
+   3. Bố cục hiện đại kết hợp CSS Flexbox và CSS Grid:
+      - Flexbox: Dùng cho điều hướng 1 chiều (Topbar, Hàng nút bấm, Thẻ huy hiệu, Ô nhập liệu).
+      - Grid: Dùng cho bố cục đa chiều 2D (Bảng số liệu KPI thống kê, Lưới ảnh tải lên).
    ============================================================================== */
 
 :root {

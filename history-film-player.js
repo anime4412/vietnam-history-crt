@@ -2,14 +2,22 @@
 // history-film-player.js - TRÌNH PHÁT BĂNG TƯ LIỆU VÀ PHIM LỊCH SỬ VIỆT NAM TRÊN TV CRT
 // Dự án: Vietnam History CRT Experience (Không gian Bảo tàng Lịch sử CRT 3D)
 // ==============================================================================
-// Chức năng:
-// 1. Quản lý việc phát các cuộn băng tư liệu lịch sử (VHS Tapes) trên màn hình CRT.
-// 2. Tích hợp video tài liệu thật (HTML5 Video Element) đồng bộ cùng hiệu ứng màn hình
-//    bóng đèn hình CRT: quét dòng (scanlines), bụi phim xước (scratches), đếm ngược 3-2-1.
-// 3. Cung cấp sa bàn chiến thuật đồ họa mô phỏng (Tactical Scenarios) cho các sự kiện
-//    lịch sử lớn: Trận Bạch Đằng 938, Ba lần kháng chiến Nguyên Mông, Hành quân Quang Trung,
-//    Tuyên ngôn Độc lập Ba Đình 1945, Chiến dịch Điện Biên Phủ 1954, Xe tăng 390 húc cổng Dinh 1975.
-// 4. Đồng bộ âm thanh, kiểm soát triệt để chống phát tiếng ngầm khi tắt TV hoặc đẩy băng ra.
+// [KIẾN THỨC ĐỒ HỌA & ÂM THANH WEB THUYẾT MINH VỚI THẦY CÔ]:
+// 1. HTML5 Canvas 2D Rendering Pipeline:
+//    - Máy chủ đồ họa 2D: Sử dụng đối tượng `CanvasRenderingContext2D` để vẽ từng điểm ảnh.
+//    - `ctx.save()` & `ctx.restore()`: Lưu và phục hồi ngăn xếp trạng thái cọ vẽ (Transform, FillStyle, Alpha, Clipping Path),
+//      ngăn chặn việc hiệu ứng của một cảnh làm ảnh hưởng sang cảnh tiếp theo.
+//    - `ctx.drawImage(videoElement, x, y, w, h)`: Giải mã và kết xuất từng khung hình trực tiếp từ thẻ <video> lên Canvas.
+// 2. Tổng hợp âm thanh bằng Web Audio API:
+//    - `AudioContext`: Quản lý luồng âm thanh cấp thấp, đồng bộ theo thời gian thực (Sample-accurate timing).
+//    - `OscillatorNode` (Bộ tạo dao động sóng hình sin): Sinh âm thanh tiếng bíp đếm ngược 880Hz / 440Hz cổ điển
+//      mà không cần tải bất kỳ tệp âm thanh MP3 bên ngoài nào.
+//    - `GainNode` & `exponentialRampToValueAtTime`: Giảm dần biên độ âm lượng theo hàm mũ để tiếng bíp ngắt êm dịu,
+//      loại bỏ hoàn toàn tiếng lách cách (Audio Pop/Click Artifacts).
+// 3. Vượt qua rào cản chính sách tự động phát (Autoplay Policy Bypass):
+//    - Trình duyệt hiện đại mặc định chặn phát âm thanh nếu người dùng chưa tương tác chuột (`NotAllowedError`).
+//    - Giải pháp: Khởi tạo video với thuộc tính `.muted = true` để được trình duyệt phê duyệt phát ngay lập tức.
+//      Khi người dùng nhấp chuột vào giao diện 3D (User Gesture), ta mới kích hoạt mở tiếng (`.muted = false`).
 // ==============================================================================
 
 import { VIETNAM_TAPES } from "./vietnam-history-data.js";

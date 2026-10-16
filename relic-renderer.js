@@ -2,13 +2,23 @@
 // relic-renderer.js - BỘ KẾ XUẤT HỒ SƠ LƯU TRỮ VÀ HÌNH ẢNH CỔ VẬT LỊCH SỬ VIỆT NAM
 // Dự án: Vietnam History CRT Experience (Không gian Bảo tàng Lịch sử CRT 3D)
 // ==============================================================================
-// Chức năng:
-// 1. Kết xuất đồ họa 2D trực tiếp lên Canvas độ phân giải cao (960x720) để ánh xạ
-//    làm chất liệu hiển thị (CanvasTexture) trên màn hình TV CRT retro trong phòng 3D.
-// 2. Trình diễn toàn bộ hình ảnh thực tế, hồ sơ giám định khảo cổ học, thông số
-//    chất liệu, niên đại, địa điểm khai quật và ý nghĩa chủ quyền của 7 Bảo vật Quốc gia.
-// 3. Hỗ trợ hệ thống chuyển tab (Tổng quan, Ghi chép khảo cổ, Ý nghĩa dân tộc),
-//    cuộn trang mượt mà bằng chuột/kéo thả, và chế độ phóng to toàn cảnh (Zoom).
+// [KIẾN THỨC ĐỒ HỌA THREE.JS & CANVAS THUYẾT MINH VỚI THẦY CÔ]:
+// 1. Ánh xạ Canvas 2D thành chất liệu 3D (Dynamic CanvasTexture in Three.js):
+//    - Lớp `RelicRenderer` vẽ giao diện đồ họa 2D lên một thẻ Canvas phẳng độc lập trong bộ nhớ.
+//    - Three.js bọc thẻ Canvas này vào đối tượng `THREE.CanvasTexture(canvas)`.
+//    - Mỗi khi nội dung Canvas thay đổi, ta gán cờ `texture.needsUpdate = true`. Trình điều khiển WebGL
+//      sẽ lập tức chuyển dữ liệu pixel lên GPU để phủ lên màn hình cong của Tivi CRT 3D.
+// 2. Tải trước hình ảnh bất đồng bộ (Asynchronous Image Preloading & Cache):
+//    - Sử dụng đối tượng `new Image()` kết hợp với cấu trúc dữ liệu `Map()`.
+//    - Toàn bộ ảnh bảo tàng được nạp trước vào bộ nhớ RAM của trình duyệt ngay khi khởi động (`img.onload`).
+//    - Nhờ đó, khi người dùng bấm chuyển cổ vật, ảnh sẽ xuất hiện tức thì mà không bị giật lag hay nhấp nháy.
+// 3. Thuật toán điều hướng tuần hoàn (Circular Array Navigation with Modulo):
+//    - Chuyển tiếp: `(relicIndex + 1) % length` (khi đến cuối danh sách sẽ tự động quay về 0).
+//    - Lùi lại: `(relicIndex - 1 + length) % length` (cộng thêm `length` để đảm bảo số dư luôn dương khi lùi từ 0 về cuối).
+// 4. Ngắt dòng văn bản tự động (Canvas Word Wrapping):
+//    - Canvas 2D không có khả năng tự động xuống dòng như thẻ HTML `<p>`.
+//    - Lớp này sử dụng phương thức `ctx.measureText(word).width` để tính toán độ dài từng từ và ngắt dòng
+//      chuẩn xác theo từng đoạn văn bản khảo cổ học.
 // ==============================================================================
 
 import { VIETNAM_RELICS } from "./vietnam-history-data.js";

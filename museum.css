@@ -1,6 +1,21 @@
 /* ==========================================================================
-   BẢO TÀNG BẢO VẬT QUỐC GIA VIỆT NAM - STYLESHEET
+   BẢO TÀNG BẢO VẬT QUỐC GIA VIỆT NAM - STYLESHEET CHUYÊN DỤNG
    Exhibition, Archival Dossiers, Lightbox & Digital Museum Design
+   ==========================================================================
+   [KIẾN THỨC NGHỆ THUẬT GIAO DIỆN & CSS THUYẾT MINH VỚI THẦY CÔ]:
+   1. Hệ thống thiết kế di sản văn hóa (Heritage Design System):
+      - Bảng màu lấy cảm hứng từ kim khí khảo cổ: Đồng cổ Đông Sơn (`--bronze`), Vàng ròng Hoàng gia (`--gold-primary`),
+        Ngọc bích Đại Việt (`--jade`), và Gốm đất nung (`--terracotta`).
+      - Nền đen nhung nhạt (`#07090e`) mô phỏng ánh sáng rọi đèn tiêu điểm (Spotlight Gallery) trong các bảo tàng quốc tế.
+   2. Hiệu ứng Kính Mờ (Glassmorphism):
+      - Ứng dụng thuộc tính `backdrop-filter: blur(12px)` và màu bán trong suốt `rgba(18, 24, 38, 0.75)`
+        tạo cảm giác như đang ngắm nhìn cổ vật qua tủ kính pha lê trưng bày.
+   3. Hoạt ảnh chuyển động đàn hồi tự nhiên (Spring Cubic-bezier):
+      - Khai báo `--transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1)`.
+      - Thay thế cho gia tốc tuyến tính cứng nhắc, hàm cubic-bezier tạo cảm giác lướt êm, mượt mà và sang trọng khi rê chuột.
+   4. Bố cục lưới tự động co giãn (Responsive CSS Grid):
+      - Cấu trúc `grid-template-columns: repeat(auto-fill, minmax(340px, 1fr))` giúp thẻ hiện vật tự động dàn trang đều đặn
+        trên mọi thiết bị từ màn hình điện thoại 375px đến màn hình máy tính để bàn 4K mà không bị vỡ bố cục.
    ========================================================================== */
 
 :root {

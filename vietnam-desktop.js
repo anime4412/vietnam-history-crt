@@ -51,6 +51,29 @@ const AUDIO_BASE = new URL("./audio2/", import.meta.url).href;
 // start page: the #hash, or (room on every page) the page this URL stands for
 const BM_HASH = () => location.hash.slice(1) || (window.__BM && window.__BM.pageAt ? window.__BM.pageAt(location.pathname) : "");
 
+// ==============================================================================
+// KHỞI TẠO BỘ MÁY ĐỒ HỌA 3D THREE.JS & HẬU KỲ HÌNH ẢNH (POST-PROCESSING)
+// [KIẾN THỨC ĐỒ HỌA THREE.JS / WEBGL THUYẾT MINH VỚI THẦY CÔ]:
+// 1. Thư viện Three.js cốt lõi (`import * as THREE from 'three'`):
+//    - Là thư viện JavaScript cấp cao bọc quanh API WebGL cấp thấp của trình duyệt.
+//    - Cung cấp kiến trúc Scenegraph (Cây khung cảnh) quản lý các nút Đối tượng 3D, Hình học (Geometry),
+//      Chất liệu (Material), Nguồn sáng (Lights) và Máy quay (Camera).
+// 2. GLTFLoader:
+//    - Trình tải định dạng tệp 3D chuẩn công nghiệp GLTF/GLB (được ví như 'JPEG của thế giới 3D').
+//    - Nạp toàn bộ mô hình căn phòng, tivi, bàn làm việc, băng VHS và kết cấu (PBR Textures) vào Scene.
+// 3. OrbitControls:
+//    - Bộ điều khiển góc nhìn máy quay: Xoay quanh tâm (Orbit), Thu phóng (Zoom) và Lia (Pan).
+// 4. Chuỗi hậu kỳ hình ảnh (Post-Processing Pipeline via EffectComposer):
+//    - Thay vì vẽ trực tiếp lên màn hình, khung cảnh được vẽ vào một bộ đệm khung (Render Target).
+//    - `RenderPass`: Kết xuất hình ảnh 3D cơ bản của căn phòng.
+//    - `UnrealBloomPass`: Hiệu ứng phát quang tỏa sáng (Bloom Glow) cho đèn neon, đèn bàn và màn hình CRT.
+//    - `ShaderPass`: Áp dụng bộ lọc GLSL Shader tùy biến tạo các đường quét ngang (Scanlines) và uốn cong mép kính CRT.
+//    - `OutputPass`: Hiệu chỉnh ánh xạ tông màu (Tone Mapping) và không gian màu sRGB để màu sắc chân thực nhất.
+// 5. Kỹ thuật Bắn tia tương tác (Raycasting):
+//    - Sử dụng `THREE.Raycaster`: Chuyển đổi tọa độ chuột 2D trên màn hình phẳng thành một tia sáng 3D
+//      bắn xuyên vào không gian phòng.
+//    - Khi tia cắt trúng vật thể (Intersection), hệ thống nhận diện người dùng đang click vào băng VHS, nút TV, hay đài đĩa.
+// ==============================================================================
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
