@@ -289,7 +289,7 @@ const server = http.createServer(async (req, res) => {
     // --------------------------------------------------------------------------
     // CÁC TUYẾN API BẮT BUỘC PHẢI CÓ QUYỀN ADMIN (BEARER TOKEN AUTHENTICATION)
     // --------------------------------------------------------------------------
-    const protectedApis = ['/api/relics', '/api/tapes', '/api/settings', '/api/import', '/api/reset'];
+    const protectedApis = ['/api/relics', '/api/tapes', '/api/settings', '/api/import', '/api/reset', '/api/upload'];
     if (protectedApis.includes(pathname) && req.method !== 'OPTIONS') {
       if (!isAuthorized(req)) {
         return sendJson(res, 401, {
@@ -457,6 +457,80 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 500, { success: false, message: 'Không tìm thấy bản sao lưu gốc' });
     }
 
+    // 11. Lấy danh sách ảnh hiện vật có sẵn trong thư viện
+    if (pathname === '/api/images' && req.method === 'GET') {
+      const relicDir = path.join(__dirname, 'images', 'relics');
+      let images = [];
+      if (fs.existsSync(relicDir)) {
+        try {
+          const files = fs.readdirSync(relicDir);
+          images = files
+            .filter(f => ['.jpg', '.jpeg', '.png', '.webp', '.svg', '.gif'].includes(path.extname(f).toLowerCase()))
+            .map(f => `images/relics/${f}`);
+        } catch (e) {
+          console.error('[LỖI ĐỌC THƯ MỤC ẢNH]:', e);
+        }
+      }
+      return sendJson(res, 200, { success: true, images });
+    }
+
+    // 12. Tải tệp ảnh hiện vật lên máy chủ (Upload Image) - Yêu cầu Token
+    if (pathname === '/api/upload' && req.method === 'POST') {
+      const body = await parseJsonBody(req);
+      if (!body.data) {
+        return sendJson(res, 400, { success: false, message: 'Thiếu dữ liệu tệp ảnh tải lên' });
+      }
+
+      // Xác định định dạng tệp ảnh
+      let ext = path.extname(body.filename || '').toLowerCase();
+      const allowedExts = ['.jpg', '.jpeg', '.png', '.webp', '.svg', '.gif'];
+      if (!allowedExts.includes(ext)) {
+        if (body.data.startsWith('data:image/png')) ext = '.png';
+        else if (body.data.startsWith('data:image/webp')) ext = '.webp';
+        else if (body.data.startsWith('data:image/svg')) ext = '.svg';
+        else if (body.data.startsWith('data:image/gif')) ext = '.gif';
+        else ext = '.jpg';
+      }
+
+      try {
+        const base64Data = body.data.replace(/^data:image\/[a-z0-9+]+;base64,/i, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        if (buffer.length === 0 || buffer.length > 20 * 1024 * 1024) {
+          return sendJson(res, 400, { success: false, message: 'Dung lượng ảnh không hợp lệ (tối đa 20MB)' });
+        }
+
+        const rawName = path.basename(body.filename || 'relic', ext)
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-zA-Z0-9_-]/g, '_')
+          .substring(0, 30) || 'relic';
+
+        const safeFilename = `${rawName}_${Date.now()}${ext}`;
+        const targetDir = path.join(__dirname, 'images', 'relics');
+        if (!fs.existsSync(targetDir)) {
+          fs.mkdirSync(targetDir, { recursive: true });
+        }
+
+        const targetPath = path.join(targetDir, safeFilename);
+        const imagesRootDir = path.resolve(__dirname, 'images');
+        if (!targetPath.startsWith(imagesRootDir)) {
+          return sendJson(res, 400, { success: false, message: 'Đường dẫn tệp không an toàn' });
+        }
+
+        fs.writeFileSync(targetPath, buffer);
+
+        return sendJson(res, 200, {
+          success: true,
+          message: 'Tải ảnh lên thành công',
+          url: `images/relics/${safeFilename}`,
+          filename: safeFilename,
+          size: buffer.length
+        });
+      } catch (err) {
+        console.error('[LỖI LƯU TỆP ẢNH UPLOAD]:', err);
+        return sendJson(res, 500, { success: false, message: 'Lỗi ghi tệp ảnh trên máy chủ' });
+      }
+    }
+
     // Tuyến API không tồn tại
     return sendJson(res, 404, { success: false, message: 'Không tìm thấy API' });
   }
@@ -503,11 +577,13 @@ const server = http.createServer(async (req, res) => {
   const relPath = path.relative(safeRootDir, filePath).replace(/\\/g, '/').toLowerCase();
   const isProtectedFile = 
     relPath.startsWith('data/') || 
-    baseName === 'server.js' || 
-    baseName === 'package.json' || 
-    baseName === 'package-lock.json' || 
-    baseName.startsWith('test-') ||
-    baseName.startsWith('.');
+    (!relPath.startsWith('images/') && (
+      baseName === 'server.js' || 
+      baseName === 'package.json' || 
+      baseName === 'package-lock.json' || 
+      baseName.startsWith('test-') ||
+      baseName.startsWith('.')
+    ));
 
   if (isProtectedFile) {
     res.writeHead(403, { 

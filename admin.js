@@ -226,6 +226,10 @@ function initRelicEvents() {
 
   btnOpenAddRelic.addEventListener("click", () => openRelicModal());
 
+  // Khởi tạo bộ chọn ảnh đa năng (Upload file & URL preview)
+  initRelicImageUploader();
+  fetchExistingImages();
+
   // Tìm kiếm tức thì trong bảng bảo vật
   relicSearchInput.addEventListener("input", (e) => {
     state.filterRelicQuery = e.target.value.toLowerCase().trim();
@@ -394,15 +398,166 @@ function openRelicModal(relic = null) {
     } else {
       addNoteRow("");
     }
+    updateRelicImagePreview(relic.image || "");
   } else {
     modalTitle.textContent = "THÊM BẢO VẬT QUỐC GIA MỚI";
     document.getElementById("relicFormId").value = "";
-    document.getElementById("relicFormImage").value = "images/relics/";
+    document.getElementById("relicFormImage").value = "";
     addNoteRow("");
+    updateRelicImagePreview("");
   }
 
   modal.hidden = false;
   modal.style.display = "flex";
+}
+
+// ==============================================================================
+// XỬ LÝ UPLOAD & XEM TRƯỚC ẢNH HIỆN VẬT (IMAGE UPLOAD & PREVIEW)
+// ==============================================================================
+function initRelicImageUploader() {
+  const fileInput = document.getElementById("relicImageFileInput");
+  const urlInput = document.getElementById("relicFormImage");
+  const dropzone = document.getElementById("relicDropzone");
+  const btnClear = document.getElementById("btnClearRelicImage");
+
+  if (fileInput) {
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) handleRelicFileSelected(file);
+    });
+  }
+
+  if (dropzone) {
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("dragover");
+    });
+    dropzone.addEventListener("dragleave", () => {
+      dropzone.classList.remove("dragover");
+    });
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("dragover");
+      const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) handleRelicFileSelected(file);
+    });
+  }
+
+  if (urlInput) {
+    urlInput.addEventListener("input", (e) => {
+      updateRelicImagePreview(e.target.value.trim());
+    });
+    urlInput.addEventListener("change", (e) => {
+      updateRelicImagePreview(e.target.value.trim());
+    });
+  }
+
+  if (btnClear) {
+    btnClear.addEventListener("click", () => {
+      if (urlInput) urlInput.value = "";
+      if (fileInput) fileInput.value = "";
+      updateRelicImagePreview("");
+      if (urlInput) urlInput.focus();
+    });
+  }
+}
+
+async function handleRelicFileSelected(file) {
+  if (!file) return;
+  if (!file.type.startsWith("image/") && !/\.(jpg|jpeg|png|webp|svg|gif)$/i.test(file.name)) {
+    showToast("Vui lòng chọn một tệp hình ảnh (.jpg, .png, .webp, .svg)", "error");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const dataUrl = ev.target.result;
+    // Hiển thị ngay ảnh xem trước bằng Base64 để người dùng thấy tức thì
+    updateRelicImagePreview(dataUrl, `⏳ Đang tải tệp "${file.name}" lên máy chủ...`, "loading");
+
+    try {
+      const res = await authFetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          data: dataUrl
+        })
+      });
+
+      const data = await res.json();
+      if (data.success && data.url) {
+        document.getElementById("relicFormImage").value = data.url;
+        updateRelicImagePreview(data.url, `✓ Đã tải lên máy chủ: ${data.url}`, "");
+        showToast("Tải ảnh hiện vật lên máy chủ thành công!", "success");
+        fetchExistingImages();
+      } else {
+        // Fallback: Nếu máy chủ chưa hỗ trợ hoặc offline, lưu base64 dataUrl trực tiếp
+        document.getElementById("relicFormImage").value = dataUrl;
+        updateRelicImagePreview(dataUrl, `✓ Dùng tệp ảnh trực tiếp (${file.name})`, "");
+        showToast("Đã lưu ảnh tệp vào hồ sơ!", "success");
+      }
+    } catch (err) {
+      document.getElementById("relicFormImage").value = dataUrl;
+      updateRelicImagePreview(dataUrl, `✓ Dùng tệp ảnh trực tiếp (${file.name})`, "");
+      showToast("Đã lưu ảnh tệp vào hồ sơ!", "success");
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateRelicImagePreview(url, customStatus = null, customClass = "") {
+  const imgEl = document.getElementById("relicImagePreview");
+  const statusEl = document.getElementById("relicPreviewStatus");
+  if (!imgEl || !statusEl) return;
+
+  const trimmed = (url || "").trim();
+
+  if (!trimmed) {
+    imgEl.src = "images/relics/trongdong.jpg";
+    statusEl.textContent = customStatus || "Chưa có ảnh (Chọn tệp hoặc dán link)";
+    statusEl.className = "preview-status-badge" + (customClass ? ` ${customClass}` : " error");
+    return;
+  }
+
+  imgEl.onload = () => {
+    if (customStatus) {
+      statusEl.textContent = customStatus;
+      statusEl.className = "preview-status-badge" + (customClass ? ` ${customClass}` : "");
+    } else if (trimmed.startsWith("data:image/")) {
+      statusEl.textContent = "✓ Ảnh tệp tải lên (Dữ liệu nội tuyến)";
+      statusEl.className = "preview-status-badge";
+    } else if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      statusEl.textContent = "✓ Link ảnh trực tuyến (Web URL hợp lệ)";
+      statusEl.className = "preview-status-badge";
+    } else if (trimmed.startsWith("images/")) {
+      statusEl.textContent = `✓ Thư mục bảo tàng: ${trimmed}`;
+      statusEl.className = "preview-status-badge";
+    } else {
+      statusEl.textContent = `✓ Đường dẫn ảnh: ${trimmed}`;
+      statusEl.className = "preview-status-badge";
+    }
+  };
+
+  imgEl.onerror = () => {
+    statusEl.textContent = "⚠️ Không tải được ảnh! Vui lòng kiểm tra lại link hoặc tệp.";
+    statusEl.className = "preview-status-badge error";
+  };
+
+  imgEl.src = trimmed;
+}
+
+async function fetchExistingImages() {
+  try {
+    const res = await fetch("/api/images");
+    const data = await res.json();
+    if (data.success && Array.isArray(data.images)) {
+      const datalist = document.getElementById("existingRelicImages");
+      if (datalist) {
+        datalist.innerHTML = data.images.map(img => `<option value="${escapeHtml(img)}"></option>`).join("");
+      }
+    }
+  } catch (e) {}
 }
 
 function addNoteRow(content = "") {

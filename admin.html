@@ -453,9 +453,46 @@
 
           <div class="form-row-2">
             <div class="form-field">
-              <label for="relicFormImage">Đường Dẫn Hình Ảnh Hiện Vật Gốc *</label>
-              <input type="text" id="relicFormImage" class="form-input" required placeholder="images/relics/trongdong.jpg">
-              <span class="field-hint">Chọn ảnh từ thư mục images/relics/ hoặc dán link</span>
+              <label for="relicFormImage">Hình Ảnh Hiện Vật Gốc (Tải tệp ảnh hoặc Dán link) *</label>
+              
+              <div class="image-uploader-box" id="relicDropzone">
+                <div class="image-uploader-controls">
+                  <!-- Nút tải file ảnh từ máy -->
+                  <label for="relicImageFileInput" class="btn-file-select" title="Chọn tệp ảnh từ máy tính của bạn">
+                    <span class="icon">📁</span> CHỌN TỆP ẢNH TỪ MÁY
+                  </label>
+                  <input type="file" id="relicImageFileInput" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" class="file-input-hidden">
+                  <span class="uploader-sep">hoặc dán link bên dưới:</span>
+                </div>
+
+                <!-- Input dán link / đường dẫn ảnh -->
+                <div class="image-input-wrapper">
+                  <input type="text" id="relicFormImage" class="form-input" required 
+                         placeholder="Dán link ảnh (https://...) hoặc đường dẫn (images/relics/...)" 
+                         list="existingRelicImages">
+                  <datalist id="existingRelicImages">
+                    <option value="images/relics/trongdong.jpg">Trống Đồng Ngọc Lũ</option>
+                    <option value="images/relics/kiman.jpg">Kim Ấn Sắc Mệnh Chi Bảo</option>
+                    <option value="images/relics/thuanthienkiem.jpg">Thuận Thiên Kiếm</option>
+                    <option value="images/relics/cuudinh.jpg">Cửu Đỉnh Đại Nội Huế</option>
+                    <option value="images/relics/rongly.jpg">Đầu Rồng Thời Lý</option>
+                    <option value="images/relics/thapdong.jpg">Tháp Đồng Đào Thịnh</option>
+                    <option value="images/relics/xetang390.jpg">Xe Tăng 390</option>
+                  </datalist>
+                </div>
+
+                <!-- Khung xem trước ảnh trực tiếp (Live Preview) -->
+                <div class="image-preview-bar" id="relicPreviewContainer">
+                  <div class="preview-img-box">
+                    <img id="relicImagePreview" src="images/relics/trongdong.jpg" alt="Xem trước ảnh" onerror="this.onerror=null; this.src='images/relics/trongdong.jpg';">
+                  </div>
+                  <div class="preview-meta">
+                    <span id="relicPreviewStatus" class="preview-status-badge">Đang hiển thị ảnh</span>
+                    <button type="button" id="btnClearRelicImage" class="btn-text-sm" title="Xóa để chọn lại ảnh khác">Đổi ảnh khác</button>
+                  </div>
+                </div>
+              </div>
+              <span class="field-hint">Hỗ trợ tải tệp ảnh từ máy (.jpg, .png, .webp), kéo thả tệp vào khung, hoặc dán link ảnh Web trực tiếp</span>
             </div>
             <div class="form-field">
               <label for="relicFormMaterial">Chất Liệu & Bề Mặt Patina</label>
