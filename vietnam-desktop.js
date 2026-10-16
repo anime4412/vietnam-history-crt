@@ -3306,6 +3306,64 @@ let revealNext=false, gated=false;
 // automated browser (the tests, a link preview) goes straight in; ?gate=1 keeps the gate there too.
 const GATE=!navigator.webdriver||/[?&]gate=1/.test(location.search), enterBtn=$("#enter"), muteBtn=$("#enter-muted");
 const GATE_SKIP=/^(Tab|Shift|Control|Alt|AltGraph|Meta|OS|CapsLock|NumLock|ScrollLock|Escape|Fn|FnLock|ContextMenu|Unidentified|Dead|F\d+|Audio\w*|Media\w*|Volume\w*|Browser\w*)$/;
+
+function checkAndShowWelcomeGuide(){
+  const isAutomated = !!(navigator.webdriver || /[?&]gate=0/.test(location.search));
+  const forceWelcome = /[?&]welcome=1/.test(location.search);
+  if(isAutomated && !forceWelcome) return false;
+  if(localStorage.getItem("vietnam_hide_welcome_guide") === "1" && !forceWelcome) return false;
+  showWelcomeGuideModal(true);
+  return true;
+}
+
+function showWelcomeGuideModal(isInitial = false){
+  const modal = $("#welcome-guide-modal");
+  if(!modal) return;
+  modal.hidden = false;
+  requestAnimationFrame(() => modal.classList.add("guide-open"));
+
+  const btnEnter = $("#btnGuideEnterSound");
+  const btnMute = $("#btnGuideEnterMuted");
+  const dontShowWrap = modal.querySelector(".guide-dont-show-wrap");
+  const chk = $("#chkGuideHideNext");
+  if(chk) chk.checked = localStorage.getItem("vietnam_hide_welcome_guide") === "1";
+
+  if(isInitial && gated){
+    if(btnEnter) btnEnter.innerHTML = `🔊 BƯỚC VÀO PHÒNG CHIẾU`;
+    if(btnMute) btnMute.style.display = "";
+    if(dontShowWrap) dontShowWrap.style.display = "";
+  } else {
+    // Đang ở trong phòng hoặc mở lại qua HUD
+    if(btnEnter) btnEnter.innerHTML = `✕ ĐÃ HIỂU · ĐÓNG`;
+    if(btnMute) btnMute.style.display = "none";
+  }
+}
+
+function hideWelcomeGuide(action = "sound"){
+  const modal = $("#welcome-guide-modal");
+  if(!modal) return;
+
+  const chk = $("#chkGuideHideNext");
+  if(chk){
+    if(chk.checked){
+      localStorage.setItem("vietnam_hide_welcome_guide", "1");
+    } else {
+      localStorage.removeItem("vietnam_hide_welcome_guide");
+    }
+  }
+
+  modal.classList.remove("guide-open");
+  modal.hidden = true;
+
+  if(gated){
+    if(action === "mute"){
+      enter(true);
+    } else {
+      enter(false);
+    }
+  }
+}
+
 function gateUp(){
   if(MEM.lost) return;   // the browser took the room's graphics away: the next tap is the reload card's (perf/mem)
   if(!enterBtn){ revealNext=true; return; }
@@ -3314,7 +3372,9 @@ function gateUp(){
   if(osd&&cta){ osd.classList.add("enter"); cta.textContent=`${touchOnly()?"TAP":"CLICK"} TO ENTER`; }
   enterBtn.hidden=false; if(muteBtn) muteBtn.hidden=false; try{ enterBtn.focus({preventScroll:true}); }catch{}
   addEventListener("click",gateClick,true); addEventListener("keydown",gateKey,true);
-  addEventListener("pointerdown",muteDown,true); addEventListener("pointerup",muteUp,true); }
+  addEventListener("pointerdown",muteDown,true); addEventListener("pointerup",muteUp,true);
+  checkAndShowWelcomeGuide();
+}
 function enter(muted){
   if(!gated) return; gated=false; removeEventListener("click",gateClick,true); removeEventListener("keydown",gateKey,true);
   removeEventListener("pointerdown",muteDown,true); removeEventListener("pointerup",muteUp,true);
@@ -3324,7 +3384,39 @@ function enter(muted){
   try{ const still=document.getElementById("still"); if(still){ still.style.pointerEvents="none"; } }catch{}
   controls.enabled=true;
   if(muted) quiet(); else gesture(); stillOut(); canvas.classList.add("ready"); revealNext=true; }   // (ready at once: a nav link's go() keeps the still)
-function gateClick(e){ const nav=e.target.closest?.("nav.menu a"); enter(!!e.target.closest?.("#osd .tv-mute,#enter-muted")); if(!nav){ e.preventDefault(); e.stopPropagation(); } }
+function gateClick(e){
+  const guideModal = $("#welcome-guide-modal");
+  if(guideModal && !guideModal.hidden && guideModal.classList.contains("guide-open")){
+    if(e.target.closest?.("#btnGuideEnterSound")){
+      e.preventDefault(); e.stopPropagation();
+      hideWelcomeGuide("sound");
+      return;
+    }
+    if(e.target.closest?.("#btnGuideEnterMuted")){
+      e.preventDefault(); e.stopPropagation();
+      hideWelcomeGuide("mute");
+      return;
+    }
+    if(e.target.closest?.("#btnGuideClose")){
+      e.preventDefault(); e.stopPropagation();
+      hideWelcomeGuide("close");
+      return;
+    }
+    if(e.target.closest?.(".guide-modal-card")){
+      // Nhấp vào checkbox, link hoặc văn bản trong modal: cho phép thao tác mặc định
+      e.stopPropagation();
+      return;
+    }
+    if(e.target === guideModal){
+      e.preventDefault(); e.stopPropagation();
+      hideWelcomeGuide("sound");
+      return;
+    }
+  }
+  const nav=e.target.closest?.("nav.menu a");
+  enter(!!e.target.closest?.("#osd .tv-mute,#enter-muted"));
+  if(!nav){ e.preventDefault(); e.stopPropagation(); }
+}
 // A finger on ENTER MUTED lets the room in when it lifts, on the label still (Felix, 30 Sep 16:40Z: on an iPhone the tap
 // "seems to be in a hover mode and additional clicks don't get me in"): Safari may never send that tap's click. A click
 // it sends after all is eaten, so it doesn't land in the room
@@ -3335,9 +3427,28 @@ function muteUp(e){ if(muteId===null||e.pointerId!==muteId) return; muteId=null;
   const eat=c=>{ c.preventDefault(); c.stopPropagation(); };
   addEventListener("click",eat,true); setTimeout(()=>removeEventListener("click",eat,true),600);
   enter(true); }
-function gateKey(e){ if(e.ctrlKey||e.metaKey||e.altKey||GATE_SKIP.test(e.key)) return;
+function gateKey(e){
+  if(e.ctrlKey||e.metaKey||e.altKey||GATE_SKIP.test(e.key)) return;
+  const guideModal = $("#welcome-guide-modal");
+  if(guideModal && !guideModal.hidden && guideModal.classList.contains("guide-open")){
+    if(e.key === "Escape"){
+      e.preventDefault(); e.stopPropagation();
+      hideWelcomeGuide("close");
+      return;
+    }
+    if(e.key === " " && e.target?.id === "chkGuideHideNext"){
+      return; // cho phép phím cách chọn checkbox
+    }
+    if(e.key === "Enter"){
+      e.preventDefault(); e.stopPropagation();
+      hideWelcomeGuide("sound");
+      return;
+    }
+    return;
+  }
   if(e.key==="Enter"&&e.target.closest?.("nav.menu a")) return enter();   // (Enter on a nav link: in, and on to its page)
-  e.preventDefault(); e.stopPropagation(); enter(e.target===muteBtn&&(e.key==="Enter"||e.key===" ")); }   // (Enter or Space on ENTER MUTED: in, with the sound off)
+  e.preventDefault(); e.stopPropagation(); enter(e.target===muteBtn&&(e.key==="Enter"||e.key===" "));
+}   // (Enter or Space on ENTER MUTED: in, with the sound off)
 let rainK=1, last=performance.now(), trainNext=performance.now()+12000, trainOn=0, lastSec=-1, slow=0, sigT=-1e9;
 // The city outside is always in its busy evening (city/lib/night.js). __scene.lifeAt(hour, weekday) runs its later hours
 // instead, for screenshots, from that hour on; lifeAt(null) goes back to the evening.
@@ -3527,6 +3638,17 @@ addEventListener("keydown", e => {
   if (e.key.toLowerCase() === "r") {
     go("relics");
   }
+  if ((e.key.toLowerCase() === "h" || e.key === "?") && !(e.target.closest && e.target.closest("input,textarea")) && !PC?.focused) {
+    showWelcomeGuideModal(false);
+    e.preventDefault();
+  }
+  if (e.key === "Escape") {
+    const modal = document.getElementById("welcome-guide-modal");
+    if (modal && !modal.hidden && modal.classList.contains("guide-open")) {
+      hideWelcomeGuide("close");
+      e.preventDefault();
+    }
+  }
 });
 
 
@@ -3555,6 +3677,8 @@ window.__BM.state = state;
 window.__BM.enter = enter;
 window.__BM.tapes = VIETNAM_TAPES;
 window.__BM.relics = VIETNAM_RELICS;
+window.__BM.showWelcomeGuide = showWelcomeGuideModal;
+window.__BM.hideWelcomeGuide = hideWelcomeGuide;
 
 function initHUDButtons() {
   // 1. Nút CỔ VẬT
@@ -3626,6 +3750,53 @@ function initHUDButtons() {
       click("button");
       gesture();
       if (!PC.zoom) toggleZoom();
+    });
+  }
+
+  // 5. Nút HƯỚNG DẪN (Mở bảng hướng dẫn trải nghiệm cho người mới)
+  const guideBtn = document.getElementById("btn-guide");
+  if (guideBtn && !guideBtn._wired) {
+    guideBtn._wired = true;
+    guideBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      click("button");
+      showWelcomeGuideModal(false);
+    });
+  }
+
+  // 6. Gắn kết sự kiện cho các nút bên trong Welcome Guide Modal
+  const btnGuideClose = document.getElementById("btnGuideClose");
+  if (btnGuideClose && !btnGuideClose._wired) {
+    btnGuideClose._wired = true;
+    btnGuideClose.addEventListener("click", (e) => {
+      e.stopPropagation();
+      hideWelcomeGuide("close");
+    });
+  }
+  const btnGuideEnterSound = document.getElementById("btnGuideEnterSound");
+  if (btnGuideEnterSound && !btnGuideEnterSound._wired) {
+    btnGuideEnterSound._wired = true;
+    btnGuideEnterSound.addEventListener("click", (e) => {
+      e.stopPropagation();
+      hideWelcomeGuide("sound");
+    });
+  }
+  const btnGuideEnterMuted = document.getElementById("btnGuideEnterMuted");
+  if (btnGuideEnterMuted && !btnGuideEnterMuted._wired) {
+    btnGuideEnterMuted._wired = true;
+    btnGuideEnterMuted.addEventListener("click", (e) => {
+      e.stopPropagation();
+      hideWelcomeGuide("mute");
+    });
+  }
+  const guideModal = document.getElementById("welcome-guide-modal");
+  if (guideModal && !guideModal._wired) {
+    guideModal._wired = true;
+    guideModal.addEventListener("click", (e) => {
+      if (e.target === guideModal) {
+        e.stopPropagation();
+        hideWelcomeGuide("close");
+      }
     });
   }
 }

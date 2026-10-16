@@ -179,6 +179,7 @@
       <button class="sound" id="btn-pc" title="Truy cập máy tính cổ tra cứu lịch sử (Phím C)">MÁY TÍNH · C</button>
       <button class="sound" id="btn-zoom-tv" title="Phóng to màn hình Tivi CRT (Phím Z)">ZOOM TV · Z</button>
       <button class="sound" id="btn-relics">CỔ VẬT</button>
+      <button class="sound" id="btn-guide" title="Xem hướng dẫn trải nghiệm phòng chiếu (Phím H hoặc ?)">HƯỚNG DẪN</button>
       <button class="sound" id="credits">THÔNG TIN</button>
       <button class="sound" id="sound" aria-pressed="false">ÂM THANH: TẮT</button>
     </div>
@@ -190,6 +191,105 @@
   <div id="err" hidden></div>
   <div id="live" class="sr" aria-live="polite"></div>
   <div id="pc-sr" class="sr" aria-live="polite"></div>
+
+  <!-- ================= BẢNG HƯỚNG DẪN TRẢI NGHIỆM CHO NGƯỜI MỚI (WELCOME GUIDE MODAL) ================= -->
+  <div id="welcome-guide-modal" class="guide-modal-backdrop" hidden aria-modal="true" role="dialog" aria-labelledby="guide-title">
+    <div class="guide-modal-card">
+      <div class="guide-scanlines" aria-hidden="true"></div>
+      
+      <header class="guide-header">
+        <div class="guide-header-badge">
+          <span class="guide-badge-dot"></span>
+          <span class="guide-badge-text">PHÒNG CHIẾU RETRO · HƯỚNG DẪN TRẢI NGHIỆM</span>
+        </div>
+        <button type="button" id="btnGuideClose" class="guide-close-btn" aria-label="Đóng bảng hướng dẫn">✕</button>
+      </header>
+
+      <div class="guide-hero">
+        <h2 id="guide-title" class="guide-title">Chào mừng bạn đến với Phòng Chiếu Sử Liệu & Bảo Vật 3D</h2>
+        <p class="guide-intro">
+          Không gian mô phỏng phòng làm việc cổ điển thập niên 90 với công nghệ Three.js. Dưới đây là các tương tác chính để bạn bắt đầu khám phá:
+        </p>
+      </div>
+
+      <div class="guide-grid">
+        <!-- Thao tác 1: Cuộn băng VHS -->
+        <div class="guide-card">
+          <div class="guide-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+              <circle cx="8" cy="12" r="3"></circle>
+              <circle cx="16" cy="12" r="3"></circle>
+              <path d="M8 15h8"></path>
+            </svg>
+          </div>
+          <div class="guide-card-content">
+            <h3>11 Cuộn Băng VHS Lịch Sử</h3>
+            <p>Nhấp trực tiếp vào bất kỳ <strong>cuộn băng VHS trên bàn</strong> để nạp vào đầu VCR và xem các thước phim tài liệu lịch sử trên Tivi CRT (Hùng Vương, Bạch Đằng, Điện Biên Phủ, 30/4/1975...).</p>
+          </div>
+        </div>
+
+        <!-- Thao tác 2: Cổ vật & Bảo vật Quốc gia -->
+        <div class="guide-card">
+          <div class="guide-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="21" x2="21" y2="21"></line>
+              <line x1="6" y1="21" x2="6" y2="10"></line>
+              <line x1="10" y1="21" x2="10" y2="10"></line>
+              <line x1="14" y1="21" x2="14" y2="10"></line>
+              <line x1="18" y1="21" x2="18" y2="10"></line>
+              <polygon points="12 2 20 8 4 8"></polygon>
+            </svg>
+          </div>
+          <div class="guide-card-content">
+            <h3>Hồ Sơ 7 Bảo Vật Quốc Gia</h3>
+            <p>Bấm nút <strong>[ CỔ VẬT ]</strong> trên thanh công cụ hoặc phím <strong>3</strong> trên TV để chiêm ngưỡng tư liệu & hình ảnh Trống đồng Ngọc Lũ, Kim ấn triều Nguyễn, Cửu Đỉnh, Xe tăng 390...</p>
+          </div>
+        </div>
+
+        <!-- Thao tác 3: Máy tính cổ IBM -->
+        <div class="guide-card">
+          <div class="guide-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </div>
+          <div class="guide-card-content">
+            <h3>Máy Tính Cổ & Bản Đồ Sử Liệu</h3>
+            <p>Nhấn phím <strong>C</strong> hoặc nhấp chuột vào máy vi tính bên trái bàn để tra cứu bách khoa dữ liệu và khám phá <strong>Bản đồ chiến dịch tương tác</strong>.</p>
+          </div>
+        </div>
+
+        <!-- Thao tác 4: Nghe đài & Xoay 3D -->
+        <div class="guide-card">
+          <div class="guide-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4.5 16.5c-1.5 1.26-2 3-2 4.5h19c0-1.5-.5-3.24-2-4.5"></path>
+              <circle cx="12" cy="10" r="7"></circle>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+          </div>
+          <div class="guide-card-content">
+            <h3>Đài Đĩa CD & Góc Nhìn 3D</h3>
+            <p>Phím <strong>M</strong> bật đài nghe nhạc · Phím <strong>Z</strong> phóng to TV · <strong>Kéo chuột trái</strong> để xoay 360°, cuộn chuột để zoom phòng, kéo chuột phải để lia góc nhìn.</p>
+          </div>
+        </div>
+      </div>
+
+      <footer class="guide-footer">
+        <label class="guide-dont-show-wrap">
+          <input type="checkbox" id="chkGuideHideNext">
+          <span>Không tự động hiển thị lại</span>
+        </label>
+        <div class="guide-action-btns">
+          <button type="button" id="btnGuideEnterMuted" class="guide-btn-mute">🔇 Vào phòng tắt tiếng</button>
+          <button type="button" id="btnGuideEnterSound" class="guide-btn-enter">🔊 BƯỚC VÀO PHÒNG CHIẾU</button>
+        </div>
+      </footer>
+    </div>
+  </div>
 </template>
 
 <!-- ==========================================================================
