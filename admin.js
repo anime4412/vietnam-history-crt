@@ -473,7 +473,7 @@ async function handleRelicFileSelected(file) {
   reader.onload = async (ev) => {
     const dataUrl = ev.target.result;
     // Hiển thị ngay ảnh xem trước bằng Base64 để người dùng thấy tức thì
-    updateRelicImagePreview(dataUrl, `⏳ Đang tải tệp "${file.name}" lên máy chủ...`, "loading");
+    updateRelicImagePreview(dataUrl, `Đang tải tệp "${file.name}" lên máy chủ...`, "loading");
 
     try {
       const res = await authFetch("/api/upload", {
@@ -488,18 +488,18 @@ async function handleRelicFileSelected(file) {
       const data = await res.json();
       if (data.success && data.url) {
         document.getElementById("relicFormImage").value = data.url;
-        updateRelicImagePreview(data.url, `✓ Đã tải lên máy chủ: ${data.url}`, "");
+        updateRelicImagePreview(data.url, `Đã tải lên máy chủ: ${data.url}`, "");
         showToast("Tải ảnh hiện vật lên máy chủ thành công!", "success");
         fetchExistingImages();
       } else {
         // Fallback: Nếu máy chủ chưa hỗ trợ hoặc offline, lưu base64 dataUrl trực tiếp
         document.getElementById("relicFormImage").value = dataUrl;
-        updateRelicImagePreview(dataUrl, `✓ Dùng tệp ảnh trực tiếp (${file.name})`, "");
+        updateRelicImagePreview(dataUrl, `Dùng tệp ảnh trực tiếp (${file.name})`, "");
         showToast("Đã lưu ảnh tệp vào hồ sơ!", "success");
       }
     } catch (err) {
       document.getElementById("relicFormImage").value = dataUrl;
-      updateRelicImagePreview(dataUrl, `✓ Dùng tệp ảnh trực tiếp (${file.name})`, "");
+      updateRelicImagePreview(dataUrl, `Dùng tệp ảnh trực tiếp (${file.name})`, "");
       showToast("Đã lưu ảnh tệp vào hồ sơ!", "success");
     }
   };
@@ -525,22 +525,22 @@ function updateRelicImagePreview(url, customStatus = null, customClass = "") {
       statusEl.textContent = customStatus;
       statusEl.className = "preview-status-badge" + (customClass ? ` ${customClass}` : "");
     } else if (trimmed.startsWith("data:image/")) {
-      statusEl.textContent = "✓ Ảnh tệp tải lên (Dữ liệu nội tuyến)";
+      statusEl.textContent = "Ảnh tệp tải lên (Dữ liệu nội tuyến)";
       statusEl.className = "preview-status-badge";
     } else if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-      statusEl.textContent = "✓ Link ảnh trực tuyến (Web URL hợp lệ)";
+      statusEl.textContent = "Link ảnh trực tuyến (Web URL)";
       statusEl.className = "preview-status-badge";
     } else if (trimmed.startsWith("images/")) {
-      statusEl.textContent = `✓ Thư mục bảo tàng: ${trimmed}`;
+      statusEl.textContent = `Thư mục bảo tàng: ${trimmed}`;
       statusEl.className = "preview-status-badge";
     } else {
-      statusEl.textContent = `✓ Đường dẫn ảnh: ${trimmed}`;
+      statusEl.textContent = `Đường dẫn ảnh: ${trimmed}`;
       statusEl.className = "preview-status-badge";
     }
   };
 
   imgEl.onerror = () => {
-    statusEl.textContent = "⚠️ Không tải được ảnh! Vui lòng kiểm tra lại link hoặc tệp.";
+    statusEl.textContent = "Không tải được ảnh! Vui lòng kiểm tra lại link hoặc tệp.";
     statusEl.className = "preview-status-badge error";
   };
 
@@ -671,8 +671,8 @@ function renderTapesTable() {
     const tr = document.createElement("tr");
     const hasVideo = tape.videoUrl && tape.videoUrl.trim() !== "";
     const sourceBadge = hasVideo 
-      ? `<span class="table-badge" style="background:#064e3b; color:#6ee7b7;">🎬 Video MP4</span>`
-      : `<span class="table-badge" style="background:#3b1e06; color:#fcd34d;">📐 Sa Bàn Đồ Họa</span>`;
+      ? `<span class="table-badge"><svg class="badge-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>Video MP4</span>`
+      : `<span class="table-badge badge-scene"><svg class="badge-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Sa Bàn 3D</span>`;
 
     tr.innerHTML = `
       <td style="font-family: var(--font-mono); font-size: 16px; color: var(--gold-light);">
@@ -946,7 +946,7 @@ function showToast(message, type = "info") {
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
 
-  const icon = type === "success" ? "✓" : type === "error" ? "⚠" : "ℹ";
+  const icon = type === "success" ? "✓" : type === "error" ? "✕" : "◆";
   toast.innerHTML = `<span style="font-weight:bold; color:var(--gold-light);">${icon}</span> <span>${escapeHtml(message)}</span>`;
 
   container.appendChild(toast);

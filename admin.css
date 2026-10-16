@@ -265,7 +265,28 @@ body {
 }
 
 .tab-icon {
-  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+}
+
+.tab-svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nav-tab:hover .tab-icon,
+.nav-tab.active .tab-icon {
+  color: var(--gold-light);
 }
 
 .tab-text {
@@ -380,7 +401,6 @@ body {
 }
 
 .kpi-icon {
-  font-size: 32px;
   width: 58px;
   height: 58px;
   background-color: #172033;
@@ -390,6 +410,24 @@ body {
   justify-content: center;
   flex-shrink: 0;
   border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--gold-light);
+  transition: all 0.25s ease;
+}
+
+.kpi-card:hover .kpi-icon {
+  border-color: var(--border-gold);
+  background-color: rgba(212, 164, 65, 0.1);
+  box-shadow: 0 0 12px var(--gold-glow);
+}
+
+.kpi-svg {
+  width: 26px;
+  height: 26px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .kpi-num {
@@ -463,8 +501,29 @@ body {
 }
 
 .action-icon {
-  font-size: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   margin-bottom: 8px;
+  color: var(--gold-light);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.action-svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.btn-action-card:hover .action-icon {
+  transform: translateY(-2px);
+  color: #fbbf24;
 }
 
 .action-name {
@@ -859,8 +918,39 @@ body {
 }
 
 .backup-icon {
-  font-size: 36px;
+  width: 52px;
+  height: 52px;
   margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #172033;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--gold-light);
+  transition: all 0.2s ease;
+}
+
+.backup-card:hover .backup-icon {
+  border-color: var(--border-gold);
+  box-shadow: 0 0 12px var(--gold-glow);
+}
+
+.backup-svg {
+  width: 26px;
+  height: 26px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.backup-icon.danger-icon,
+.backup-icon.danger-icon .backup-svg,
+.backup-svg.text-danger {
+  color: #f87171 !important;
+  stroke: #f87171 !important;
 }
 
 .backup-card-title {
@@ -944,6 +1034,31 @@ body {
 
 .btn-file-select:active {
   transform: translateY(0);
+}
+
+.btn-svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.badge-svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: inline-block;
+  vertical-align: -1px;
+  margin-right: 5px;
 }
 
 .uploader-sep {
