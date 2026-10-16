@@ -1142,7 +1142,8 @@ function populateSettingsForm() {
   document.getElementById("settingCrtScanlines").checked = s.crtScanlines !== false;
   document.getElementById("settingCrtBloom").checked = s.crtBloom !== false;
   document.getElementById("settingMusicEnabled").checked = s.musicEnabled !== false;
-  document.getElementById("settingAdminPin").value = s.adminPin || "admin123";
+  // Để trống ô mã PIN bảo mật khi hiển thị form để tránh bị lộ mật khẩu
+  document.getElementById("settingAdminPin").value = "";
 }
 
 // ==============================================================================

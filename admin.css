@@ -1361,19 +1361,6 @@ body {
   font-weight: 600;
 }
 
-.auth-hint {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 18px;
-}
-
-.auth-hint code {
-  color: var(--gold-light);
-  background: #111827;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
 /* ==============================================================================
    11. THÔNG BÁO TỨC THÌ (TOAST NOTIFICATIONS)
    ============================================================================== */
