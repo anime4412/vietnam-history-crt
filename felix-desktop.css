@@ -13,7 +13,8 @@
   --osd:"VT323",ui-monospace,"Courier New",monospace;
 }
 *{box-sizing:border-box}
-html.bm-scene,html.bm-scene body{height:100%;margin:0;overflow:hidden;background:var(--ground);color:var(--ink);font-family:var(--display)}
+html,body,html.bm-scene,html.bm-scene body{position:fixed;inset:0;width:100%;height:100%;height:100dvh;margin:0;padding:0;overflow:hidden;overscroll-behavior:none;touch-action:none;background:var(--ground);color:var(--ink);font-family:var(--display)}
+#bm-root{position:fixed;inset:0;width:100%;height:100%;height:100dvh;overflow:hidden;pointer-events:none}
 #gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;opacity:0;transition:opacity 1.2s ease}
 #gl.ready{opacity:1}
 /* the home view as a still while the room loads (tex/still.jpg, from tv/stillshot.cjs); the canvas fades in over it */
@@ -109,23 +110,24 @@ html.bm-scene,html.bm-scene body{height:100%;margin:0;overflow:hidden;background
 #enter-muted{position:fixed;left:0;top:0;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 #enter{position:fixed;inset:0;z-index:1;width:100%;height:100%;margin:0;padding:0;border:0;background:none;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent}
 @media (prefers-reduced-motion:reduce){#osd *,#osd *::after,#still .tv-spill i{animation:none!important} #osd .tv-scr{transition:none!important} #osd.out{opacity:0}}
-.hud{position:fixed;z-index:2}
-html.bm-scene body::before{content:"";position:fixed;left:0;right:0;top:0;height:120px;z-index:1;pointer-events:none;background:linear-gradient(rgba(5,5,9,.55),rgba(5,5,9,0))}
+.hud{position:fixed;z-index:10;box-sizing:border-box}
+html.bm-scene body::before{content:"";position:fixed;left:0;right:0;top:0;height:100px;z-index:1;pointer-events:none;background:linear-gradient(rgba(5,5,9,.65),rgba(5,5,9,0))}
 a{color:var(--ink);text-decoration-color:var(--accent);text-underline-offset:4px}
 a:hover{text-decoration-thickness:2px}
 
-/* top bar: name + nav, mirrors the monitor's input buttons */
-.top{top:calc(16px + env(safe-area-inset-top,0px));left:20px;right:20px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;pointer-events:none}
-.name{font-weight:850;font-stretch:125%;text-transform:uppercase;letter-spacing:.03em;font-size:16px;pointer-events:auto;cursor:pointer;background:none;border:0;color:var(--ink);padding:0;font-family:inherit}
-nav.menu{display:flex;gap:8px;flex-wrap:wrap;pointer-events:auto}
-nav.menu a{font-family:var(--osd);font-size:31px;letter-spacing:.07em;text-decoration:none;color:var(--muted);padding:3px 14px 1px;border-radius:4px;border:1px solid transparent}   /* 24px until v27 (Felix: bigger) */
-nav.menu a:hover{color:var(--ink)}
-nav.menu a[aria-current="page"]{color:#0b0b0d;background:var(--ink)}
+/* top bar: name + nav, responsive retro HUD */
+.top{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:12px;right:12px;width:calc(100% - 24px);max-width:calc(100vw - 24px);display:flex;justify-content:space-between;align-items:center;gap:8px 12px;flex-wrap:wrap;pointer-events:none;z-index:10;box-sizing:border-box}
+.name{font-weight:850;font-stretch:110%;text-transform:uppercase;letter-spacing:.03em;font-size:clamp(12px,1.1vw,15px);pointer-events:auto;cursor:pointer;background:rgba(14,13,19,.7);border:1px solid rgba(255,255,255,.16);border-radius:4px;color:var(--ink);padding:4px 10px 3px;font-family:inherit;white-space:nowrap;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:all .2s ease;display:inline-flex;align-items:center;gap:6px;flex-shrink:0}
+.name:hover{background:rgba(30,26,40,.9);border-color:var(--accent);color:#fff;box-shadow:0 0 12px rgba(255,184,103,.35)}
+nav.menu{display:flex;gap:6px;align-items:center;flex-wrap:wrap;pointer-events:auto;max-width:100%}
+nav.menu a{font-family:var(--osd);font-size:clamp(17px,1.7vw,24px);letter-spacing:.04em;text-decoration:none;color:var(--muted);padding:2px 9px 1px;border-radius:4px;border:1px solid rgba(255,255,255,.12);background:rgba(14,13,19,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap;transition:all .2s ease}
+nav.menu a:hover{color:#fff;background:rgba(30,26,40,.85);border-color:rgba(255,255,255,.3)}
+nav.menu a[aria-current="page"]{color:#0b0b0d;background:var(--ink);border-color:var(--ink);font-weight:bold}
 nav.menu a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-nav.menu a.menu-museum{color:#ffd56b;border:1px solid rgba(212,164,65,0.45);background:rgba(212,164,65,0.1);transition:all .25s ease}
-nav.menu a.menu-museum:hover{color:#fff;border-color:#ffd56b;background:rgba(212,164,65,0.28);box-shadow:0 0 16px rgba(212,164,65,0.35)}
-nav.menu a.menu-admin{color:#7dd3fc;border:1px solid rgba(125,211,252,0.35);background:rgba(125,211,252,0.08);transition:all .25s ease}
-nav.menu a.menu-admin:hover{color:#fff;border-color:#7dd3fc;background:rgba(125,211,252,0.25);box-shadow:0 0 16px rgba(125,211,252,0.35)}
+nav.menu a.menu-museum{color:#ffd56b;border:1px solid rgba(212,164,65,.5);background:rgba(212,164,65,.15)}
+nav.menu a.menu-museum:hover{color:#fff;border-color:#ffd56b;background:rgba(212,164,65,.35);box-shadow:0 0 14px rgba(212,164,65,.4)}
+nav.menu a.menu-admin{color:#7dd3fc;border:1px solid rgba(125,211,252,.45);background:rgba(125,211,252,.12)}
+nav.menu a.menu-admin:hover{color:#fff;border-color:#7dd3fc;background:rgba(125,211,252,.3);box-shadow:0 0 14px rgba(125,211,252,.4)}
 
 
 /* page card: a typed sheet that sits beside the desk object the camera flies to */
@@ -191,12 +193,13 @@ body.credcard #panel .close{display:none}
 .cred0{margin:6px 0 0;font-size:12px;line-height:23.2px;color:var(--muted)}
 .cred0 a{color:inherit}
 
-.ctl{right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none}
-.ctl .hint{font-family:var(--osd);font-size:17px;color:#d3cfdc;text-align:right;line-height:1.15;text-shadow:0 0 1px #000,0 0 2px #000,0 1px 1px #000,0 0 9px rgba(0,0,0,.8)}   /* outlined like VCR on-screen text, so it reads over the lit notepad */
-button.sound{pointer-events:auto;font:inherit;font-family:var(--osd);font-size:19px;letter-spacing:.06em;color:var(--ink);
-  background:rgba(20,18,24,.55);border:1px solid var(--line);border-radius:999px;padding:5px 14px 4px;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.ctl .btns{display:flex;gap:8px}
-button.sound[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.ctl{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none;max-width:calc(100vw - 28px);z-index:10;box-sizing:border-box}
+.ctl .hint{font-family:var(--osd);font-size:clamp(13px,1.1vw,16px);color:#d3cfdc;text-align:right;line-height:1.2;text-shadow:0 0 2px #000,0 1px 3px #000,0 0 8px rgba(0,0,0,.9);max-width:min(85vw,560px);word-break:break-word;white-space:normal;pointer-events:auto}
+button.sound{pointer-events:auto;font:inherit;font-family:var(--osd);font-size:clamp(14px,1.2vw,17px);letter-spacing:.05em;color:var(--ink);
+  background:rgba(20,18,24,.75);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 12px 3px;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.5);transition:all .2s ease}
+button.sound:hover{background:rgba(40,35,52,.9);border-color:var(--accent);color:#fff;transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.6)}
+.ctl .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center;pointer-events:auto;max-width:100%}
+button.sound[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:rgba(255,184,103,.15)}
 button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 body.paneled .ctl .hint{display:none}
 body.ttx .ctl .hint{display:block}
@@ -209,14 +212,34 @@ body.ttx.zoomed #panel{opacity:1;visibility:visible}   /* Posts: its card is alr
 #unzoom{display:none}
 body.zoomed #unzoom,body.pcnear #unzoom,body.padnote.paneled #unzoom,body.calcup #unzoom{display:inline-block}   /* the notepad or the calculator up: PUT DOWN … */
 body.zoomed .ctl #credits{display:none}
-#tip{position:fixed;z-index:3;pointer-events:none;font-family:var(--osd);font-size:17px;letter-spacing:.06em;color:#0b0b0d;background:var(--ink);padding:1px 7px 0;border-radius:3px;transform:translate(12px,14px);white-space:nowrap}
+#tip{position:fixed;z-index:12;pointer-events:none;font-family:var(--osd);font-size:17px;letter-spacing:.06em;color:#0b0b0d;background:var(--ink);padding:1px 7px 0;border-radius:3px;transform:translate(12px,14px);white-space:nowrap}
 #err{position:fixed;inset:0;display:grid;place-items:center;font-family:var(--osd);font-size:22px;color:var(--muted);text-align:center;padding:20px}
+
+/* Các ngưỡng co giãn màn hình thông minh (Responsive Breakpoints) */
+@media (max-width:1200px){
+  .top{justify-content:center;gap:6px 10px}
+  nav.menu{justify-content:center}
+}
+@media (max-height:600px){
+  .top{top:calc(6px + env(safe-area-inset-top,0px));gap:4px 8px}
+  .name{font-size:11px;padding:2px 7px}
+  nav.menu a{font-size:17px;padding:1px 7px}
+  .ctl{bottom:calc(6px + env(safe-area-inset-bottom,0px));gap:4px}
+  .ctl .hint{font-size:13px;line-height:1.1}
+  button.sound{padding:3px 10px 2px;font-size:14px}
+}
 @media (max-width:760px){
-  .panel{top:auto!important;left:12px!important;right:12px;width:auto;max-height:46%;bottom:calc(12px + env(safe-area-inset-bottom,0px));transform:rotate(-.4deg)}
+  .panel{top:auto!important;left:10px!important;right:10px;width:auto;max-height:46%;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:rotate(-.4deg)}
   .panel[hidden]{transform:translateY(24px)}
   body.paneled .ctl,body.paneled #osd{display:none}
+  .ctl{right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:calc(100vw - 16px)}
   .ctl .hint{display:none}
-  nav.menu a{font-size:21px;padding:2px 8px 1px}
+  .ctl .btns{gap:4px}
+  button.sound{font-size:13px;padding:3px 8px 2px}
+  .top{left:8px;right:8px;top:calc(6px + env(safe-area-inset-top,0px));width:calc(100% - 16px);justify-content:center;gap:4px}
+  .name{font-size:11px;padding:2px 7px}
+  nav.menu{gap:3px;justify-content:center}
+  nav.menu a{font-size:15px;padding:2px 6px 1px}
 }
 body.debug .hud:not(.top){display:none}
 @media (prefers-reduced-motion:reduce){#gl,#still,.panel{transition:none}}
