@@ -188,7 +188,7 @@ class VietnamNationalMuseum {
         <article class="exhibit-card" data-index="${idx}">
           <!-- Khung ảnh hiện vật với hiệu ứng đèn rọi spotlight -->
           <div class="card-media" onclick="window.museumApp.openDossier(${idx})">
-            <img src="${relic.image}" alt="${this.escapeHtml(relic.title)}" class="card-img" loading="lazy">
+            <img src="${this.escapeHtml(relic.image)}" alt="${this.escapeHtml(relic.title)}" class="card-img" loading="lazy">
             <div class="card-badges">
               <span class="badge-national">BẢO VẬT QUỐC GIA</span>
               <span class="badge-era-chip">${this.escapeHtml(relic.era.split("(")[0].trim())}</span>

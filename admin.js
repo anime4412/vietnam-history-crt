@@ -119,6 +119,27 @@ function showAuthModal() {
 }
 
 // ==============================================================================
+// 2.5 BỘ TRUYỀN TẢI YÊU CẦU BẢO MẬT (SECURE AUTH FETCH WRAPPER WITH BEARER TOKEN)
+// ==============================================================================
+async function authFetch(url, options = {}) {
+  const token = localStorage.getItem("admin_token") || sessionStorage.getItem("admin_token");
+  const headers = { ...(options.headers || {}) };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  options.headers = headers;
+
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    localStorage.removeItem("admin_token");
+    sessionStorage.removeItem("admin_token");
+    showAuthModal();
+    showToast("Phiên đăng nhập đã hết hạn hoặc chưa xác thực. Vui lòng mở khóa lại!", "error");
+  }
+  return res;
+}
+
+// ==============================================================================
 // 3. TẢI DỮ LIỆU TỪ MÁY CHỦ (FETCH API DATA)
 // ==============================================================================
 async function loadAllData() {
@@ -253,11 +274,12 @@ function initRelicEvents() {
     };
 
     try {
-      const res = await fetch("/api/relics", {
+      const res = await authFetch("/api/relics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ relic: relicData })
       });
+      if (res.status === 401) return;
       const data = await res.json();
 
       if (data.success) {
@@ -403,7 +425,8 @@ async function deleteRelic(id) {
   }
 
   try {
-    const res = await fetch(`/api/relics?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    const res = await authFetch(`/api/relics?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    if (res.status === 401) return;
     const data = await res.json();
     if (data.success) {
       state.relics = data.relics;
@@ -462,11 +485,12 @@ function initTapeEvents() {
     };
 
     try {
-      const res = await fetch("/api/tapes", {
+      const res = await authFetch("/api/tapes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tape: tapeData })
       });
+      if (res.status === 401) return;
       const data = await res.json();
 
       if (data.success) {
@@ -577,7 +601,8 @@ async function deleteTape(id) {
   }
 
   try {
-    const res = await fetch(`/api/tapes?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    const res = await authFetch(`/api/tapes?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    if (res.status === 401) return;
     const data = await res.json();
     if (data.success) {
       state.tapes = data.tapes;
@@ -614,11 +639,12 @@ function initSettingsEvents() {
     }
 
     try {
-      const res = await fetch("/api/settings", {
+      const res = await authFetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ settings: newSettings })
       });
+      if (res.status === 401) return;
       const data = await res.json();
       if (data.success) {
         state.settings = data.settings;
@@ -675,11 +701,12 @@ function initBackupEvents() {
     reader.onload = async (e) => {
       try {
         const json = JSON.parse(e.target.result);
-        const res = await fetch("/api/import", {
+        const res = await authFetch("/api/import", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(json)
         });
+        if (res.status === 401) return;
         const data = await res.json();
         if (data.success) {
           showToast("Khôi phục cơ sở dữ liệu thành công!", "success");
@@ -702,7 +729,8 @@ function initBackupEvents() {
       return;
     }
     try {
-      const res = await fetch("/api/reset", { method: "POST" });
+      const res = await authFetch("/api/reset", { method: "POST" });
+      if (res.status === 401) return;
       const data = await res.json();
       if (data.success) {
         showToast("Đã khôi phục dữ liệu gốc thành công!", "success");
