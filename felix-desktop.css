@@ -13,9 +13,8 @@
   --osd:"VT323",ui-monospace,"Courier New",monospace;
 }
 *{box-sizing:border-box}
-html,body,html.bm-scene,html.bm-scene body{position:fixed;inset:0;width:100%;height:100%;height:100dvh;margin:0;padding:0;overflow:hidden;overscroll-behavior:none;touch-action:none;background:var(--ground);color:var(--ink);font-family:var(--display)}
-#bm-root{position:fixed;inset:0;width:100%;height:100%;height:100dvh;overflow:hidden;pointer-events:none}
-#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;opacity:0;transition:opacity 1.2s ease}
+html.bm-scene,html.bm-scene body{height:100%;margin:0;overflow:hidden;background:var(--ground);color:var(--ink);font-family:var(--display)}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;pointer-events:auto;opacity:0;transition:opacity 1.2s ease}
 #gl.ready{opacity:1}
 /* the home view as a still while the room loads (tex/still.jpg, from tv/stillshot.cjs); the canvas fades in over it */
 #still{position:fixed;inset:0;background:var(--ground) 50% 50%/auto 100% no-repeat;opacity:0;transition:opacity .45s ease;pointer-events:none}
@@ -108,7 +107,7 @@ html,body,html.bm-scene,html.bm-scene body{position:fixed;inset:0;width:100%;hei
   #osd.free .tv-glass{box-shadow:inset 0 0 calc(min(63vw,58vh,450px)*.06) calc(min(63vw,58vh,450px)*.015) rgba(4,8,36,.6)}
 }
 #enter-muted{position:fixed;left:0;top:0;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-#enter{position:fixed;inset:0;z-index:1;width:100%;height:100%;margin:0;padding:0;border:0;background:none;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent}
+#enter{position:fixed;inset:0;z-index:1;width:100%;height:100%;margin:0;padding:0;border:0;background:none;cursor:pointer;outline:none;pointer-events:auto;-webkit-tap-highlight-color:transparent}
 @media (prefers-reduced-motion:reduce){#osd *,#osd *::after,#still .tv-spill i{animation:none!important} #osd .tv-scr{transition:none!important} #osd.out{opacity:0}}
 .hud{position:fixed;z-index:10;box-sizing:border-box}
 html.bm-scene body::before{content:"";position:fixed;left:0;right:0;top:0;height:100px;z-index:1;pointer-events:none;background:linear-gradient(rgba(5,5,9,.65),rgba(5,5,9,0))}
