@@ -41,6 +41,37 @@
       overflow: hidden;
       background: #07080d;
     }
+    /* Đảm bảo toàn bộ khung chứa 3D và Canvas WebGL nhận trọn vẹn sự kiện chuột & cảm ứng */
+    #bm-root {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      pointer-events: auto !important;
+      touch-action: none !important;
+    }
+    #gl {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      display: block !important;
+      pointer-events: auto !important;
+      touch-action: none !important;
+      z-index: 1 !important;
+    }
+    /* Các thanh HUD để trong suốt cho chuột xuyên qua Canvas, ngoại trừ các nút/link thực tế */
+    .hud {
+      pointer-events: none !important;
+    }
+    .hud .name,
+    .hud nav.menu a,
+    .hud button,
+    .hud a,
+    .hud input,
+    .hud textarea {
+      pointer-events: auto !important;
+    }
     /* Giao diện dự phòng khi trình duyệt không hỗ trợ WebGL 3D */
     .bm-fallback { color: #efe9dc; font: 18px/1.6 system-ui, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
     .bm-fallback a { color: #ffb867; text-decoration: underline; }
@@ -269,10 +300,11 @@
 
   root.classList.add("bm-scene", "bm-desktop");
 
-  // 2. Tải stylesheet giao diện phòng retro 3D
+  // 2. Tải stylesheet giao diện phòng retro 3D (kèm query timestamp chống lưu cache cũ)
+  var vTime = Date.now();
   var css = d.createElement("link");
   css.rel = "stylesheet";
-  css.href = "felix-desktop.css";
+  css.href = "felix-desktop.css?v=" + vTime;
   d.head.appendChild(css);
 
   var mounted = false;
@@ -284,14 +316,14 @@
     
     // Nạp kịch bản màn hình khởi động Tivi (Bootloader OSD)
     var b = d.createElement("script");
-    b.src = "felix-boot.js";
+    b.src = "felix-boot.js?v=" + vTime;
     b.async = false;
     d.body.appendChild(b);
 
     // Nạp module 3D chính (Three.js Engine phòng làm việc & màn hình CRT TV)
     var s = d.createElement("script");
     s.type = "module";
-    s.src = "vietnam-desktop.js?v=" + Date.now();
+    s.src = "vietnam-desktop.js?v=" + vTime;
     d.body.appendChild(s);
   }
 

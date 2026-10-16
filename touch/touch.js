@@ -123,8 +123,9 @@ body.tphone .edge{padding:14px 5px 12px;font-size:16px;background:rgba(14,13,19,
     drag.acc+=dy; if(Math.abs(drag.acc)>70){ H.ttxSwipe(Math.sign(drag.acc)); drag.acc=0; } },{passive:false,capture:true});
   // while a finger flips the pages, the row under it isn't a hover (that would pin its page)
   addEventListener("pointermove",e=>{ if(drag&&!drag.pc&&e.pointerType==="touch"){ e.stopImmediatePropagation(); H.ttxSwipe(0); } },{capture:true});
-  const endDrag=e=>{ if(drag&&e.touches.length===0){ if(!H.controls.enabled) H.controls.enabled=drag.was; drag=null; } };
+  function endDrag(e){ if(drag&&e.touches.length===0){ if(!H.controls.enabled) H.controls.enabled=drag.was; drag=null; } }
   H.canvas.addEventListener("touchend",endDrag); H.canvas.addEventListener("touchcancel",endDrag);
+  addEventListener("touchend",endDrag); addEventListener("touchcancel",endDrag);
 
   // ---- 2. the tape strip
   const strip=document.createElement("div"); strip.id="tstrip"; strip.hidden=true; strip.setAttribute("aria-label","Tapes");

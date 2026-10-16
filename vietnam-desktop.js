@@ -715,7 +715,7 @@ function measureAnchors(root){
 const controls=new OrbitControls(camera,canvas);
 controls.target.copy(frameFor("home").tgt); controls.enableDamping=true; controls.dampingFactor=.06; controls.enablePan=false;
 controls.minDistance=.3; controls.maxDistance=2.6; controls.minPolarAngle=.95; controls.maxPolarAngle=1.72;
-controls.minAzimuthAngle=-1.3; controls.maxAzimuthAngle=1.2; controls.rotateSpeed=.5; controls.zoomSpeed=.7; controls.update();
+controls.minAzimuthAngle=-1.3; controls.maxAzimuthAngle=1.2; controls.rotateSpeed=.75; controls.zoomSpeed=.85; controls.update();
 
 // ---- the desk lamp: a click on it switches it off and on (L did too until v27, when Felix dropped the lamp and window keys). Off, the room is lit by the TV, the city and the floor lamp:
 // that light has its own bake (bake/*_irrD.jpg) and its own panorama for reflections (tex/env_off.jpg), fetched the first time
@@ -3090,9 +3090,10 @@ function pick(e){ ptr.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1)
   const h=ray.intersectObjects(gone.length?[...interact.keys()].filter(keep):[...interact.keys()],false)[0]; pickUV=null; if(!h) return null;
   ray.far=h.distance-.002; const blocked=ray.intersectObjects(gone.length?occluders.filter(o=>o.visible&&keep(o)):occluders,false).length>0; ray.far=Infinity;
   if(blocked) return null; pickUV=h.uv||null; return h.object; }
-// fingers are wider than a VCR button: a tap that misses looks around it, nearest ring first
-function pickNear(e){ let h=pick(e); if(h||e.pointerType==="mouse") return h;
-  for(const r of [9,18,27]) for(let k=0;k<8;k++){ const a=k*Math.PI/4; h=pick({clientX:e.clientX+Math.cos(a)*r,clientY:e.clientY+Math.sin(a)*r}); if(h) return h; }
+// fingers and mouse pointers: a tap or click that misses looks around it, nearest ring first
+function pickNear(e){ let h=pick(e); if(h) return h;
+  const radii=e.pointerType==="mouse"?[6,14]:[9,18,27];
+  for(const r of radii) for(let k=0;k<8;k++){ const a=k*Math.PI/4; h=pick({clientX:e.clientX+Math.cos(a)*r,clientY:e.clientY+Math.sin(a)*r}); if(h) return h; }
   return null; }
 // where on the signal a point of the glass is (screen uv.y=0 is the top), as the monitor shader draws it: the raster's reach (RASTER),
 // the whole raster under UNDERSCAN, and under H/V DELAY the picture split around the blanking (null on the blanking)
@@ -3157,7 +3158,7 @@ addEventListener("pointerup",e=>{
   if(cdDrag){ cdDrag=false; controls.enabled=true; cd.release(e); down=null; return; }
   if(dragKnob){ if(Math.abs(e.clientY-dragKnob.y)<=3) act(down.hit); dragKnob=null; controls.enabled=true; down=null; return; }
   const isScreen=down&&down.hit&&interact.get(down.hit)?.kind==="screen";
-  const tapDist=isScreen?45:6;
+  const tapDist=isScreen?50:(e.pointerType==="touch"?35:20);
   const tap=down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<tapDist;
   // With the notepad up, a click on its paper goes to the pad (padClick), and any other click only puts the pad down (Felix,
   // 27 Sep 02:36Z: "any click/tap outside the notepad should just put it down (as opposed to immediately performing another
@@ -3280,7 +3281,12 @@ function gateUp(){
 function enter(muted){
   if(!gated) return; gated=false; removeEventListener("click",gateClick,true); removeEventListener("keydown",gateKey,true);
   removeEventListener("pointerdown",muteDown,true); removeEventListener("pointerup",muteUp,true);
-  enterBtn.remove(); muteBtn?.remove(); if(muted) quiet(); else gesture(); stillOut(); canvas.classList.add("ready"); revealNext=true; }   // (ready at once: a nav link's go() keeps the still)
+  try{ enterBtn?.remove(); muteBtn?.remove(); }catch{}
+  try{ document.getElementById("enter")?.remove(); document.getElementById("enter-muted")?.remove(); }catch{}
+  try{ const osd=document.getElementById("osd"); if(osd){ osd.style.pointerEvents="none"; } }catch{}
+  try{ const still=document.getElementById("still"); if(still){ still.style.pointerEvents="none"; } }catch{}
+  controls.enabled=true;
+  if(muted) quiet(); else gesture(); stillOut(); canvas.classList.add("ready"); revealNext=true; }   // (ready at once: a nav link's go() keeps the still)
 function gateClick(e){ const nav=e.target.closest?.("nav.menu a"); enter(!!e.target.closest?.("#osd .tv-mute,#enter-muted")); if(!nav){ e.preventDefault(); e.stopPropagation(); } }
 // A finger on ENTER MUTED lets the room in when it lifts, on the label still (Felix, 30 Sep 16:40Z: on an iPhone the tap
 // "seems to be in a hover mode and additional clicks don't get me in"): Safari may never send that tap's click. A click
