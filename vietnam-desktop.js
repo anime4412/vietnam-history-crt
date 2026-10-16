@@ -1124,15 +1124,34 @@ function rainGlass(){
 // Baked lighting: per atlas an albedo map, the room's irradiance (A) and the TV's irradiance (B), all on uv1.
 const BAKE={}, TVCOL={value:new THREE.Color(0,0,0)}, BAKEGAIN={value:1}, SPEC_OCC={value:1.5};
 const texL=new THREE.TextureLoader();
+
+// Hàm tải dữ liệu an toàn có cơ chế thử lại (Retry) và giới hạn thời gian (Timeout)
+async function fetchSafe(url, retries = 3, timeoutMs = 15000) {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timer);
+      if (res.ok) return res;
+      throw new Error(`HTTP ${res.status}`);
+    } catch (e) {
+      clearTimeout(timer);
+      if (attempt === retries - 1) throw e;
+      await new Promise(r => setTimeout(r, 400 * (attempt + 1)));
+    }
+  }
+}
+
 // lightmap atlases are packed islands: mipmaps would blend neighbouring islands into each other, so sample level 0 only
 // (each bake map, once its image is in, goes by bakeIn: clockBake moves the wall clock's shadow on the room atlas's)
 const bakeIns=new Set(); let CLOCK_FIX=null;
 function bakeIn(t){ bakeIns.add(t); clockBake(t); }
 function btex(url,srgb){ const t=texL.load(url,bakeIn); t.channel=1; t.flipY=false; t.colorSpace=srgb?THREE.SRGBColorSpace:THREE.NoColorSpace; t.generateMipmaps=false; t.minFilter=THREE.LinearFilter; return t; }
-const bakeReady=fetch(SCENE_BASE+"bake/bake.json").then(r=>r.json()).then(j=>{
+const bakeReady=fetchSafe(SCENE_BASE+"bake/bake.json").then(r=>r.json()).then(j=>{
   for(const [k,v] of Object.entries(j)){ BAKE[k]={sA:v.A,sB:v.B,sD:v.D,g:v.g||2.2,A:btex(`${SCENE_BASE}bake/${k}_irrA.jpg`),B:btex(`${SCENE_BASE}bake/${k}_irrB.jpg`),albedo:k.startsWith("props")?null:btex(`${SCENE_BASE}bake/${k}_albedo.jpg`,true)};
     BAKE[k].uD={value:BAKE[k].A}; BAKE[k].usD={value:v.A}; }
-});
+}).catch(e=>console.warn("bakeReady warning:", e));
 const bakedCache=new Map();
 // Baked surfaces neither cast nor receive shadows, so the moon (the one directional light) would put its cold highlight on every
 // one of them that faces the window, inside the bookshelf too. The window's light is in the bake and in the room's reflection.
@@ -1237,16 +1256,34 @@ function shadeMat(o){
 let holdDraw=false, holdT=0;
 function osdPaint(n){ const p=window.__osdStep?.(n); return p&&typeof p.then==="function"?p:Promise.resolve(); }
 function loadScene(onLoad,onErr){
-  const get=u=>fetch(u).then(r=>{ if(!r.ok) throw new Error(u+" "+r.status); return r.json(); });
+  const get=u=>fetchSafe(u).then(r=>r.json());
   // (the geometry's parts are read as they stream in, for the loading display's count)
-  const stream=u=>fetch(u).then(async r=>{ if(!r.ok) throw new Error(u+" "+r.status); const feed=window.__osdFeed; if(!feed||!r.body) return r.json();
-    const rd=r.body.getReader(), got=[]; for(;;){ const {done,value}=await rd.read(); if(done) break; got.push(value); feed(value.length); }
-    return JSON.parse(await new Blob(got).text()); });
+  const stream=async u=>{
+    try {
+      const r=await fetchSafe(u);
+      const feed=window.__osdFeed;
+      if(!feed||!r.body) return r.json();
+      const rd=r.body.getReader(), got=[];
+      for(;;){ const {done,value}=await rd.read(); if(done) break; got.push(value); if(feed) feed(value.length); }
+      return JSON.parse(await new Blob(got).text());
+    } catch(err) {
+      const res=await fetchSafe(u);
+      return res.json();
+    }
+  };
   // the glTF JSON and its geometry (base64 in a few JSON parts) are stitched into a GLB and parsed from memory
   Promise.all([get(SCENE_BASE+"gl/scene.json"),bakeReady]).then(([g])=>
     Promise.all(Array.from({length:g.extras.binParts},(_,i)=>stream(`${SCENE_BASE}gl/bin${i}.json`))).then(parts=>osdPaint(1).then(()=>{
       new GLTFLoader().parse(memGlb(g,parts),SCENE_BASE+"gl/",onLoad,onErr);   // (the text straight into the GLB, a slice at a time: perf/mem)
-    }))).catch(onErr);
+    }))).catch(err => {
+      console.warn("loadScene retry attempt:", err);
+      setTimeout(() => {
+        Promise.all([get(SCENE_BASE+"gl/scene.json"),bakeReady]).then(([g])=>
+          Promise.all(Array.from({length:g.extras.binParts},(_,i)=>fetchSafe(`${SCENE_BASE}gl/bin${i}.json`).then(r=>r.json()))).then(parts=>osdPaint(1).then(()=>{
+            new GLTFLoader().parse(memGlb(g,parts),SCENE_BASE+"gl/",onLoad,onErr);
+          }))).catch(onErr);
+      }, 1000);
+    });
 }
 // the geometry comes quantized (tv/quantize.py): positions, and UVs outside 0..1, as 16-bit steps over each accessor's own range,
 // carried in the primitive's extras. They are expanded back to floats before anything measures the scene.
@@ -3067,7 +3104,7 @@ function winAt(v){ WIN.zoom=v; document.body.classList.toggle("win",v); if(A.out
 function winFocus(){ if(PC.zoom) pcExit(); cdAt(false); winAt(true); setZoomed(true); flyTo(winFrame()); }
 // At the CD player (cdplayer/cdplayer.js): the camera looks down at it from its front right, its buttons and wheel work, the LCD
 // lights up, and Esc, Z, the round button or a click beside it goes back to the desk.
-function cdAt(v){ if(!cd||cd.near===v) return; cd.setNear(v); if(!v) cdLeft=true; document.body.classList.toggle("cdz",v); setHint(); unzoomLabel(); live(v?"The CD player: "+cd.title():""); }
+function cdAt(v){ if(!cd||cd.near===v) return; cd.setNear(v); if(!v) cdLeft=true; document.body.classList.toggle("cdz",v); setHint(); unzoomLabel(); live(v?"The CD player: "+cd.title():""); const mb=document.getElementById("btn-music"); if(mb) mb.setAttribute("aria-pressed", v?"true":"false"); }
 function cdFocus(){ if(!cd) return; if(PC.zoom) pcExit(); if(WIN.zoom) winAt(false); cdAt(true); setZoomed(true); flyTo(cd.shot()); }
 // The close-up looks down more steeply and stands nearer than any other view, outside looseLimits: a flight there or back
 // widens the orbit's limits to take in both its ends, or the controls would pin the camera to them on the way and it would
@@ -3519,11 +3556,14 @@ window.__BM.enter = enter;
 window.__BM.tapes = VIETNAM_TAPES;
 window.__BM.relics = VIETNAM_RELICS;
 
-function initRelicBtn() {
+function initHUDButtons() {
+  // 1. Nút CỔ VẬT
   const relicBtn = document.getElementById("btn-relics");
-  if (relicBtn && !relicBtn._relicWired) {
-    relicBtn._relicWired = true;
-    relicBtn.addEventListener("click", () => {
+  if (relicBtn && !relicBtn._wired) {
+    relicBtn._wired = true;
+    relicBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      click("button");
       if (state.page === "relics") {
         if (!zoomed) {
           setZoomed(true);
@@ -3536,9 +3576,62 @@ function initRelicBtn() {
       }
     });
   }
+
+  // 2. Nút NGHE ĐÀI · M (Bật/Tắt đài đĩa CD nghe nhạc hào hùng)
+  const musicBtn = document.getElementById("btn-music");
+  if (musicBtn && !musicBtn._wired) {
+    musicBtn._wired = true;
+    musicBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      click("button");
+      gesture();
+      if (!A.on) setSound(true);
+      if (cd && !cd.near) {
+        if (state.sheet) closeSheet();
+        cdFocus();
+      } else if (typeof music !== "undefined" && music) {
+        if (music.playing) {
+          music.pause();
+          musicBtn.setAttribute("aria-pressed", "false");
+        } else {
+          music.play();
+          musicBtn.setAttribute("aria-pressed", "true");
+        }
+      }
+    });
+  }
+
+  // 3. Nút MÁY TÍNH · C (Tra cứu cơ sở dữ liệu trên máy tính cổ)
+  const pcBtn = document.getElementById("btn-pc");
+  if (pcBtn && !pcBtn._wired) {
+    pcBtn._wired = true;
+    pcBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      click("button");
+      gesture();
+      if (atPC(state.page) || PC.zoom) {
+        pcTap(pickUV);
+      } else {
+        pcVisit();
+      }
+    });
+  }
+
+  // 4. Nút ZOOM TV · Z (Phóng to màn hình Tivi CRT)
+  const zoomBtn = document.getElementById("btn-zoom-tv");
+  if (zoomBtn && !zoomBtn._wired) {
+    zoomBtn._wired = true;
+    zoomBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      click("button");
+      gesture();
+      if (!PC.zoom) toggleZoom();
+    });
+  }
 }
+
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initRelicBtn);
+  document.addEventListener("DOMContentLoaded", initHUDButtons);
 } else {
-  initRelicBtn();
+  initHUDButtons();
 }

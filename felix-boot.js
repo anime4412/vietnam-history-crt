@@ -67,6 +67,12 @@
     // once, with its CLICK TO ENTER)
     const dt=Math.min(.5,Math.max(0,now-last)/1000), lo=inside?1:Math.max(DL*Math.min(1,(streamed+got)/LOAD_BYTES),STEPS[step]),
       hi=inside?1:step>3?.99:step>1?STEPS[step+1]-.01:Math.min(DL,lo+.03); last=now;
+    // Fallback tự động tăng tiến độ sau thời gian dài tránh bị kẹt ở 77% khi mạng chập chờn
+    if(now-t0>10000&&step<2){ step=2; }
+    if(now-t0>14000&&step<3){ step=3; }
+    if(now-t0>18000&&step<4){ step=4; }
+    if(now-t0>22000&&!done){ if(gl) gl.classList.add("ready"); }
+
     shown=inside?1:shown<lo?Math.min(lo,shown+Math.min(STEP,Math.max(.6,(lo-shown)*10)*dt)):shown+Math.max(0,hi-shown)*(1-Math.exp(-dt/1.2)); show(shown); settle();
     if(!on&&(inside||lit||now-t0>(want&&still?WAIT_STILL:1000))){ on=true; el.classList.toggle("free",!lit); el.classList.add("on"); }
     else if(on&&el.classList.contains("free")===lit){ el.classList.add("glide"); el.classList.toggle("free",!lit); }   // (the still came late, or went)
