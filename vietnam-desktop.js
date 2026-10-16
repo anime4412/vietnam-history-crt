@@ -3680,8 +3680,27 @@ window.__BM.relics = VIETNAM_RELICS;
 window.__BM.showWelcomeGuide = showWelcomeGuideModal;
 window.__BM.hideWelcomeGuide = hideWelcomeGuide;
 
+// ==============================================================================
+// KHỞI TẠO CÁC NÚT ĐIỀU KHIỂN TRÊN GIAO DIỆN HUD (HEAD-UP DISPLAY) & WELCOME MODAL
+// [KIẾN THỨC DOM & JAVASCRIPT THUYẾT MINH VỚI THẦY CÔ]:
+// 1. document.getElementById("id"):
+//    - Tìm kiếm phần tử HTML có thuộc tính id trùng khớp.
+//    - Đây là phương thức truy vấn DOM nhanh nhất vì trình duyệt lưu bảng băm (Hash Table)
+//      các ID với độ phức tạp thời gian O(1).
+// 2. Thuộc tính cờ kiểm tra `!el._wired`:
+//    - Mẹo lập trình kiểm soát trạng thái: gắn cờ `_wired = true` vào đối tượng DOM
+//      để đảm bảo không bị gán trùng lặp sự kiện (Duplicate Event Listeners) khi hàm được gọi lại nhiều lần.
+// 3. e.stopPropagation() (Chống nổi bọt sự kiện - Event Bubbling):
+//    - Trong mô hình sự kiện DOM, khi một phần tử con được click, sự kiện sẽ lan truyền ngược lên các thẻ cha
+//      cho tới thẻ `document` và canvas Three.js.
+//    - Gọi `e.stopPropagation()` sẽ chặn đứng sự kiện tại nút bấm, ngăn không cho canvas 3D hiểu nhầm
+//      thành thao tác xoay phòng hay bấm vào đồ vật 3D khác.
+// 4. document.readyState === "loading":
+//    - Kiểm tra xem cây DOM đã sẵn sàng hay chưa. Nếu trình duyệt còn đang phân tích cú pháp HTML,
+//      hệ thống sẽ chờ sự kiện 'DOMContentLoaded'. Nếu đã xong, hàm sẽ thực thi ngay lập tức.
+// ==============================================================================
 function initHUDButtons() {
-  // 1. Nút CỔ VẬT
+  // 1. Nút CỔ VẬT: Mở xem danh sách hoặc chuyển sang cổ vật tiếp theo trên màn hình CRT
   const relicBtn = document.getElementById("btn-relics");
   if (relicBtn && !relicBtn._wired) {
     relicBtn._wired = true;
@@ -3793,6 +3812,7 @@ function initHUDButtons() {
   if (guideModal && !guideModal._wired) {
     guideModal._wired = true;
     guideModal.addEventListener("click", (e) => {
+      // Nhấp chuột vào nền mờ bên ngoài hộp thoại để đóng
       if (e.target === guideModal) {
         e.stopPropagation();
         hideWelcomeGuide("close");
@@ -3801,6 +3821,7 @@ function initHUDButtons() {
   }
 }
 
+// Kiểm tra trạng thái phân tích cú pháp HTML của trình duyệt trước khi khởi chạy
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initHUDButtons);
 } else {

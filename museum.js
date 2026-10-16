@@ -49,13 +49,27 @@ const ICONS = {
 
 // ==========================================================================
 // 2. LỚP ĐIỀU KHIỂN BẢO TÀNG CHÍNH (CLASS VIETNAM NATIONAL MUSEUM)
-// Quản lý trạng thái, nạp DOM, bắt sự kiện chuột/bàn phím và tương tác người dùng
 // ==========================================================================
+
+/**
+ * 📚 GIẢI THÍCH KIẾN TRÚC: LẬP TRÌNH HƯỚNG ĐỐI TƯỢNG (OOP) VỚI ES6 CLASS
+ * - `class VietnamNationalMuseum`: Định nghĩa một lớp (Class) trong ES6.
+ *   + Mục đích: Đóng gói toàn bộ Trạng thái (Properties) và Hành vi (Methods) của trang bảo tàng vào một thực thể duy nhất.
+ *   + Giúp code không bị phân mảnh, không bị xung đột biến toàn cục (Global Scope Pollution), và dễ bảo trì mở rộng.
+ * 
+ * - `constructor()`: Phương thức hàm tạo đặc biệt.
+ *   + Cơ chế: Tự động kích hoạt ngay khi ta khởi tạo đối tượng bằng từ khóa `new VietnamNationalMuseum()`.
+ *   + Nhiệm vụ: Thiết lập các giá trị ban đầu cho các biến thuộc tính `this.*` và kích hoạt chuỗi khởi động ứng dụng.
+ * 
+ * - Từ khóa `this`:
+ *   + Đại diện cho chính thể hiện (Instance) hiện tại của class `VietnamNationalMuseum`.
+ *   + Cho phép các hàm khác nhau trong class chia sẻ và truy cập chung dữ liệu (ví dụ: `this.relics`, `this.zoomLevel`).
+ */
 class VietnamNationalMuseum {
   constructor() {
-    // Nạp danh sách 7 bảo vật quốc gia từ kho dữ liệu
+    // Nạp danh sách 7 bảo vật quốc gia từ kho dữ liệu JS
     this.relics = VIETNAM_RELICS || [];
-    // Vị trí bảo vật đang được xem trong modal (0 đến 6)
+    // Vị trí con trỏ bảo vật đang được xem trong modal (0 đến 6)
     this.currentRelicIndex = 0;
     // Bộ lọc thời kỳ đang áp dụng ('all', 'dongson', 'lytran', 'lamson', 'nguyen', 'modern')
     this.currentFilter = "all";
@@ -70,16 +84,28 @@ class VietnamNationalMuseum {
     // Trạng thái đang phát âm thanh thuyết minh
     this.isSpeaking = false;
 
-    // Khởi tạo các phần tử DOM, render giao diện và gán sự kiện
-    this.initDOM();
-    this.renderExhibits();
-    this.renderTimeline();
-    this.bindEvents();
+    // Chuỗi khởi động vòng đời ứng dụng (Lifecycle chain)
+    this.initDOM();        // 1. Quét và lưu tham chiếu đến các thẻ HTML
+    this.renderExhibits(); // 2. Vẽ danh sách 7 bảo vật ra màn hình
+    this.renderTimeline(); // 3. Vẽ biểu đồ niên biểu lịch sử
+    this.bindEvents();     // 4. Gắn kết các sự kiện tương tác chuột & phím
   }
 
   // ------------------------------------------------------------------------
   // Khởi tạo và lưu trữ tham chiếu đến các phần tử DOM trên trang
   // ------------------------------------------------------------------------
+
+  /**
+   * 📚 GIẢI THÍCH: HÀM `initDOM()` VÀ KỸ THUẬT DOM CACHING
+   * - Tại sao cần lưu `this.gridEl = document.getElementById("exhibitsGrid")`?
+   *   + Mỗi lần gọi `document.getElementById` hoặc `document.querySelector`, trình duyệt phải duyệt qua cây DOM.
+   *   + Việc lưu tham chiếu thẻ HTML vào thuộc tính `this.*` (DOM Caching) giúp ta tái sử dụng ngay lập tức mà không phải tìm lại,
+   *     giúp trang web phản hồi siêu nhanh 60 FPS mà không bị giật lag.
+   * 
+   * - SO SÁNH `document.getElementById` VÀ `document.querySelectorAll`:
+   *   + `getElementById("idName")`: Tìm đúng 1 phần tử có id khớp. Trả về `HTMLElement` hoặc `null`. Tốc độ cực nhanh O(1).
+   *   + `querySelectorAll(".className")`: Tìm TẤT CẢ các phần tử có class khớp trong file HTML. Trả về một `NodeList` tĩnh.
+   */
   initDOM() {
     // Vùng lưới chứa các thẻ hiện vật bảo tàng
     this.gridEl = document.getElementById("exhibitsGrid");
@@ -87,9 +113,10 @@ class VietnamNationalMuseum {
     this.counterEl = document.getElementById("exhibitsCounter");
     // Ô nhập từ khóa tìm kiếm
     this.searchInput = document.getElementById("relicSearch");
-    // Các nút tab lọc thời kỳ
+    
+    // Tìm danh sách tất cả các nút bấm lọc thời kỳ theo class CSS
     this.filterBtns = document.querySelectorAll(".filter-btn");
-    // Các nút chuyển đổi chế độ xem Grid / List
+    // Tìm danh sách tất cả các nút chuyển đổi chế độ xem Grid / List
     this.viewBtns = document.querySelectorAll(".view-btn");
     
     // Cửa sổ modal hồ sơ chuyên sâu
@@ -113,10 +140,23 @@ class VietnamNationalMuseum {
 
   // ------------------------------------------------------------------------
   // Lọc danh sách hiện vật theo thời kỳ lịch sử và từ khóa tìm kiếm
+  // [KIẾN THỨC JS THUYẾT MINH VỚI THẦY CÔ]:
+  // 1. Array.prototype.filter():
+  //    - Duyệt qua từng phần tử trong mảng `this.relics`.
+  //    - Nhận vào một callback function trả về giá trị Boolean (true/false).
+  //    - Không làm thay đổi mảng ban đầu (immutable), mà trả về một mảng mới
+  //      chỉ chứa các phần tử thỏa mãn điều kiện (true).
+  // 2. Arrow Function (relic => { ... }):
+  //    - Cú pháp hàm mũi tên ngắn gọn của ES6.
+  //    - Kế thừa ngữ cảnh `this` từ phạm vi bao quanh (lexical this),
+  //      giúp truy cập `this.currentFilter` và `this.searchQuery` chính xác.
+  // 3. Chuỗi tìm kiếm không phân biệt hoa thường (Case-insensitive):
+  //    - Dùng `.toLowerCase()` cho cả từ khóa và nội dung để người dùng gõ chữ hoa hay thường đều tìm thấy.
+  //    - Dùng `.includes()` để kiểm tra từ khóa có nằm trong chuỗi văn bản hay không.
   // ------------------------------------------------------------------------
   getFilteredRelics() {
     return this.relics.filter(relic => {
-      // 1. Kiểm tra khớp thời kỳ lịch sử
+      // 1. Kiểm tra khớp thời kỳ lịch sử (So sánh chuỗi định danh)
       let matchesFilter = true;
       if (this.currentFilter === "dongson") {
         matchesFilter = relic.id === "trongdong" || relic.id === "thapdong";
@@ -134,6 +174,7 @@ class VietnamNationalMuseum {
       let matchesSearch = true;
       if (this.searchQuery.trim() !== "") {
         const q = this.searchQuery.toLowerCase();
+        // Gộp tất cả các trường thông tin của hiện vật thành 1 chuỗi văn bản lớn để tìm kiếm toàn diện
         const fullText = [
           relic.title,
           relic.era,
@@ -146,15 +187,27 @@ class VietnamNationalMuseum {
           ...(relic.highlights || [])
         ].join(" ").toLowerCase();
 
+        // Kiểm tra xem chuỗi văn bản tổng hợp có chứa từ khóa `q` hay không
         matchesSearch = fullText.includes(q);
       }
 
+      // Hiện vật được chọn nếu vừa thỏa mãn bộ lọc thời kỳ, vừa thỏa mãn từ khóa tìm kiếm
       return matchesFilter && matchesSearch;
     });
   }
 
   // ------------------------------------------------------------------------
-  // Kết xuất danh sách thẻ hiện vật ra màn hình
+  // Kết xuất danh sách thẻ hiện vật ra màn hình (Render DOM)
+  // [KIẾN THỨC JS THUYẾT MINH VỚI THẦY CÔ]:
+  // 1. innerHTML vs textContent:
+  //    - Dùng `this.counterEl.textContent`: An toàn tuyệt đối, chỉ gán văn bản thuần, không parse HTML.
+  //    - Dùng `String.padStart(2, "0")`: Định dạng số có 2 chữ số (VD: 5 -> "05") giúp giao diện đồng đều.
+  //    - Dùng `this.gridEl.innerHTML`: Cho phép render cấu trúc HTML động từ dữ liệu mảng.
+  // 2. Template Literals (Cú pháp `...` với `${biến}`):
+  //    - Tính năng của ES6 cho phép nhúng biến, biểu thức JavaScript trực tiếp vào chuỗi nhiều dòng.
+  // 3. Array.prototype.map() & join(""):
+  //    - `.map()` chuyển đổi mỗi phần tử hiện vật thành một chuỗi HTML thẻ <article>.
+  //    - `.join("")` nối mảng các chuỗi HTML thành một chuỗi duy nhất để gán vào `innerHTML`.
   // ------------------------------------------------------------------------
   renderExhibits() {
     const list = this.getFilteredRelics();
@@ -451,7 +504,17 @@ class VietnamNationalMuseum {
 
   // ------------------------------------------------------------------------
   // Tính năng Thuyết minh Audio Guide (Web Speech Synthesis API)
-  // Đọc to thuyết minh giới thiệu bảo vật bằng giọng tiếng Việt
+  // [KIẾN THỨC JS THUYẾT MINH VỚI THẦY CÔ]:
+  // 1. Web Speech Synthesis API (`window.speechSynthesis`):
+  //    - Là API chuẩn tích hợp sẵn trong trình duyệt hiện đại (Chrome, Edge, Safari, Firefox).
+  //    - Chuyển văn bản thành giọng đọc (Text-to-Speech - TTS) mà không cần gọi API bên thứ ba.
+  // 2. Đối tượng SpeechSynthesisUtterance:
+  //    - Đại diện cho một câu lệnh phát âm chứa nội dung văn bản (`speechText`).
+  //    - Thiết lập thuộc tính `.lang = 'vi-VN'` để phát âm chuẩn ngữ điệu tiếng Việt.
+  //    - Thuộc tính `.rate = 0.95` điều chỉnh tốc độ nói hơi chậm một chút để người nghe dễ hiểu.
+  // 3. Xử lý vòng đời âm thanh (Lifecycle Events):
+  //    - `.onstart`: Kích hoạt khi bắt đầu phát tiếng -> cập nhật giao diện (đổi icon, đổi chữ).
+  //    - `.onend` & `.onerror`: Kích hoạt khi phát xong hoặc lỗi -> dọn dẹp trạng thái, trả nút về ban đầu.
   // ------------------------------------------------------------------------
   toggleAudioGuide() {
     // Nếu đang phát, bấm vào sẽ dừng lại
@@ -460,7 +523,7 @@ class VietnamNationalMuseum {
       return;
     }
 
-    // Kiểm tra trình duyệt có hỗ trợ SpeechSynthesis hay không
+    // Kiểm tra tính tương thích trình duyệt (Feature Detection)
     if (!("speechSynthesis" in window)) {
       alert("Trình duyệt của bạn không hỗ trợ tính năng thuyết minh giọng nói tự động.");
       return;
@@ -469,9 +532,10 @@ class VietnamNationalMuseum {
     const relic = this.relics[this.currentRelicIndex];
     if (!relic) return;
 
-    // Tổng hợp nội dung thuyết minh
+    // Tổng hợp nội dung thuyết minh từ các trường thông tin của hiện vật
     const speechText = `${relic.title}. Niên đại: ${relic.era}. ${relic.desc}. Bối cảnh: ${relic.discovery || ""}. Ý nghĩa: ${relic.significance || ""}`;
 
+    // Hủy các câu đọc trước đó nếu còn đang phát dở
     window.speechSynthesis.cancel();
     this.audioSpeech = new SpeechSynthesisUtterance(speechText);
     this.audioSpeech.lang = "vi-VN"; // Thiết lập giọng đọc tiếng Việt
@@ -505,15 +569,27 @@ class VietnamNationalMuseum {
 
   // ------------------------------------------------------------------------
   // Lắng nghe và xử lý toàn bộ sự kiện người dùng (Bàn phím, Chuột, Cuộn trang)
+  // [KIẾN THỨC JS THUYẾT MINH VỚI THẦY CÔ]:
+  // 1. addEventListener(type, listener, options):
+  //    - Cơ chế Event-Driven (Hướng sự kiện) cốt lõi của JavaScript trong trình duyệt.
+  //    - Không ghi đè các hàm xử lý khác (khác với onclick gán trực tiếp).
+  // 2. Sự kiện 'input' vs 'change':
+  //    - 'input': Kích hoạt ngay lập tức tại mỗi ký tự người dùng gõ vào ô tìm kiếm -> Tìm kiếm thời gian thực (Live Search).
+  //    - 'change': Chỉ kích hoạt khi người dùng gõ xong và nhấn Enter hoặc rời chuột (blur) khỏi ô nhập.
+  // 3. HTML5 Data Attributes (`dataset.*`):
+  //    - Truy cập các thuộc tính tùy biến dạng `data-filter` hoặc `data-view` trên thẻ HTML thông qua `btn.dataset.filter`.
+  // 4. Tùy chọn `{ passive: true }` khi lắng nghe 'scroll':
+  //    - Khai báo cho trình duyệt biết hàm này không bao giờ gọi `e.preventDefault()`.
+  //    - Giúp luồng kết xuất (Compositor Thread) cuộn trang mượt mà 60fps mà không bị khựng lại chờ JavaScript.
   // ------------------------------------------------------------------------
   bindEvents() {
-    // 1. Tìm kiếm tức thời khi người dùng gõ vào ô tìm kiếm
+    // 1. Tìm kiếm tức thời khi người dùng gõ vào ô tìm kiếm (Live Search)
     this.searchInput.addEventListener("input", (e) => {
       this.searchQuery = e.target.value;
       this.renderExhibits();
     });
 
-    // 2. Lọc theo thời kỳ lịch sử khi bấm các nút thời kỳ
+    // 2. Lọc theo thời kỳ lịch sử khi bấm các nút thời kỳ (Sử dụng data-filter)
     this.filterBtns.forEach(btn => {
       btn.addEventListener("click", () => {
         this.filterBtns.forEach(b => b.classList.remove("active"));
@@ -523,7 +599,7 @@ class VietnamNationalMuseum {
       });
     });
 
-    // 3. Chuyển đổi giữa chế độ Trưng bày (Grid) và Danh mục hồ sơ (List)
+    // 3. Chuyển đổi giữa chế độ Trưng bày (Grid) và Danh mục hồ sơ (List) (Sử dụng data-view)
     this.viewBtns.forEach(btn => {
       btn.addEventListener("click", () => {
         this.viewBtns.forEach(b => b.classList.remove("active"));

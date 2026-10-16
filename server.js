@@ -191,9 +191,29 @@ function sendJson(res, statusCode, data) {
 
 // ==============================================================================
 // 3. KHỞI TẠO MÁY CHỦ HTTP & BẢO VỆ ĐA LỚP
+// [KIẾN THỨC NODE.JS THUYẾT MINH VỚI THẦY CÔ]:
+// 1. http.createServer(callback):
+//    - Là hàm cốt lõi của module 'http' tích hợp sẵn trong Node.js để tạo Web Server.
+//    - Cơ chế Non-blocking I/O & Event Loop: Node.js chạy trên mô hình đơn luồng (Single Thread),
+//      nhưng xử lý đồng thời hàng nghìn kết nối mà không bị nghẽn (nhờ cơ chế bất đồng bộ libuv).
+//    - Tham số `req` (http.IncomingMessage): Đối tượng chứa toàn bộ thông tin từ trình duyệt gửi lên:
+//      + `req.method`: Phương thức HTTP (GET, POST, PUT, DELETE, OPTIONS).
+//      + `req.url`: Đường dẫn tài nguyên được yêu cầu.
+//      + `req.headers`: Các tiêu đề thông tin client (User-Agent, Authorization Bearer Token, Cookie...).
+//    - Tham số `res` (http.ServerResponse): Đối tượng luồng ghi (Writable Stream) dùng để phản hồi về client:
+//      + `res.writeHead(statusCode, headers)`: Thiết lập mã trạng thái HTTP và danh sách tiêu đề.
+//      + `res.end(data)`: Gửi khối dữ liệu cuối cùng và đóng kết nối HTTP.
+// 2. CORS (Cross-Origin Resource Sharing):
+//    - Chính sách chia sẻ tài nguyên giữa các nguồn khác nhau.
+//    - `Access-Control-Allow-Origin: *`: Cho phép ứng dụng client từ các domain khác gọi API.
+//    - `OPTIONS Pre-flight Request`: Trình duyệt gửi request OPTIONS thăm dò trước khi gửi POST/DELETE
+//      có kèm header 'Authorization'. Máy chủ phản hồi mã 204 No Content để cấp phép.
+// 3. Tiêu chuẩn an ninh OWASP (Security Headers):
+//    - `X-Content-Type-Options: nosniff`: Cấm trình duyệt tự ý suy đoán định dạng MIME (chống MIME sniffing).
+//    - `X-Frame-Options: SAMEORIGIN`: Chống tấn công Clickjacking (ngăn kẻ xấu nhúng web vào iframe lừa người dùng).
 // ==============================================================================
 const server = http.createServer(async (req, res) => {
-  // Bổ sung các tiêu đề bảo mật an ninh trình duyệt cơ bản
+  // Bổ sung các tiêu đề bảo mật an ninh trình duyệt cơ bản theo chuẩn OWASP
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -201,13 +221,14 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  // Phản hồi yêu cầu pre-flight OPTIONS
+  // Phản hồi yêu cầu pre-flight OPTIONS khi client gửi request thăm dò bảo mật
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     res.end();
     return;
   }
 
+  // Phân tích cú pháp URL để bóc tách đường dẫn pathname (bỏ qua query string ?id=...)
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = parsedUrl.pathname;
 
@@ -614,6 +635,8 @@ const server = http.createServer(async (req, res) => {
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
   // Chính sách lưu bộ nhớ đệm (Cache-Control):
+  // - Đối với tệp đa phương tiện lớn (ảnh, âm thanh, video, model 3D): Cho phép trình duyệt lưu đệm 7 ngày (max-age=604800)
+  // - Đối với HTML/CSS/JS: Bắt buộc không lưu đệm (no-cache) để khi F5 luôn cập nhật mã nguồn mới nhất
   const isMedia = ['.mp3', '.mp4', '.webm', '.ogg', '.wav', '.glb', '.gltf', '.png', '.jpg', '.jpeg', '.webp', '.woff2'].includes(ext);
   if (isMedia) {
     res.setHeader('Cache-Control', 'public, max-age=604800, stale-while-revalidate=86400');
@@ -623,15 +646,27 @@ const server = http.createServer(async (req, res) => {
     res.setHeader('Expires', '0');
   }
 
-  // Xử lý yêu cầu truyền tải từng phần (HTTP Range Request / Streaming MP4/MP3)
+  // ----------------------------------------------------------------------------
+  // Xử lý phân phối nội dung: Stream vs Toàn bộ tệp
+  // [KIẾN THỨC NODE.JS THUYẾT MINH VỚI THẦY CÔ]:
+  // 1. fs.createReadStream(filePath).pipe(res):
+  //    - Thay vì đọc toàn bộ file vào RAM bằng `fs.readFileSync` (gây cạn kiệt bộ nhớ nếu file lớn),
+  //      Stream chia nhỏ file thành từng khối (chunks 64KB) và truyền dần qua mạng.
+  //    - Phương thức `.pipe()` tự động điều tiết lưu lượng (Backpressure): nếu mạng của người dùng
+  //      chậm, stream sẽ tự hãm tốc độ đọc đĩa để tránh tràn bộ nhớ đệm máy chủ.
+  // 2. HTTP 206 Partial Content (HTTP Range Requests):
+  //    - Hỗ trợ phát video/audio tài liệu: Trình duyệt chỉ yêu cầu một đoạn byte cụ thể (VD: bytes=0-1048576).
+  //    - Cho phép người dùng tua video nhanh mà không cần chờ tải hết toàn bộ file dung lượng lớn.
+  // ----------------------------------------------------------------------------
   const range = req.headers.range;
   if (range) {
     const parts = range.replace(/bytes=/, '').split('-');
     const start = parseInt(parts[0], 10);
-    const maxChunk = 1024 * 1024; // Khối 1MB
+    const maxChunk = 1024 * 1024; // Phân đoạn tối đa 1MB cho mỗi lượt tải
     const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + maxChunk - 1, stat.size - 1);
     const chunksize = (end - start) + 1;
     
+    // Đọc một phần tệp từ byte `start` đến `end`
     const file = fs.createReadStream(filePath, { start, end });
     res.writeHead(206, {
       'Content-Range': `bytes ${start}-${end}/${stat.size}`,
@@ -641,6 +676,7 @@ const server = http.createServer(async (req, res) => {
     });
     file.pipe(res);
   } else {
+    // Phục vụ toàn bộ tệp tin bình thường với mã HTTP 200 OK
     res.writeHead(200, {
       'Content-Length': stat.size,
       'Content-Type': contentType,
