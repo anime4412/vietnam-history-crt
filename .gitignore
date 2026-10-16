@@ -39,8 +39,15 @@ optimize_all_videos.js
 
 # Temporary Screenshots
 screenshot_*.png
+test-*.png
+render-*.png
+*.screenshot.png
+canva-*.png
 
-# Canva Secrets & Tokens
+# Canva Experiments & Data
+.canva-browser-data/
 .env.canva
+canva-*
+verify-canva-*
 *.tokens.json
 .canva_tokens.json
